@@ -1,0 +1,26 @@
+<!-- ═══ BLOG / WRITING ═════════════════════════════════════════════════════ -->
+<section id="blog" class="blog-section">
+  <div class="section-head reveal">
+    <p class="section-label">// Writing</p>
+    <h2 class="section-title">Technical Articles</h2>
+    <p class="section-sub">
+      Sharing what I've learned across 5+ years building Angular and cloud solutions.
+    </p>
+  </div>
+  <div class="blog-grid">
+    <article class="blog-card reveal" *ngFor="let post of publishedPosts(); trackBy: trackById">
+      <div class="blog-card-top">
+        <div class="blog-tags">
+          <span class="blog-tag" *ngFor="let tag of post.tags.slice(0, 3)">{{ tag }}</span>
+        </div>
+        <span class="blog-reading-time">{{ post.readingTime }} min read</span>
+      </div>
+      <h3 class="blog-title">{{ post.title }}</h3>
+      <p class="blog-excerpt">{{ post.excerpt }}</p>
+      <div class="blog-footer">
+        <span class="blog-date">{{ post.publishedAt | date: 'MMM d, yyyy' }}</span>
+        <button class="blog-read-btn" (click)="navigateToBlog(post.slug)">Read Article →</button>
+      </div>
+    </article>
+  </div>
+</section>

@@ -1,0 +1,147 @@
+<!-- ═══ CONTACT ══════════════════════════════════════════════════════════════ -->
+<section id="contact" class="contact-section">
+  <div class="contact-grid">
+    <div class="contact-left reveal">
+      <p class="section-label">// Contact</p>
+      <h2
+        class="contact-heading"
+        [innerHTML]="
+          content.siteSettings.contact.heading ||
+          'Let\'s build<br><span>something great</span><br>together.'
+        "
+      ></h2>
+      <div class="contact-links">
+        <a [href]="'mailto:' + content.hero.email" class="clink" target="_blank" style="flex: 1">
+          <span class="clink-icon">✉</span>
+          <div style="flex: 1; min-width: 0">
+            <p class="clink-label">Email</p>
+            <p
+              class="clink-val"
+              style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap"
+            >
+              {{ content.hero.email }}
+            </p>
+          </div>
+          <button
+            class="clink-copy-inline"
+            (click)="copyEmail(); $event.preventDefault(); $event.stopPropagation()"
+            [title]="emailCopied ? 'Copied!' : 'Copy email'"
+          >
+            {{ emailCopied ? '✓' : '⧉' }}
+          </button>
+        </a>
+        <a
+          [href]="content.hero.linkedin"
+          target="_blank"
+          class="clink"
+          (click)="trackSocialClick()"
+        >
+          <span class="clink-icon">🔗</span>
+          <div>
+            <p class="clink-label">LinkedIn</p>
+            <p class="clink-val">Connect with me</p>
+          </div>
+        </a>
+        <a
+          *ngIf="content.hero.github"
+          [href]="content.hero.github"
+          target="_blank"
+          class="clink"
+          (click)="trackSocialClick()"
+        >
+          <span class="clink-icon">⌥</span>
+          <div>
+            <p class="clink-label">GitHub</p>
+            <p class="clink-val">See my code</p>
+          </div>
+        </a>
+        <span class="clink">
+          <span class="clink-icon">📍</span>
+          <div>
+            <p class="clink-label">Location</p>
+            <p class="clink-val">{{ content.hero.location }}</p>
+          </div>
+        </span>
+        <span
+          class="clink clink-available"
+          *ngIf="
+            content.siteSettings.freelance.enabled &&
+            content.siteSettings.freelance.showInContact !== false
+          "
+        >
+          <span class="clink-icon avail-dot">●</span>
+          <div>
+            <p class="clink-label">Status</p>
+            <p class="clink-val">Available for freelance</p>
+          </div>
+        </span>
+      </div>
+    </div>
+    <div class="contact-right reveal">
+      <div class="success-banner" *ngIf="contactSuccess">
+        ✓
+        {{
+          content.siteSettings.contact.successMessage ||
+            'Message sent! I will get back to you shortly.'
+        }}
+      </div>
+      <div class="error-banner" *ngIf="contactError">⚠ {{ contactError }}</div>
+      <div class="cform">
+        <div class="cform-row">
+          <div class="cform-group">
+            <label>Your Name</label>
+            <input
+              type="text"
+              [(ngModel)]="contactForm.name"
+              name="cn"
+              placeholder="Jane Smith"
+              [disabled]="contactSending"
+            />
+          </div>
+          <div class="cform-group">
+            <label>Email</label>
+            <input
+              type="email"
+              [(ngModel)]="contactForm.email"
+              name="ce"
+              placeholder="jane@company.com"
+              [disabled]="contactSending"
+            />
+          </div>
+        </div>
+        <div class="cform-group">
+          <label>Message</label>
+          <textarea
+            rows="5"
+            [(ngModel)]="contactForm.message"
+            name="cm"
+            placeholder="Hi Anand, I have a project I'd like to discuss..."
+            [disabled]="contactSending"
+          ></textarea>
+        </div>
+        <!-- Honeypot: hidden from real users; bots fill it and get silently discarded -->
+        <div
+          style="position: absolute; left: -9999px; height: 0; overflow: hidden"
+          aria-hidden="true"
+        >
+          <input
+            type="text"
+            name="_hp"
+            [(ngModel)]="contactForm._hp"
+            tabindex="-1"
+            autocomplete="off"
+          />
+        </div>
+        <button
+          class="btn-hero-primary"
+          (click)="sendMessage()"
+          [disabled]="contactSending"
+          style="width: 100%; justify-content: center"
+        >
+          <span *ngIf="!contactSending">Send Message →</span>
+          <span *ngIf="contactSending" class="sending-spinner"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

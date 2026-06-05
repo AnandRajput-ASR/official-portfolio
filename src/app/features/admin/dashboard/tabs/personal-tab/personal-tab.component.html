@@ -1,0 +1,209 @@
+<section class="tab-content" (input)="markDirty()" (change)="markDirty()">
+  <div class="tab-header">
+    <div>
+      <h1>Side Projects</h1>
+      <p>Personal builds, freelance work, open-source — with GitHub &amp; live demo links.</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem">
+      <button class="btn btn-primary btn-sm" (click)="showAddPersonal = true">
+        + Add Project
+      </button>
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="savePersonalProjects()"
+        [disabled]="saving"
+      >
+        {{ saving ? 'Saving...' : 'Save Changes' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="personalProjectsEdit.length === 0">
+    <span>⚡</span>
+    <p>No side projects yet — add your first one!</p>
+  </div>
+
+  <div
+    class="pp-admin-grid drag-list"
+    appDragList
+    (reordered)="onReorder($event)"
+  >
+    <div
+      class="pp-admin-card"
+      draggable="true"
+      [attr.data-drag-id]="p.id"
+      *ngFor="let p of personalProjectsEdit; trackBy: trackById"
+    >
+      <div class="pp-admin-topbar">
+        <span class="drag-handle" title="Drag to reorder"></span>
+        <select [(ngModel)]="p.type" class="pp-select">
+          <option value="personal">⚡ Personal</option>
+          <option value="freelance">💼 Freelance</option>
+          <option value="opensource">🌐 Open Source</option>
+        </select>
+        <select [(ngModel)]="p.status" class="pp-select">
+          <option value="live">● Live</option>
+          <option value="wip">⟳ In Progress</option>
+          <option value="archived">Archived</option>
+        </select>
+        <input
+          type="text"
+          [(ngModel)]="p.year"
+          class="pp-year-input"
+          placeholder="Year"
+          maxlength="4"
+        />
+        <label class="pp-featured-toggle" title="Show star badge on portfolio">
+          <input type="checkbox" [(ngModel)]="p.featured" /> ★
+        </label>
+        <button
+          class="delete-row-btn"
+          (click)="deletePersonalProject(p.id)"
+          title="Delete project"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            width="13"
+            height="13"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"
+            />
+            <path
+              d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="form-group">
+        <label>Title</label><input type="text" [(ngModel)]="p.title" />
+      </div>
+      <div class="form-group">
+        <label>Description</label><textarea rows="3" [(ngModel)]="p.description"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>🐙 GitHub URL</label>
+          <input type="url" [(ngModel)]="p.githubUrl" placeholder="https://github.com/..." />
+        </div>
+        <div class="form-group">
+          <label>↗ Live Demo URL</label>
+          <input type="url" [(ngModel)]="p.liveUrl" placeholder="https://..." />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Technologies <small>(Enter to add)</small></label>
+        <div class="tags-editor small">
+          <span class="tag-pill" *ngFor="let t of p.tech"
+            >{{ t }}<button (click)="removePersonalTech(p, t)">×</button></span
+          >
+          <input
+            type="text"
+            placeholder="Angular, Node.js..."
+            (keydown.enter)="addPersonalTech(p, $event)"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Add Side Project Modal -->
+<div class="modal-overlay" *ngIf="showAddPersonal" (click)="showAddPersonal = false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add Side Project</h2>
+      <button (click)="showAddPersonal = false" title="Close">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
+          />
+        </svg>
+      </button>
+    </div>
+    <div class="form-row form-row-3">
+      <div class="form-group">
+        <label>Type</label>
+        <select [(ngModel)]="newPersonal.type" class="form-select">
+          <option value="personal">⚡ Personal</option>
+          <option value="freelance">💼 Freelance</option>
+          <option value="opensource">🌐 Open Source</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select [(ngModel)]="newPersonal.status" class="form-select">
+          <option value="live">● Live</option>
+          <option value="wip">⟳ In Progress</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Year</label
+        ><input type="text" [(ngModel)]="newPersonal.year" placeholder="2026" maxlength="4" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Title</label
+      ><input type="text" [(ngModel)]="newPersonal.title" placeholder="My Awesome Project" />
+    </div>
+    <div class="form-group">
+      <label>Description</label
+      ><textarea
+        rows="3"
+        [(ngModel)]="newPersonal.description"
+        placeholder="What does it do? What problem does it solve?"
+      ></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>🐙 GitHub URL</label
+        ><input
+          type="url"
+          [(ngModel)]="newPersonal.githubUrl"
+          placeholder="https://github.com/you/project"
+        />
+      </div>
+      <div class="form-group">
+        <label>↗ Live URL</label
+        ><input type="url" [(ngModel)]="newPersonal.liveUrl" placeholder="https://myproject.com" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Technologies <small>(Enter to add)</small></label>
+      <div class="tags-editor">
+        <span class="tag-pill" *ngFor="let t of newPersonal.tech"
+          >{{ t }}<button (click)="removeTagFromNew(newPersonal.tech!, t)">×</button></span
+        >
+        <input
+          type="text"
+          placeholder="Angular, Node.js..."
+          (keydown.enter)="addTagToNew(newPersonal.tech!, $event)"
+        />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label"
+        ><input type="checkbox" [(ngModel)]="newPersonal.featured" /> ★ Mark as Featured (shows gold
+        accent)</label
+      >
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" (click)="showAddPersonal = false">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="submitAddPersonal()">Add Project</button>
+    </div>
+  </div>
+</div>

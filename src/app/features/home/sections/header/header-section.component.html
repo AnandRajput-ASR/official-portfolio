@@ -1,0 +1,110 @@
+<!-- ═══ OPEN-TO-WORK BANNER ════════════════════════════════════════════════ -->
+<div class="otw-banner" *ngIf="content.siteSettings.openToWork && !otwDismissed">
+  <span class="otw-dot"></span>
+  <span
+    class="otw-text"
+    [innerHTML]="content.siteSettings.openToWorkText || 'Open to Freelance'"
+  ></span>
+  <a href="#contact" class="otw-cta">Let's talk →</a>
+  <button class="otw-close" (click)="dismiss.emit()" aria-label="Dismiss">✕</button>
+</div>
+
+<!-- ═══ NAV ══════════════════════════════════════════════════════════════════ -->
+<nav class="nav" id="mainNav">
+  <div class="nav-logo">
+    {{ content.siteSettings.nav.logoText || 'AR' }}<span class="dot">.</span>
+  </div>
+
+  <!-- Desktop links -->
+  <div class="nav-links">
+    <a href="#about">{{ langService.t('nav.about') }}</a>
+    <a href="#skills">{{ langService.t('nav.skills') }}</a>
+    <a href="#projects">{{ langService.t('nav.work') }}</a>
+    <a href="#personal-projects">{{ langService.t('nav.sideProjects') }}</a>
+    <a href="#certs">{{ langService.t('nav.certs') }}</a>
+    <a href="#testimonials" *ngIf="showReviewsLink">{{ langService.t('nav.reviews') }}</a>
+    <a href="#blog" *ngIf="showWritingLink">{{ langService.t('nav.writing') }}</a>
+    <a href="#contact">{{ langService.t('nav.hire') }}</a>
+  </div>
+
+  <div class="nav-right">
+    <!-- Theme toggle -->
+    <button
+      class="theme-toggle"
+      (click)="themeService.toggle()"
+      [title]="themeService.isDark() ? 'Switch to Light' : 'Switch to Dark'"
+      [attr.aria-label]="themeService.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+    >
+      <span *ngIf="themeService.isDark()">☀️</span>
+      <span *ngIf="!themeService.isDark()">🌙</span>
+    </button>
+
+    <!-- Language toggle — hidden automatically when admin enables only one language -->
+    <button
+      *ngIf="langService.activeLangs().length > 1"
+      class="lang-toggle"
+      (click)="langService.toggle()"
+      title="Switch language"
+      aria-label="Toggle language"
+    >
+      {{ langService.label() }}
+    </button>
+
+    <!-- Resume quick link -->
+    <a
+      *ngIf="resumeInfo?.available"
+      [href]="resumeService.getDownloadUrl()"
+      class="btn-nav-resume"
+      download
+      (click)="resumeClick.emit($event)"
+      >{{ langService.t('nav.resume') }}</a
+    >
+
+    <!-- Mobile hamburger -->
+    <button
+      class="hamburger"
+      (click)="toggleMobileMenu()"
+      [class.open]="mobileMenuOpen"
+      aria-label="Menu"
+    >
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile menu overlay -->
+<div class="mobile-menu" [class.open]="mobileMenuOpen">
+  <div class="mobile-menu-bg" (click)="closeMobileMenu()"></div>
+  <div class="mobile-menu-panel">
+    <div class="mobile-menu-header">
+      <span class="nav-logo"
+        >{{ content.siteSettings.nav.logoText || 'AR' }}<span class="dot">.</span></span
+      >
+      <button class="mobile-close" (click)="closeMobileMenu()" aria-label="Close menu">✕</button>
+    </div>
+    <nav class="mobile-nav">
+      <a href="#about" (click)="closeMobileMenu()">About</a>
+      <a href="#skills" (click)="closeMobileMenu()">Skills</a>
+      <a href="#projects" (click)="closeMobileMenu()">Projects</a>
+      <a href="#certs" (click)="closeMobileMenu()">Certifications</a>
+      <a href="#contact" (click)="closeMobileMenu()">Hire Me</a>
+    </nav>
+    <div class="mobile-menu-footer">
+      <a
+        *ngIf="resumeInfo?.available"
+        [href]="resumeService.getDownloadUrl()"
+        class="btn-hero-primary"
+        download
+        (click)="resumeClick.emit($event)"
+        >↓ Download Resume</a
+      >
+      <button
+        class="theme-toggle-lg"
+        (click)="themeService.toggle()"
+        [attr.aria-label]="themeService.isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+      >
+        {{ themeService.isDark() ? '☀️ Light Mode' : '🌙 Dark Mode' }}
+      </button>
+    </div>
+  </div>
+</div>

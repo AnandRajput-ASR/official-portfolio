@@ -1,0 +1,60 @@
+.resume-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2rem 4rem;
+  background: linear-gradient(135deg, var(--surface), rgba(76, 175, 80, 0.04));
+  border-top: 1px solid rgba(76, 175, 80, 0.15);
+  border-bottom: 1px solid var(--border);
+  .rb-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    .rb-icon {
+      font-size: 2.2rem;
+    }
+    .rb-title {
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 0.2rem;
+    }
+    .rb-meta {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+  }
+  .btn-resume-dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    color: var(--green);
+    border: 1px solid rgba(76, 175, 80, 0.4);
+    padding: 0.85rem 2rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: all 0.25s;
+    clip-path: polygon(
+      0 0,
+      calc(100% - 10px) 0,
+      100% 10px,
+      100% 100%,
+      10px 100%,
+      0 calc(100% - 10px)
+    );
+    &:hover {
+      background: rgba(76, 175, 80, 0.1);
+      transform: translateY(-2px);
+    }
+  }
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 2rem;
+    align-items: flex-start;
+  }
+}

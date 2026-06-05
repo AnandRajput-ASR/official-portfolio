@@ -1,0 +1,70 @@
+@use '../admin-base';
+
+.blog-admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.blog-admin-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+
+  &.draft {
+    border-left-color: var(--border);
+    opacity: 0.75;
+  }
+}
+
+.blog-admin-topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface2);
+  flex-wrap: wrap;
+
+  .blog-admin-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    flex: 1;
+  }
+}
+
+.blog-pub-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  white-space: nowrap;
+
+  &.published {
+    color: #22c55e;
+    border-color: #22c55e40;
+    background: #22c55e10;
+  }
+}
+
+.blog-admin-editor {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0 1.25rem;
+
+  &.open {
+    max-height: 2000px;
+    padding: 1.25rem;
+  }
+}
+
+.blog-content-editor {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.78rem;
+  line-height: 1.7;
+  min-height: 260px;
+  resize: vertical;
+}

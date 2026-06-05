@@ -1,0 +1,92 @@
+<!-- ═══ CERTIFICATIONS ═══════════════════════════════════════════════════════ -->
+<section id="certs" class="certs-section">
+  <div class="section-head reveal">
+    <p class="section-label">// Certifications</p>
+    <h2 class="section-title">Certified &amp; Verified</h2>
+    <p class="section-sub">
+      Industry certifications earned while actively delivering production systems.
+    </p>
+  </div>
+  <div class="certs-grid">
+    <div
+      class="cert-card reveal"
+      *ngFor="let cert of content.certifications; trackBy: trackById"
+      [class.cert-highlight]="cert.level === 'Expert' || cert.level === 'Professional'"
+      [style.--cert-accent]="cert.accentColor"
+    >
+      <!-- Badge area -->
+      <div class="cert-badge-wrap">
+        <app-certification-badge [cert]="cert" [size]="76"></app-certification-badge>
+      </div>
+
+      <div class="cert-info">
+        <p class="cert-code" [style.color]="cert.accentColor">{{ cert.code }}</p>
+        <h3 class="cert-name">{{ cert.name }}</h3>
+        <p class="cert-issuer">{{ cert.issuer }} Certified · {{ cert.level }}</p>
+        <p class="cert-year">
+          Issued {{ cert.issueYear }}
+          <span *ngIf="cert.expirationYear"> · Expires {{ cert.expirationYear }}</span>
+        </p>
+        <p
+          class="cert-status"
+          [class.active]="certificationStatus(cert) === 'active'"
+          [class.expired]="certificationStatus(cert) === 'expired'"
+          [class.no-expiry]="certificationStatus(cert) === 'no-expiry'"
+        >
+          {{
+            certificationStatus(cert) === 'active'
+              ? 'Active'
+              : certificationStatus(cert) === 'expired'
+                ? 'Expired'
+                : 'No Expiry'
+          }}
+        </p>
+      </div>
+
+      <div class="cert-footer">
+        <span
+          class="cert-level"
+          [style.background]="cert.accentColor + '20'"
+          [style.color]="cert.accentColor"
+          [style.border-color]="cert.accentColor + '40'"
+        >
+          {{ cert.level === 'Expert' ? cert.level + ' ★' : cert.level }}
+        </span>
+        <a
+          *ngIf="cert.credlyLink"
+          [href]="externalUrl(cert.credlyLink)"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="cert-credly-link"
+          [title]="verificationLabel(cert.credlyLink)"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M14 3h7v7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M10 14L21 3"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M21 14v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h6"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <span class="cert-verified-dot" aria-hidden="true"></span>
+          {{ verificationLabel(cert.credlyLink) }}
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

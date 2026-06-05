@@ -1,0 +1,140 @@
+<!-- ═══ TESTIMONIALS ═══════════════════════════════════════════════════════ -->
+<section id="testimonials" class="testimonials-section">
+  <div class="section-head reveal">
+    <p class="section-label">// Kind Words</p>
+    <h2 class="section-title">What People Say</h2>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card reveal" *ngFor="let t of visibleTestimonials(); trackBy: trackById">
+      <div class="testi-quote-mark">"</div>
+      <p class="testi-quote">{{ t.quote }}</p>
+      <div class="testi-stars">
+        <span class="testi-star" *ngFor="let s of stars(t.rating)">★</span>
+      </div>
+      <div class="testi-author">
+        <div class="testi-avatar" *ngIf="!t.avatar">{{ t.name.charAt(0) }}</div>
+        <img
+          class="testi-avatar-img"
+          *ngIf="t.avatar"
+          [src]="contentService.getImageUrl(t.avatar)"
+          [alt]="t.name"
+          loading="lazy"
+        />
+        <div class="testi-info">
+          <p class="testi-name">{{ t.name }}</p>
+          <p class="testi-role">{{ t.role }} · {{ t.company }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Public testimonial submission -->
+  <div
+    class="testi-submit-area reveal"
+    style="max-width: 1200px; margin: 2.5rem auto 0; padding: 0 4rem"
+  >
+    <button
+      class="testi-submit-trigger"
+      (click)="showTestiSubmitForm = !showTestiSubmitForm"
+      *ngIf="!testiSubmitSuccess"
+    >
+      {{ showTestiSubmitForm ? '✕ Cancel' : '✦ Share Your Experience Working With Me' }}
+    </button>
+    <div class="testi-submit-success" *ngIf="testiSubmitSuccess">
+      ✓ Thank you! Your testimonial has been submitted and will be reviewed before publishing.
+    </div>
+    <div class="testi-submit-form" [class.open]="showTestiSubmitForm && !testiSubmitSuccess">
+      <p class="tsf-heading">Leave a Testimonial</p>
+      <p class="tsf-sub">Reviewed by Anand before publishing — usually within 1–2 days.</p>
+      <div class="error-banner" *ngIf="testiSubmitError">⚠ {{ testiSubmitError }}</div>
+      <div class="form-row">
+        <div class="cform-group">
+          <label>Your Name *</label
+          ><input type="text" [(ngModel)]="testiSubmitForm.name" placeholder="Jane Smith" />
+        </div>
+        <div class="cform-group">
+          <label>Role / Title</label
+          ><input type="text" [(ngModel)]="testiSubmitForm.role" placeholder="Project Manager" />
+        </div>
+        <div class="cform-group">
+          <label>Company</label
+          ><input type="text" [(ngModel)]="testiSubmitForm.company" placeholder="Accenture" />
+        </div>
+      </div>
+      <div class="cform-group">
+        <label>Your Testimonial *</label
+        ><textarea
+          rows="4"
+          [(ngModel)]="testiSubmitForm.quote"
+          placeholder="Describe your experience working with Anand..."
+        ></textarea>
+      </div>
+
+      <div class="cform-group">
+        <label>{{ langService.t('testi.email') }}</label
+        ><input
+          type="email"
+          [(ngModel)]="testiSubmitForm.email"
+          [placeholder]="langService.t('testi.emailPlaceholder')"
+          required
+        />
+      </div>
+
+      <!-- Star Rating -->
+      <div class="cform-group">
+        <label>Rating</label>
+        <div class="testi-rating-picker">
+          <button
+            type="button"
+            *ngFor="let n of [1, 2, 3, 4, 5]"
+            class="testi-star-btn"
+            [class.active]="testiSubmitForm.rating >= n"
+            (click)="setTestiRating(n)"
+          >
+            ★
+          </button>
+        </div>
+      </div>
+
+      <!-- Photo Upload -->
+      <div class="cform-group">
+        <label>Your Photo <small>(optional)</small></label>
+        <div class="testi-photo-upload">
+          <div class="testi-photo-preview" *ngIf="testiSubmitAvatar">
+            <img [src]="testiSubmitAvatar" alt="preview" />
+          </div>
+          <div class="testi-photo-placeholder" *ngIf="!testiSubmitAvatar">
+            {{ testiSubmitForm.name ? testiSubmitForm.name.charAt(0).toUpperCase() : '?' }}
+          </div>
+          <label class="btn-photo-upload">
+            {{ testiSubmitAvatar ? 'Replace Photo' : 'Upload Photo' }}
+            <input
+              type="file"
+              accept="image/*"
+              style="display: none"
+              (change)="onTestiAvatarSelected($event)"
+            />
+          </label>
+          <button
+            type="button"
+            class="btn-photo-remove"
+            *ngIf="testiSubmitAvatar"
+            (click)="removeTestiAvatar()"
+          >
+            ✕ Remove
+          </button>
+        </div>
+      </div>
+
+      <button
+        class="btn-hero-primary"
+        (click)="submitPublicTestimonial()"
+        [disabled]="testiSubmitting"
+        style="margin-top: 0.5rem"
+      >
+        <span *ngIf="!testiSubmitting">Submit for Review →</span>
+        <span *ngIf="testiSubmitting" class="sending-spinner"></span>
+      </button>
+    </div>
+  </div>
+</section>

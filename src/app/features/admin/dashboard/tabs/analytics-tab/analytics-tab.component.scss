@@ -1,0 +1,172 @@
+@use '../admin-base';
+
+// ── ANALYTICS ────────────────────────────────────────────────────────────────
+.analytics-loading {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 4rem;
+  color: var(--muted);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  .loader-ring {
+    width: 28px;
+    height: 28px;
+    border-width: 2px;
+  }
+}
+
+.analytics-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.analytics-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-align: center;
+  transition: border-color 0.2s;
+  &:hover {
+    border-color: var(--amber);
+  }
+  &.ac-highlight {
+    border-top: 3px solid var(--amber);
+  }
+
+  .ac-icon {
+    font-size: 1.5rem;
+  }
+  .ac-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+  }
+  .ac-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+  }
+  .ac-sublabel {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.4;
+  }
+}
+
+// ── Visit bar chart ───────────────────────────────────────────────────────────
+.visit-chart {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1.25rem 1.5rem 0.75rem;
+}
+.vc-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 80px;
+}
+.vc-bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  position: relative;
+}
+.vc-bar-fill {
+  width: 100%;
+  min-height: 2px;
+  background: var(--border);
+  border-radius: 1px 1px 0 0;
+  transition: height 0.5s ease;
+  &.vc-bar-today {
+    background: var(--amber);
+  }
+}
+.vc-bar-val {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.48rem;
+  color: var(--muted);
+  position: absolute;
+  bottom: calc(100% + 2px);
+  white-space: nowrap;
+}
+.vc-axis {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.56rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.35rem;
+}
+
+.analytics-section {
+  margin-top: 2rem;
+}
+.analytics-section-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.analytics-table {
+  .at-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr;
+    gap: 1rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+  .at-header {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .at-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .at-count {
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    color: var(--amber);
+  }
+  .at-bar-wrap {
+    height: 6px;
+    background: var(--border);
+  }
+  .at-bar-fill {
+    height: 100%;
+    background: var(--amber);
+    transition: width 0.8s ease;
+  }
+}

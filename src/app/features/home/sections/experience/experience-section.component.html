@@ -1,0 +1,20 @@
+<!-- ═══ EXPERIENCE ═══════════════════════════════════════════════════════════ -->
+<section id="experience" class="exp-section">
+  <div class="section-head reveal">
+    <p class="section-label">// Career</p>
+    <h2 class="section-title">Experience &amp; Education</h2>
+  </div>
+  <div class="timeline">
+    <div class="tl-item reveal" *ngFor="let exp of content.experience; trackBy: trackById">
+      <div class="tl-dot"></div>
+      <div class="tl-content">
+        <p class="tl-period">{{ exp.period }}</p>
+        <h3 class="tl-role">{{ exp.role }}</h3>
+        <p class="tl-company">
+          {{ exp.company }} <span>· {{ exp.location }}</span>
+        </p>
+        <p class="tl-desc">{{ exp.description }}</p>
+      </div>
+    </div>
+  </div>
+</section>

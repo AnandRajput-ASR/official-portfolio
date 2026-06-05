@@ -1,0 +1,19 @@
+<!-- ═══ CURRENTLY LEARNING ════════════════════════════════════════════════════════ -->
+<section class="learning-section">
+  <div class="learning-inner reveal">
+    <p class="learning-label">{{ langService.t('learning.title') }}</p>
+    <div class="learning-chips">
+      <a
+        *ngFor="let item of content.siteSettings.learning.items"
+        [href]="item.url || null"
+        [target]="item.url ? '_blank' : null"
+        class="learning-chip"
+        [class.learning-chip-link]="item.url"
+      >
+        <span class="learning-icon">{{ item.icon }}</span>
+        <span class="learning-text">{{ item.label }}</span>
+        <span class="learning-type">{{ item.type }}</span>
+      </a>
+    </div>
+  </div>
+</section>

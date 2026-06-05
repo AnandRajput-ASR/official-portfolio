@@ -1,0 +1,20 @@
+<!-- ═══ RESUME BANNER ════════════════════════════════════════════════════════ -->
+<div class="resume-banner">
+  <div class="rb-left">
+    <span class="rb-icon">📄</span>
+    <div>
+      <p class="rb-title">Download My Resume</p>
+      <p class="rb-meta">
+        {{ resumeInfo?.fileName }} · {{ resumeService.formatSize(resumeInfo?.size || 0) }}
+      </p>
+    </div>
+  </div>
+  <a
+    [href]="resumeService.getDownloadUrl()"
+    class="btn-resume-dl"
+    download
+    target="_blank"
+    (click)="resumeClick.emit($event)"
+    >{{ langService.t('btn.downloadResume') }}</a
+  >
+</div>

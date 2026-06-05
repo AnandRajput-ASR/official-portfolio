@@ -1,0 +1,260 @@
+@use '../admin-base';
+
+.testi-admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.testi-admin-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  transition: opacity 0.2s;
+
+  &.hidden {
+    opacity: 0.5;
+    border-left-color: var(--border);
+  }
+}
+
+.testi-admin-topbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+
+  .drag-handle {
+    flex-shrink: 0;
+  }
+
+  .testi-admin-name {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    strong {
+      font-size: 0.9rem;
+    }
+
+    span {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+    }
+  }
+
+  .testi-stars-sm {
+    color: var(--amber);
+    letter-spacing: 0.1em;
+    font-size: 0.85rem;
+    margin-left: auto;
+  }
+}
+
+.testi-avatar-sm {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: #0d0d0d;
+  font-weight: 900;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.testi-avatar-sm-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.testi-admin-body {
+  padding: 1.25rem;
+}
+
+.avatar-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .testi-avatar-preview img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border);
+  }
+}
+
+.visibility-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  user-select: none;
+
+  input {
+    display: none;
+  }
+
+  .vis-slider {
+    width: 32px;
+    height: 18px;
+    background: var(--border);
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 14px;
+      height: 14px;
+      background: var(--muted);
+      transition:
+        transform 0.2s,
+        background 0.2s;
+    }
+  }
+
+  input:checked ~ .vis-slider {
+    background: #22c55e;
+  }
+
+  input:checked ~ .vis-slider::after {
+    transform: translateX(14px);
+    background: #fff;
+  }
+
+  input:checked ~ .vis-label {
+    color: #22c55e;
+  }
+}
+
+.testi-rating-row {
+  display: flex;
+  gap: 0.4rem;
+
+  button {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &.active {
+      color: var(--amber);
+      border-color: var(--amber);
+      background: rgba(245, 166, 35, 0.1);
+    }
+  }
+}
+
+.pending-inbox {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  margin-bottom: 1.75rem;
+
+  &.has-pending {
+    border-color: var(--amber);
+    background: rgba(245, 166, 35, 0.04);
+  }
+}
+
+.pending-inbox-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+
+  h3 {
+    font-size: 1rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+}
+
+.pending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.pending-card {
+  border: 1px solid var(--border);
+  border-left: 3px solid #f59e0b;
+  background: var(--surface2);
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+
+  .pending-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+
+    strong {
+      font-size: 0.9rem;
+    }
+  }
+
+  .pending-stars {
+    color: #f59e0b;
+    font-size: 0.8rem;
+  }
+
+  .pending-quote {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--muted);
+    font-style: italic;
+    padding-left: 0.75rem;
+    border-left: 2px solid var(--border);
+  }
+
+  .pending-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+.pending-empty-note {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 400;
+  font-family: 'Space Mono', monospace;
+}
+
+.unread-count {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--accent2);
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.05em;
+  margin-left: 0.75rem;
+}

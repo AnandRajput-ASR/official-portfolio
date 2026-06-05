@@ -1,0 +1,199 @@
+<section class="tab-content" (input)="markDirty()" (change)="markDirty()">
+  <div class="tab-header">
+    <div>
+      <h1>Blog / Writing</h1>
+      <p>
+        Technical articles boost SEO and show thought leadership. Toggle Published to show on
+        portfolio.
+      </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem">
+      <button class="btn btn-primary btn-sm" (click)="showAddBlog = true">+ New Post</button>
+      <button class="btn btn-outline btn-sm" (click)="saveBlog()" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save All' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="blogEdit.length === 0">
+    <span>✍️</span>
+    <p>No posts yet — share what you've learned!</p>
+  </div>
+
+  <div class="blog-admin-list">
+    <div
+      class="blog-admin-card"
+      *ngFor="let post of blogEdit; trackBy: trackById"
+      [class.draft]="!post.published"
+    >
+      <div class="blog-admin-topbar">
+        <span class="blog-pub-badge" [class.published]="post.published">{{
+          post.published ? '● Published' : '○ Draft'
+        }}</span>
+        <strong class="blog-admin-title">{{ post.title || 'Untitled Post' }}</strong>
+        <span class="muted-text" style="margin-left: auto">{{ post.publishedAt }}</span>
+        <button class="btn btn-outline btn-xs" (click)="toggleEditBlog(post.id)">
+          {{ editingBlogId === post.id ? 'Collapse' : 'Edit' }}
+        </button>
+        <button class="delete-row-btn" (click)="deleteBlogPost(post.id)" title="Delete post">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            width="13"
+            height="13"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"
+            />
+            <path
+              d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="blog-admin-editor" [class.open]="editingBlogId === post.id">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Title</label><input type="text" [(ngModel)]="post.title" />
+          </div>
+          <div class="form-group">
+            <label>URL Slug <small>(auto-generated from title)</small></label
+            ><input type="text" [(ngModel)]="post.slug" placeholder="my-article-title" />
+          </div>
+          <div class="form-group xs">
+            <label>Reading Time (min)</label
+            ><input type="number" [(ngModel)]="post.readingTime" min="1" />
+          </div>
+          <div class="form-group xs">
+            <label>Publish Date</label><input type="date" [(ngModel)]="post.publishedAt" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Excerpt <small>(shown in card preview)</small></label
+          ><textarea rows="2" [(ngModel)]="post.excerpt"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Full Article Content <small>(plain text or markdown)</small></label>
+          <textarea rows="14" [(ngModel)]="post.content" class="blog-content-editor"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Tags <small>(Enter to add)</small></label>
+          <div class="tags-editor small">
+            <span class="tag-pill" *ngFor="let t of post.tags"
+              >{{ t }}<button (click)="removeBlogTag(post, t)">×</button></span
+            >
+            <input
+              type="text"
+              placeholder="Angular, DevOps..."
+              (keydown.enter)="addBlogTag(post, $event)"
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="post.published" /> Published (visible on
+            portfolio)
+          </label>
+        </div>
+        <div style="text-align: right; margin-top: 0.5rem">
+          <button class="btn btn-primary btn-sm" (click)="saveBlog()" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save Post' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Add Blog Modal -->
+<div class="modal-overlay" *ngIf="showAddBlog" (click)="showAddBlog = false">
+  <div class="modal modal-wide" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>New Blog Post</h2>
+      <button (click)="showAddBlog = false" title="Close">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <div class="form-row form-row-3">
+      <div class="form-group">
+        <label>Title</label
+        ><input
+          type="text"
+          [(ngModel)]="newBlog.title"
+          placeholder="e.g. Building Scalable Apps with NgRx"
+        />
+      </div>
+      <div class="form-group xs">
+        <label>Reading Time (min)</label>
+        <input type="number" [(ngModel)]="newBlog.readingTime" min="1" max="60" />
+      </div>
+      <div class="form-group xs">
+        <label>Publish Date</label><input type="date" [(ngModel)]="newBlog.publishedAt" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Excerpt <small>(shown in card preview)</small></label
+      ><textarea
+        rows="2"
+        [(ngModel)]="newBlog.excerpt"
+        placeholder="1–2 sentence summary..."
+      ></textarea>
+    </div>
+    <div class="form-group">
+      <label
+        >Article Content
+        <small>(plain text or markdown — renders as preformatted on portfolio)</small></label
+      >
+      <textarea
+        rows="12"
+        [(ngModel)]="newBlog.content"
+        class="blog-content-editor"
+        placeholder="# Your Heading&#10;&#10;Start writing..."
+      ></textarea>
+    </div>
+    <div class="form-group">
+      <label>Tags <small>(press Enter)</small></label>
+      <div class="tags-editor small">
+        <span class="tag-pill" *ngFor="let t of newBlog.tags"
+          >{{ t }}<button (click)="removeTagFromNew(newBlog.tags!, t)">×</button></span
+        >
+        <input
+          type="text"
+          placeholder="Angular, DevOps..."
+          (keydown.enter)="addTagToNew(newBlog.tags!, $event)"
+        />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label"
+        ><input type="checkbox" [(ngModel)]="newBlog.published" /> Publish immediately (visible on
+        portfolio)</label
+      >
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" (click)="showAddBlog = false">Cancel</button>
+      <button
+        class="btn btn-primary btn-sm"
+        (click)="submitAddBlog()"
+        [disabled]="!newBlog.title || !newBlog.content"
+      >
+        Add Post
+      </button>
+    </div>
+  </div>
+</div>

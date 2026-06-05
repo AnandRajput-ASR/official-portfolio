@@ -1,0 +1,114 @@
+<section class="tab-content" (input)="markDirty()" (change)="markDirty()">
+  <div class="tab-header">
+    <div>
+      <h1>Experience</h1>
+      <p>Manage your career timeline</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm" (click)="showAddExp = true">+ Add Entry</button>
+      <button class="btn btn-primary" (click)="saveExperience()" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save All' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="cards-list drag-list" appDragList (reordered)="onReorder($event)">
+    <div
+      class="edit-card"
+      draggable="true"
+      [attr.data-drag-id]="exp.id"
+      *ngFor="let exp of experienceEdit; trackBy: trackById"
+    >
+      <div class="edit-card-header">
+        <span class="drag-handle" title="Drag to reorder"></span>
+        <strong>{{ exp.role }}</strong>
+        <span class="muted">&#64; {{ exp.company }}</span>
+        <button class="btn btn-danger btn-sm ml-auto" (click)="deleteExperience(exp.id)">
+          Delete
+        </button>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Period</label>
+          <input
+            type="text"
+            [(ngModel)]="exp.period"
+            [name]="'period_' + exp.id"
+            placeholder="2022 — Present"
+          />
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" [(ngModel)]="exp.location" [name]="'loc_' + exp.id" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Role / Title</label>
+          <input type="text" [(ngModel)]="exp.role" [name]="'role_' + exp.id" />
+        </div>
+        <div class="form-group">
+          <label>Company</label>
+          <input type="text" [(ngModel)]="exp.company" [name]="'company_' + exp.id" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea rows="3" [(ngModel)]="exp.description" [name]="'desc_' + exp.id"></textarea>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Add Experience Modal -->
+<div class="modal-overlay" *ngIf="showAddExp" (click)="showAddExp = false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add Experience</h2>
+      <button (click)="showAddExp = false" title="Close">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
+          />
+        </svg>
+      </button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Period</label
+        ><input
+          type="text"
+          [(ngModel)]="newExp.period"
+          name="ne_period"
+          placeholder="2022 — Present"
+        />
+      </div>
+      <div class="form-group">
+        <label>Location</label><input type="text" [(ngModel)]="newExp.location" name="ne_loc" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Role</label><input type="text" [(ngModel)]="newExp.role" name="ne_role" />
+      </div>
+      <div class="form-group">
+        <label>Company</label><input type="text" [(ngModel)]="newExp.company" name="ne_company" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description</label
+      ><textarea rows="4" [(ngModel)]="newExp.description" name="ne_desc"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" (click)="showAddExp = false">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="submitAddExp()">Add Entry</button>
+    </div>
+  </div>
+</div>

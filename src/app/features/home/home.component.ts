@@ -1,27 +1,69 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+    AfterViewInit,
+    Component,
+    OnDestroy,
+    OnInit,
+    ViewEncapsulation,
+    inject,
+} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import { Certification, PortfolioContent } from '@core/models';
+import { RouterModule } from '@angular/router';
+import { PortfolioContent } from '@core/models';
 import { ContentService } from '@core/services/content.service';
 import { LanguageService } from '@core/services/language.service';
 import { LoadingService } from '@core/services/loading.service';
-import { MessagesService } from '@core/services/messages.service';
 import { ResumeInfo, ResumeService } from '@core/services/resume.service';
 import { ThemeService } from '@core/services/theme.service';
-import { CertificationBadgeComponent } from '@shared/components/certification-badge/certification-badge.component';
+import { AboutSectionComponent } from './sections/about/about-section.component';
+import { BlogSectionComponent } from './sections/blog/blog-section.component';
+import { CertsSectionComponent } from './sections/certs/certs-section.component';
+import { ContactSectionComponent } from './sections/contact/contact-section.component';
+import { ExperienceSectionComponent } from './sections/experience/experience-section.component';
+import { FooterSectionComponent } from './sections/footer/footer-section.component';
+import { FreelanceCtaSectionComponent } from './sections/freelance-cta/freelance-cta-section.component';
+import { HeaderSectionComponent } from './sections/header/header-section.component';
+import { HeroSectionComponent } from './sections/hero/hero-section.component';
+import { LearningSectionComponent } from './sections/learning/learning-section.component';
+import { PersonalProjectsSectionComponent } from './sections/personal-projects/personal-projects-section.component';
+import { ResumeBannerComponent } from './sections/resume-banner/resume-banner.component';
+import { ResumeGateComponent } from './sections/resume-gate/resume-gate.component';
+import { SkillsSectionComponent } from './sections/skills/skills-section.component';
+import { TestimonialsSectionComponent } from './sections/testimonials/testimonials-section.component';
+import { TickerSectionComponent } from './sections/ticker/ticker-section.component';
+import { WorkSectionComponent } from './sections/work/work-section.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, CertificationBadgeComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    HeaderSectionComponent,
+    HeroSectionComponent,
+    TickerSectionComponent,
+    AboutSectionComponent,
+    SkillsSectionComponent,
+    WorkSectionComponent,
+    PersonalProjectsSectionComponent,
+    CertsSectionComponent,
+    ExperienceSectionComponent,
+    TestimonialsSectionComponent,
+    BlogSectionComponent,
+    LearningSectionComponent,
+    FreelanceCtaSectionComponent,
+    ContactSectionComponent,
+    ResumeBannerComponent,
+    FooterSectionComponent,
+    ResumeGateComponent,
+  ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
+  encapsulation: ViewEncapsulation.None,
 })
 export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   contentService = inject(ContentService);
-  private messagesService = inject(MessagesService);
-  private router = inject(Router);
   resumeService = inject(ResumeService);
   themeService = inject(ThemeService);
   langService = inject(LanguageService);
@@ -31,36 +73,17 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   loading = true;
   apiError = false;
   resumeInfo: ResumeInfo | null = null;
-  mobileMenuOpen = false;
   openCompanies = new Set<string>();
-  activeBlogPost: string | null = null;
   otwDismissed = false;
   private destroyed = false;
   private scrollHandler: (() => void) | null = null;
   private observers: IntersectionObserver[] = [];
 
-  // Contact form
-  contactForm = { name: '', email: '', message: '', _hp: '' };
-  contactSending = false;
-  contactSuccess = false;
-  contactError = '';
-  emailCopied = false;
-
   // Visitor counter (public footer widget)
   visitorCount: number | null = null;
 
-  // Testimonial submission form
-  testiSubmitForm = { name: '', role: '', company: '', quote: '', rating: 5, email: '' };
-  testiSubmitAvatar: string | null = null;
-  testiSubmitting = false;
-  testiSubmitSuccess = false;
-  testiSubmitError = '';
-  showTestiSubmitForm = false;
-
   // Resume gate modal
   resumeGateOpen = false;
-  resumeGateEmail = '';
-  resumeGateError = '';
 
   ngOnInit(): void {
     this.loadingService.start('home-content');
@@ -133,71 +156,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.otwDismissed = true;
   }
 
-  navigateToBlog(slug: string): void {
-    this.router.navigate(['/blog', slug]);
-  }
-
-  submitPublicTestimonial(): void {
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!this.testiSubmitForm.name || !this.testiSubmitForm.quote) {
-      this.testiSubmitError = 'Name and your testimonial are required.';
-      return;
-    }
-    if (!this.testiSubmitForm.email || !emailPattern.test(this.testiSubmitForm.email)) {
-      this.testiSubmitError = 'A valid email address is required.';
-      return;
-    }
-    this.testiSubmitting = true;
-    this.testiSubmitError = '';
-    const payload = { ...this.testiSubmitForm, avatar: this.testiSubmitAvatar || undefined };
-    this.contentService.submitTestimonial(payload).subscribe({
-      next: () => {
-        this.testiSubmitting = false;
-        this.testiSubmitSuccess = true;
-        this.testiSubmitForm = { name: '', role: '', company: '', quote: '', rating: 5, email: '' };
-        this.testiSubmitAvatar = null;
-        setTimeout(() => {
-          this.testiSubmitSuccess = false;
-          this.showTestiSubmitForm = false;
-        }, 5000);
-      },
-      error: (err) => {
-        this.testiSubmitting = false;
-        this.testiSubmitError = err.error?.message || 'Submission failed. Please try again.';
-      },
-    });
-  }
-
-  onTestiAvatarSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files?.length) return;
-    const file = input.files[0];
-    if (file.size > 2 * 1024 * 1024) {
-      this.testiSubmitError = 'Photo must be under 2 MB.';
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.testiSubmitAvatar = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  removeTestiAvatar(): void {
-    this.testiSubmitAvatar = null;
-  }
-
-  setTestiRating(n: number): void {
-    this.testiSubmitForm.rating = n;
-  }
-
-  toggleMobileMenu(): void {
-    this.mobileMenuOpen = !this.mobileMenuOpen;
-  }
-  closeMobileMenu(): void {
-    this.mobileMenuOpen = false;
-  }
-
   toggleCompany(id: string): void {
     if (this.openCompanies.has(id)) this.openCompanies.delete(id);
     else this.openCompanies.add(id);
@@ -232,10 +190,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.contentService.trackEvent('socialClick');
   }
 
-  toggleBlogPost(id: string): void {
-    this.activeBlogPost = this.activeBlogPost === id ? null : id;
-  }
-
   private _visibleTestis: any[] = [];
   private _publishedPosts: any[] = [];
 
@@ -267,61 +221,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
         'CI/CD Pipelines',
       ]
     );
-  }
-
-  stars(n: number): number[] {
-    return Array(n).fill(0);
-  }
-
-  normalizedSkillProficiency(value: number | null | undefined): number {
-    const numericValue = Number(value);
-    if (!Number.isFinite(numericValue)) return 80;
-    return Math.min(100, Math.max(10, Math.round(numericValue)));
-  }
-
-  skillLevel(proficiency: number | null | undefined): string {
-    const value = this.normalizedSkillProficiency(proficiency);
-    if (value >= 90) return 'Expert';
-    if (value >= 75) return 'Advanced';
-    if (value >= 60) return 'Strong';
-    return 'Growing';
-  }
-
-  skillLevelClass(proficiency: number | null | undefined): string {
-    const value = this.normalizedSkillProficiency(proficiency);
-    if (value >= 90) return 'elite';
-    if (value >= 75) return 'advanced';
-    if (value >= 60) return 'strong';
-    return 'growing';
-  }
-
-  formatSkillExperience(value: string | null | undefined): string {
-    const normalized = String(value || '')
-      .replace(/\s*(years?|yrs?)\.?$/i, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (!normalized) return 'Flexible experience';
-    if (/^1$/.test(normalized)) return '1 year';
-    if (/^\d+$/.test(normalized)) return `${normalized} years`;
-    if (/^\d+\+$/.test(normalized)) return `${normalized} years`;
-    return /years?|yrs?/i.test(normalized) ? normalized : `${normalized} years`;
-  }
-
-  extraSkills(): string[] {
-    const fromSettings = this.content?.siteSettings?.hero?.extraSkills || [];
-    const cleaned = fromSettings
-      .map((item) => String(item || '').trim())
-      .filter((item) => item.length > 0);
-    if (cleaned.length) return Array.from(new Set(cleaned));
-    return [];
-  }
-
-  getDisplayTags(tags: string[]): string[] {
-    return tags.slice(0, 4);
-  }
-
-  getExtraTagCount(tags: string[]): number {
-    return Math.max(0, tags.length - 4);
   }
 
   private setupScrollReveal(): void {
@@ -377,29 +276,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 100);
   }
 
-  sendMessage(): void {
-    const { name, email, message } = this.contactForm;
-    if (!name || !email || !message) {
-      this.contactError = 'Please fill in all fields.';
-      return;
-    }
-    this.contactSending = true;
-    this.contactError = '';
-    this.messagesService.sendMessage(this.contactForm).subscribe({
-      next: () => {
-        this.contactSending = false;
-        this.contactSuccess = true;
-        this.contactForm = { name: '', email: '', message: '', _hp: '' };
-        this.contentService.trackEvent('contactSubmit');
-        setTimeout(() => (this.contactSuccess = false), 6000);
-      },
-      error: (err) => {
-        this.contactSending = false;
-        this.contactError = err.error?.message || 'Failed to send. Please try again.';
-      },
-    });
-  }
-
   retryLoad(): void {
     this.apiError = false;
     this.loading = true;
@@ -440,72 +316,15 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     return item.id;
   }
 
-  get currentYear(): number {
-    return new Date().getFullYear();
-  }
-
-  certificationStatus(cert: Partial<Certification>): 'active' | 'expired' | 'no-expiry' {
-    const expiration = String(cert.expirationYear ?? '').trim();
-    const expires = Number(expiration);
-    if (!expiration || Number.isNaN(expires)) return 'no-expiry';
-    return expires < this.currentYear ? 'expired' : 'active';
-  }
-
-  verificationLabel(url: string | null | undefined): string {
-    const safeUrl = this.externalUrl(url).toLowerCase();
-    if (safeUrl.includes('credly.com')) return 'Verify on Credly';
-    if (safeUrl.includes('microsoft.')) return 'Verify on Microsoft';
-    return 'Verify Certificate';
-  }
-
-  /** Ensures external links always have a protocol so the browser doesn't
-   *  treat bare URLs like "www.google.com" as relative paths. */
-  externalUrl(url: string | null | undefined): string {
-    if (!url || url === '#') return '#';
-    return /^https?:\/\//i.test(url) ? url : 'https://' + url;
-  }
-
-  /** Copies email address to clipboard; shows confirmation for 2 s. */
-  copyEmail(): void {
-    navigator.clipboard.writeText(this.content!.hero.email).then(() => {
-      this.emailCopied = true;
-      setTimeout(() => (this.emailCopied = false), 2000);
-    });
-  }
-
   /** Opens the resume-gate modal if protection is on, otherwise downloads directly. */
   handleResumeClick(event: Event): void {
     if (this.content?.siteSettings?.resumeProtected) {
       event.preventDefault();
       this.resumeGateOpen = true;
-      this.resumeGateEmail = '';
-      this.resumeGateError = '';
-      // Tracking fires only after the gate is submitted (see submitResumeGate)
+      // Tracking fires only after the gate is submitted (see ResumeGateComponent)
     } else {
       // Direct download — track immediately
       this.trackResumeDownload();
     }
-  }
-
-  closeResumeGate(): void {
-    this.resumeGateOpen = false;
-  }
-
-  submitResumeGate(): void {
-    const email = this.resumeGateEmail.trim().toLowerCase();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      this.resumeGateError = 'Please enter a valid email address.';
-      return;
-    }
-    // Send the email to the backend (stored in resume_leads + email notification)
-    this.contentService.trackResumeLead(email);
-    // Track it as a resumeDownload analytics event
-    this.contentService.trackEvent('resumeDownload');
-    this.resumeGateOpen = false;
-    // Trigger download programmatically
-    const a = document.createElement('a');
-    a.href = this.resumeService.getDownloadUrl();
-    a.download = '';
-    a.click();
   }
 }

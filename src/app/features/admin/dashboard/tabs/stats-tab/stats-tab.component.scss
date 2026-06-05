@@ -1,0 +1,54 @@
+@use '../admin-base';
+
+.stats-admin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.stat-admin-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+
+.stat-admin-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  min-width: 70px;
+  padding: 0.75rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+
+  .stat-big {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--amber);
+  }
+  .stat-lab-preview {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 0.05em;
+  }
+}
+
+.stat-admin-fields {
+  flex: 1;
+}
+
+.form-group.xs {
+  max-width: 180px;
+}
+
+@media (max-width: 768px) {
+  .stat-admin-card {
+    flex-direction: column;
+  }
+}

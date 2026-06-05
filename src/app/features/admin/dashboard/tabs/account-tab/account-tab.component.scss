@@ -1,0 +1,81 @@
+@use '../admin-base';
+
+// ── Password strength meter ──────────────────────────────────────────────────
+.pass-strength {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+  .ps-bars {
+    display: flex;
+    gap: 3px;
+    span {
+      width: 36px;
+      height: 4px;
+      background: var(--border);
+      transition: background 0.3s;
+      &.active:nth-child(1) {
+        background: #ef4444;
+      }
+      &.active:nth-child(2) {
+        background: #f59e0b;
+      }
+      &.active:nth-child(3) {
+        background: #22c55e;
+      }
+    }
+  }
+  .ps-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+}
+
+// ── Reset token result ───────────────────────────────────────────────────────
+.reset-token-result {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  .token-code {
+    display: block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    word-break: break-all;
+    color: var(--amber);
+    padding: 0.5rem;
+    background: rgba(245, 166, 35, 0.06);
+    margin-top: 0.25rem;
+  }
+}
+
+// ── Session info ─────────────────────────────────────────────────────────────
+.session-info {
+  .si-row {
+    display: flex;
+    gap: 1.5rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+  .si-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    min-width: 120px;
+  }
+  .si-val {
+    font-weight: 700;
+    font-size: 0.88rem;
+  }
+  .amber-text {
+    color: var(--amber);
+  }
+}

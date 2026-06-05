@@ -1,0 +1,129 @@
+.about-section {
+  padding: 8rem 4rem;
+  background: var(--bg);
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .about-heading {
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.5rem;
+    em {
+      color: var(--amber);
+      font-style: normal;
+    }
+  }
+  .about-text {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.8;
+    margin-bottom: 1rem;
+    strong {
+      color: var(--text);
+    }
+  }
+  .about-freelance {
+    background: var(--amber-dim);
+    border-left: 3px solid var(--amber);
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    color: var(--text) !important;
+    strong {
+      color: var(--amber);
+    }
+  }
+  .about-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    .alink {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      transition: color 0.2s;
+      &:hover {
+        color: var(--amber);
+      }
+    }
+  }
+  .about-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5px;
+    background: var(--border);
+    margin-bottom: 1.5rem;
+    .astat {
+      background: var(--surface);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      .astat-val {
+        font-size: 2.8rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        color: var(--amber);
+      }
+      .astat-lab {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.62rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+    }
+  }
+  .about-accenture-badge {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    .acc-logo {
+      font-size: 1.8rem;
+      color: var(--amber);
+      flex-shrink: 0;
+    }
+    .acc-company {
+      font-weight: 800;
+      font-size: 0.95rem;
+      margin-bottom: 0.15rem;
+    }
+    .acc-role {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 0.2rem;
+    }
+    .acc-period {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--muted);
+    }
+    .acc-award {
+      margin-left: auto;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--amber);
+      letter-spacing: 0.05em;
+      text-align: right;
+      white-space: nowrap;
+    }
+  }
+  @media (max-width: 900px) {
+    padding: 5rem 2rem;
+    .about-grid {
+      grid-template-columns: 1fr;
+      gap: 3rem;
+    }
+  }
+}

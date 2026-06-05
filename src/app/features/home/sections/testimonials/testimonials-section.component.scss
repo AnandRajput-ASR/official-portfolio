@@ -1,0 +1,277 @@
+.testimonials-section {
+  padding: 8rem 4rem;
+  background: var(--bg);
+  .section-head {
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+  }
+
+  .testi-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+  }
+
+  .testi-card {
+    background: var(--surface);
+    padding: 2.5rem 2rem;
+    position: relative;
+    transition: background 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    border-top: 3px solid transparent;
+    &:hover {
+      background: var(--surface2);
+      border-top-color: var(--amber);
+    }
+
+    .testi-quote-mark {
+      font-size: 4rem;
+      line-height: 1;
+      color: var(--amber);
+      font-family: Georgia, serif;
+      opacity: 0.4;
+      position: absolute;
+      top: 1rem;
+      right: 1.5rem;
+    }
+    .testi-quote {
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--text);
+      font-style: italic;
+      position: relative;
+      z-index: 1;
+    }
+    .testi-stars {
+      display: flex;
+      gap: 0.25rem;
+      .testi-star {
+        color: var(--amber);
+        font-size: 0.9rem;
+      }
+    }
+    .testi-author {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      .testi-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--amber);
+        color: #0d0d0d;
+        font-weight: 900;
+        font-size: 0.95rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .testi-avatar-img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+      .testi-name {
+        font-weight: 800;
+        font-size: 0.9rem;
+      }
+      .testi-role {
+        font-size: 0.78rem;
+        color: var(--muted);
+        font-family: 'Space Mono', monospace;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 5rem 1.5rem;
+    .testi-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PUBLIC TESTIMONIAL SUBMIT FORM
+// ═══════════════════════════════════════════════════════════════════════════════
+.testi-submit-trigger {
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.85rem 1.75rem;
+  cursor: pointer;
+  transition: all 0.25s;
+  width: 100%;
+  &:hover {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+}
+.testi-submit-success {
+  padding: 1.25rem 1.75rem;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #22c55e;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+}
+.testi-submit-form {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  &.open {
+    max-height: 900px;
+  }
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: 0 1.75rem;
+  &.open {
+    padding: 1.75rem;
+  }
+  .tsf-heading {
+    font-size: 1rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+  }
+  .tsf-sub {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+  .cform-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    flex: 1;
+    label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    input,
+    textarea {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.65rem 0.9rem;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.88rem;
+      transition: border-color 0.2s;
+      resize: vertical;
+      &:focus {
+        outline: none;
+        border-color: var(--amber);
+      }
+    }
+  }
+  .form-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+
+  // Star rating picker
+  .testi-rating-picker {
+    display: flex;
+    gap: 0.25rem;
+    .testi-star-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--border);
+      transition:
+        color 0.15s,
+        transform 0.15s;
+      padding: 0;
+      line-height: 1;
+      &.active {
+        color: #f59e0b;
+      }
+      &:hover {
+        transform: scale(1.2);
+      }
+    }
+  }
+
+  // Photo upload
+  .testi-photo-upload {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .testi-photo-preview {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+  .testi-photo-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .btn-photo-upload {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.85rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    &:hover {
+      border-color: var(--amber);
+    }
+  }
+  .btn-photo-remove {
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    cursor: pointer;
+    padding: 0.4rem 0.5rem;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

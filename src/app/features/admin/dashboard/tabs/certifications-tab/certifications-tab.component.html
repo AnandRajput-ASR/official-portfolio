@@ -1,0 +1,412 @@
+<section class="tab-content" (input)="markDirty()" (change)="markDirty()">
+  <div class="tab-header">
+    <div>
+      <h1>Certifications</h1>
+      <p>
+        Drag to reorder · Well-known issuers (Microsoft, AWS, Google) get auto badges · Upload
+        custom badge or use styled default
+      </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem">
+      <button class="btn btn-primary btn-sm" (click)="showAddCert = true">
+        + Add Certification
+      </button>
+      <button class="btn btn-outline btn-sm" (click)="saveCertifications()" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save Order' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="certificationsEdit.length === 0">
+    <span>🏅</span>
+    <p>No certifications yet — add your first one!</p>
+  </div>
+
+  <div
+    class="certs-admin-grid drag-list"
+    appDragList
+    (reordered)="onReorder($event)"
+  >
+    <div
+      class="cert-admin-card"
+      draggable="true"
+      [attr.data-drag-id]="cert.id"
+      *ngFor="let cert of certificationsEdit; trackBy: trackById"
+      [style.--cert-color]="cert.accentColor"
+    >
+      <div class="cert-admin-topbar">
+        <span class="drag-handle" title="Drag to reorder"></span>
+        <div class="cert-badge-preview">
+          <app-certification-badge [cert]="cert" [size]="72"></app-certification-badge>
+          <button
+            *ngIf="cert.badgeType === 'upload'"
+            class="cert-badge-remove-btn"
+            (click)="setBadgeType(cert, 'default')"
+            title="Remove uploaded badge"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 16 16"
+              width="9"
+              height="9"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
+              />
+            </svg>
+          </button>
+        </div>
+        <div
+          class="cert-admin-level-badge"
+          [style.background]="certBadge.getLevelColor(cert.level) + '20'"
+          [style.color]="certBadge.getLevelColor(cert.level)"
+          [style.border-color]="certBadge.getLevelColor(cert.level) + '40'"
+        >
+          {{ certBadge.getLevelLabel(cert.level) }}
+        </div>
+        <button
+          class="delete-row-btn ml-auto"
+          (click)="deleteCert(cert.id)"
+          title="Delete certification"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            width="13"
+            height="13"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"
+            />
+            <path
+              d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="form-row cert-title-row">
+        <div class="form-group">
+          <label>Certification Name</label><input type="text" [(ngModel)]="cert.name" />
+        </div>
+        <div class="form-group sm">
+          <label>Code</label
+          ><input type="text" [(ngModel)]="cert.code" placeholder="AZ-400" maxlength="12" />
+        </div>
+      </div>
+      <div class="form-row cert-meta-row">
+        <div class="form-group">
+          <label>Issuer</label>
+          <select
+            [(ngModel)]="cert.issuer"
+            (ngModelChange)="onIssuerChange(cert)"
+            class="form-select"
+          >
+            <option value="Microsoft">Microsoft</option>
+            <option value="AWS">AWS / Amazon</option>
+            <option value="Google">Google</option>
+            <option value="CompTIA">CompTIA</option>
+            <option value="Oracle">Oracle</option>
+            <option value="Cisco">Cisco</option>
+            <option value="PMI">PMI</option>
+            <option value="Meta">Meta</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Level</label>
+          <select
+            [(ngModel)]="cert.level"
+            (ngModelChange)="onLevelChange(cert)"
+            class="form-select"
+          >
+            <option value="Fundamental">Fundamental</option>
+            <option value="Foundational">Foundational</option>
+            <option value="Associate">Associate</option>
+            <option value="Professional">Professional</option>
+            <option value="Expert">Expert</option>
+            <option value="Practitioner">Practitioner</option>
+            <option value="Specialty">Specialty</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row cert-years-row">
+        <div class="form-group xs">
+          <label>Issued</label
+          ><input
+            type="text"
+            [(ngModel)]="cert.issueYear"
+            maxlength="4"
+            pattern="[0-9]{4}"
+            inputmode="numeric"
+            title="Enter a 4-digit year"
+            placeholder="2024"
+          />
+        </div>
+        <div class="form-group xs">
+          <label>Expires</label
+          ><input
+            type="text"
+            [(ngModel)]="cert.expirationYear"
+            maxlength="4"
+            pattern="[0-9]{4}"
+            inputmode="numeric"
+            title="Enter a 4-digit year"
+            placeholder="2027"
+          />
+        </div>
+        <div class="form-group xs">
+          <label>Color</label><input type="color" [(ngModel)]="cert.accentColor" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label
+          >🔗 Verification URL <small>(Credly or Microsoft verification link)</small></label
+        >
+        <input
+          type="url"
+          [(ngModel)]="cert.credlyLink"
+          placeholder="https://www.credly.com/badges/... or https://learn.microsoft.com/..."
+        />
+      </div>
+
+      <div class="cert-badge-type-switcher">
+        <label>Badge Display:</label>
+        <button
+          class="badge-type-btn"
+          [class.active]="cert.badgeType === 'auto'"
+          (click)="setBadgeType(cert, 'auto')"
+          [disabled]="!certBadge.isKnownIssuer(cert.issuer)"
+          [title]="
+            certBadge.isKnownIssuer(cert.issuer)
+              ? 'Auto-generate from issuer'
+              : 'Auto not available — choose Upload or Default'
+          "
+        >
+          🤖 Auto
+        </button>
+        <button
+          type="button"
+          class="badge-type-btn"
+          [class.active]="cert.badgeType === 'upload'"
+          (click)="triggerFileInput(cert.id)"
+        >
+          📤 Upload
+        </button>
+        <input
+          [id]="'badge-upload-' + cert.id"
+          type="file"
+          accept="image/*"
+          style="display: none"
+          (change)="onCertBadgeUpload(cert, $event)"
+        />
+        <button
+          class="badge-type-btn"
+          [class.active]="cert.badgeType === 'default'"
+          (click)="setBadgeType(cert, 'default')"
+        >
+          🎨 Default
+        </button>
+        <button
+          type="button"
+          class="badge-type-btn"
+          *ngIf="cert.badgeType === 'upload' && cert.badgeLink"
+          [disabled]="isBgRemovalRunning(cert)"
+          (click)="removeUploadedBadgeBackground(cert)"
+          title="Try to remove the background from uploaded badge"
+        >
+          {{ isBgRemovalRunning(cert) ? '⏳ Removing...' : '🪄 Remove BG' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cert-admin-save-bar" *ngIf="certificationsEdit.length > 0">
+    <p class="muted-text">
+      Changes are saved per-card. Use "Save Order" to persist drag order.
+    </p>
+    <button class="btn btn-primary btn-sm" (click)="saveCertifications()" [disabled]="saving">
+      {{ saving ? 'Saving...' : 'Save All Changes' }}
+    </button>
+  </div>
+</section>
+
+<!-- Add Cert Modal -->
+<div class="modal-overlay" *ngIf="showAddCert" (click)="closeAddCertModal()">
+  <div class="modal modal-wide" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add Certification</h2>
+      <button (click)="closeAddCertModal()" title="Close">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <div class="cert-modal-preview">
+      <app-certification-badge
+        [cert]="newCert"
+        [previewSrc]="certUploadPreview"
+        [size]="72"
+      ></app-certification-badge>
+      <p class="cert-preview-label">Live Preview</p>
+    </div>
+
+    <div class="form-row cert-title-row">
+      <div class="form-group">
+        <label>Certification Name</label
+        ><input
+          type="text"
+          [(ngModel)]="newCert.name"
+          placeholder="Microsoft Azure Developer Associate"
+        />
+      </div>
+      <div class="form-group sm">
+        <label>Code / Short Name</label
+        ><input type="text" [(ngModel)]="newCert.code" placeholder="AZ-204" maxlength="12" />
+      </div>
+    </div>
+    <div class="form-row cert-meta-row">
+      <div class="form-group">
+        <label>Issuer</label>
+        <select
+          [(ngModel)]="newCert.issuer"
+          (ngModelChange)="onIssuerChange(newCert)"
+          class="form-select"
+        >
+          <option value="Microsoft">Microsoft</option>
+          <option value="AWS">AWS / Amazon</option>
+          <option value="Google">Google</option>
+          <option value="CompTIA">CompTIA</option>
+          <option value="Oracle">Oracle</option>
+          <option value="Cisco">Cisco</option>
+          <option value="PMI">PMI</option>
+          <option value="Meta">Meta</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Level</label>
+        <select
+          [(ngModel)]="newCert.level"
+          (ngModelChange)="onLevelChange(newCert)"
+          class="form-select"
+        >
+          <option value="Fundamental">Fundamental</option>
+          <option value="Foundational">Foundational</option>
+          <option value="Associate">Associate</option>
+          <option value="Professional">Professional</option>
+          <option value="Expert">Expert</option>
+          <option value="Practitioner">Practitioner</option>
+          <option value="Specialty">Specialty</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row cert-years-row">
+      <div class="form-group xs">
+        <label>Issued</label
+        ><input
+          type="text"
+          [(ngModel)]="newCert.issueYear"
+          placeholder="2024"
+          maxlength="4"
+          pattern="[0-9]{4}"
+          inputmode="numeric"
+          title="Enter a 4-digit year"
+        />
+      </div>
+      <div class="form-group xs">
+        <label>Expires</label
+        ><input
+          type="text"
+          [(ngModel)]="newCert.expirationYear"
+          placeholder="2027"
+          maxlength="4"
+          pattern="[0-9]{4}"
+          inputmode="numeric"
+          title="Enter a 4-digit year"
+        />
+      </div>
+      <div class="form-group xs">
+        <label>Color</label><input type="color" [(ngModel)]="newCert.accentColor" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label
+        >🔗 Verification URL <small>(optional — Credly or Microsoft verification)</small></label
+      >
+      <input
+        type="url"
+        [(ngModel)]="newCert.credlyLink"
+        placeholder="https://www.credly.com/badges/... or https://learn.microsoft.com/..."
+      />
+    </div>
+
+    <div class="cert-badge-type-switcher">
+      <label>Badge Style:</label>
+      <button
+        class="badge-type-btn"
+        [class.active]="newCert.badgeType === 'auto'"
+        (click)="setBadgeType(newCert, 'auto')"
+        [disabled]="!certBadge.isKnownIssuer(newCert.issuer || '')"
+        [title]="
+          certBadge.isKnownIssuer(newCert.issuer || '')
+            ? 'Auto-generate from issuer'
+            : 'Not available for ' + newCert.issuer
+        "
+      >
+        🤖 Auto ({{
+          certBadge.isKnownIssuer(newCert.issuer || '') ? 'available' : 'not available'
+        }})
+      </button>
+      <label class="badge-type-btn" [class.active]="newCert.badgeType === 'upload'">
+        📤 Upload Image
+        <input
+          type="file"
+          accept="image/*"
+          style="display: none"
+          (change)="onCertBadgeUpload(newCert, $event)"
+        />
+      </label>
+      <button
+        class="badge-type-btn"
+        [class.active]="newCert.badgeType === 'default'"
+        (click)="setBadgeType(newCert, 'default')"
+      >
+        🎨 Styled Default
+      </button>
+      <button
+        type="button"
+        class="badge-type-btn"
+        *ngIf="newCert.badgeType === 'upload' && (newCert.badgeLink || certUploadPreview)"
+        [disabled]="isBgRemovalRunning(newCert)"
+        (click)="removeUploadedBadgeBackground(newCert)"
+        title="Try to remove the background from uploaded badge"
+      >
+        {{ isBgRemovalRunning(newCert) ? '⏳ Removing...' : '🪄 Remove BG' }}
+      </button>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" (click)="closeAddCertModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="submitAddCert()">Add Certification</button>
+    </div>
+  </div>
+</div>

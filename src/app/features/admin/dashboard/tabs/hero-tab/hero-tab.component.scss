@@ -1,0 +1,65 @@
+@use '../admin-base';
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2rem;
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--accent1);
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.05em;
+  }
+}
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: var(--border);
+    cursor: pointer;
+    transition: 0.3s;
+    &::before {
+      content: '';
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 4px;
+      bottom: 4px;
+      background: var(--muted);
+      transition: 0.3s;
+    }
+  }
+  input:checked + .toggle-slider {
+    background: var(--accent3);
+  }
+  input:checked + .toggle-slider::before {
+    transform: translateX(22px);
+    background: var(--bg);
+  }
+}
+
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

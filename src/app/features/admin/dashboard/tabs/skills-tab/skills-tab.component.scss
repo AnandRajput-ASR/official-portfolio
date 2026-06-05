@@ -1,0 +1,208 @@
+@use '../admin-base';
+
+// Skill-card border-left accent driven by the [style.--skill-accent] binding.
+.skill-admin-card {
+  border-left: 3px solid var(--skill-accent, var(--amber));
+
+  .edit-card-header {
+    align-items: flex-start;
+  }
+}
+
+.skill-title-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
+
+  strong {
+    font-size: 1.05rem;
+    line-height: 1.2;
+  }
+
+  span {
+    color: var(--muted);
+    font-size: 0.74rem;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+.skill-name-group input {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.skill-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+}
+
+.skill-meta-copy {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.skill-level-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.26rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  font-size: 0.66rem;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.03);
+
+  &.elite {
+    color: #0b6b49;
+    border-color: rgba(11, 107, 73, 0.35);
+    background: rgba(46, 204, 113, 0.14);
+  }
+
+  &.advanced {
+    color: #8b5e00;
+    border-color: rgba(245, 166, 35, 0.35);
+    background: rgba(245, 166, 35, 0.14);
+  }
+
+  &.strong {
+    color: var(--accent1);
+    border-color: rgba(0, 229, 255, 0.3);
+    background: rgba(0, 229, 255, 0.08);
+  }
+
+  &.growing {
+    color: #a04f1f;
+    border-color: rgba(255, 125, 41, 0.28);
+    background: rgba(255, 125, 41, 0.12);
+  }
+}
+
+.skill-admin-note {
+  margin: -0.1rem 0 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px dashed rgba(245, 166, 35, 0.35);
+  background: rgba(245, 166, 35, 0.08);
+  color: #c38a17;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.skill-preview-card {
+  margin-top: 1rem;
+  padding: 1.15rem;
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--skill-accent, var(--amber));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent), var(--bg);
+
+  h4 {
+    margin: 0.9rem 0 0.5rem;
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  p {
+    margin: 0.85rem 0 0;
+    color: var(--muted);
+    font-size: 0.82rem;
+    line-height: 1.6;
+  }
+}
+
+.skill-preview-card-modal {
+  margin-top: 0;
+}
+
+.skill-preview-head,
+.skill-preview-stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.skill-preview-icon {
+  font-size: 1.8rem;
+}
+
+.skill-preview-stats {
+  margin-bottom: 0.65rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.skill-preview-track {
+  width: 100%;
+  height: 5px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.skill-preview-fill {
+  display: block;
+  height: 100%;
+}
+
+.skill-preview-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+
+  span {
+    padding: 0.24rem 0.58rem;
+    border: 1px solid var(--border);
+    font-size: 0.63rem;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+}
+
+.prof-slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  app-custom-slider {
+    flex: 1;
+  }
+
+  .prof-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    min-width: 36px;
+    text-align: right;
+  }
+}
+
+.skill-metrics-row .form-group.xs input {
+  padding: 0.65rem 0.75rem;
+  min-height: 42px;
+}
+
+@media (max-width: 640px) {
+  .skill-meta-row,
+  .skill-preview-head,
+  .skill-preview-stats {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
