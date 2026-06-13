@@ -1,3 +1,4 @@
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   APP_INITIALIZER,
   ApplicationConfig,
@@ -6,12 +7,12 @@ import {
   provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
-import { routes } from './app.routes';
 import { authInterceptor } from '@core/interceptors/auth.interceptor';
 import { AuthService } from '@core/services/auth.service';
 import { GlobalErrorHandler } from '@core/services/global-error-handler';
 import { ObservabilityService } from '@core/services/observability.service';
-import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { routes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -26,7 +27,7 @@ export const appConfig: ApplicationConfig = {
       // mode it's a no-op that just returns the localStorage user.
       provide: APP_INITIALIZER,
       multi: true,
-      useFactory: (auth: AuthService) => () => auth.probeSession().subscribe(),
+      useFactory: (auth: AuthService) => () => firstValueFrom(auth.probeSession()),
       deps: [AuthService],
     },
     {

@@ -1,10 +1,17 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, of, tap } from 'rxjs';
-import { environment } from '@env/environment';
 import { AuthResponse } from '@core/models';
+import { environment } from '@env/environment';
+import { BehaviorSubject, catchError, Observable, of, tap } from 'rxjs';
 import { StorageService } from './storage.service';
+
+interface ForgotPasswordResponse {
+  emailSent?: boolean;
+  email?: string;
+  resetToken?: string;
+  message?: string;
+}
 
 /**
  * Two authentication modes, selected by `environment.cookieAuth`:
@@ -41,7 +48,11 @@ export class AuthService {
     if (environment.cookieAuth) {
       // Cookie is set by the response; ignore the body.
       return this.http
-        .post<AuthResponse>(`${environment.api.baseUrl}/auth/login`, { username, password })
+        .post<AuthResponse>(
+          `${environment.api.baseUrl}/auth/login`,
+          { username, password },
+          { withCredentials: true },
+        )
         .pipe(tap(() => this.markLoggedIn(username)));
     }
     return this.http
@@ -59,10 +70,12 @@ export class AuthService {
     if (environment.cookieAuth) {
       // Best-effort: tell the backend to clear cookies. Always continue
       // to local cleanup even if the call fails.
-      this.http.post(`${environment.api.baseUrl}/auth/logout`, {}).subscribe({
-        error: () => this.clearLocalSession(),
-        complete: () => this.clearLocalSession(),
-      });
+      this.http
+        .post(`${environment.api.baseUrl}/auth/logout`, {}, { withCredentials: true })
+        .subscribe({
+          error: () => this.clearLocalSession(),
+          complete: () => this.clearLocalSession(),
+        });
     } else {
       this.storage.remove(AuthService.TOKEN_KEY);
       this.storage.remove(AuthService.USER_KEY);
@@ -108,7 +121,9 @@ export class AuthService {
       return of(user ?? null);
     }
     return this.http
-      .get<{ username: string; role: string }>(`${environment.api.baseUrl}/auth/me`)
+      .get<{ username: string; role: string }>(`${environment.api.baseUrl}/auth/me`, {
+        withCredentials: true,
+      })
       .pipe(
         tap({
           next: (u) => {
@@ -120,6 +135,7 @@ export class AuthService {
             this.loggedIn$.next(false);
           },
         }),
+        catchError(() => of(null)),
       );
   }
 
@@ -131,11 +147,15 @@ export class AuthService {
     if (environment.cookieAuth) {
       // The backend rotates the session cookie in the response; we just
       // observe success and let the caller log the user back in.
-      return this.http.put<AuthResponse>(`${environment.api.baseUrl}/auth/change-password`, {
-        currentPassword,
-        newPassword,
-        newUsername,
-      });
+      return this.http.put<AuthResponse>(
+        `${environment.api.baseUrl}/auth/change-password`,
+        {
+          currentPassword,
+          newPassword,
+          newUsername,
+        },
+        { withCredentials: true },
+      );
     }
     return this.http
       .put<AuthResponse>(`${environment.api.baseUrl}/auth/change-password`, {
@@ -153,12 +173,15 @@ export class AuthService {
       );
   }
 
-  forgotPassword(): Observable<any> {
-    return this.http.post(`${environment.api.baseUrl}/auth/forgot-password`, {});
+  forgotPassword(): Observable<ForgotPasswordResponse> {
+    return this.http.post<ForgotPasswordResponse>(`${environment.api.baseUrl}/auth/forgot-password`, {});
   }
 
-  resetPassword(token: string, newPassword: string): Observable<any> {
-    return this.http.post(`${environment.api.baseUrl}/auth/reset-password`, { token, newPassword });
+  resetPassword(token: string, newPassword: string): Observable<{ message?: string }> {
+    return this.http.post<{ message?: string }>(`${environment.api.baseUrl}/auth/reset-password`, {
+      token,
+      newPassword,
+    });
   }
 
   private hasValidSession(): boolean {

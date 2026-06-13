@@ -1,7 +1,7 @@
-import { inject } from '@angular/core';
 import { HttpInterceptorFn } from '@angular/common/http';
-import { environment } from '@env/environment';
+import { inject } from '@angular/core';
 import { AuthService } from '@core/services/auth.service';
+import { environment } from '@env/environment';
 
 /**
  * Attaches a `Bearer` token to outgoing requests when one is available.
@@ -13,6 +13,13 @@ import { AuthService } from '@core/services/auth.service';
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (environment.cookieAuth) {
+    const isApiRequest =
+      req.url.startsWith(environment.api.baseUrl) ||
+      req.url.startsWith('/api/') ||
+      req.url === '/api';
+    if (isApiRequest && !req.withCredentials) {
+      req = req.clone({ withCredentials: true });
+    }
     return next(req);
   }
   const token = inject(AuthService).getToken();
