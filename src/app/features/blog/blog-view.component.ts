@@ -1,9 +1,9 @@
-import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Component, OnInit, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { ContentService } from '@core/services/content.service';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BlogPost } from '@core/models';
+import { ContentService } from '@core/services/content.service';
 import { renderMarkdown } from '@core/utils/markdown';
 
 @Component({
@@ -58,7 +58,6 @@ import { renderMarkdown } from '@core/utils/markdown';
 })
 export class BlogViewComponent implements OnInit {
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
   private contentService = inject(ContentService);
   private titleService = inject(Title);
   private metaService = inject(Meta);
@@ -71,14 +70,13 @@ export class BlogViewComponent implements OnInit {
 
   ngOnInit(): void {
     const slug = this.route.snapshot.paramMap.get('slug');
-    this.contentService.getAll().subscribe({
-      next: (content) => {
-        const found = content.blogPosts?.find((p) => p.slug === slug && p.published);
-        if (found) {
-          this.post = found;
-          this.renderedContent = renderMarkdown(found.content ?? '');
+    this.contentService.getPublishedBlogPostBySlug(slug).subscribe({
+      next: ({ post, content }) => {
+        if (post) {
+          this.post = post;
+          this.renderedContent = renderMarkdown(post.content ?? '');
           this.contentService.trackEvent('blogView');
-          this.setMetaTags(found, content);
+          this.setMetaTags(post, content);
         } else {
           this.notFound = true;
         }

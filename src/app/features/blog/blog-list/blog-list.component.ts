@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { ContentService } from '@core/services/content.service';
 import { BlogPost } from '@core/models';
+import { ContentService } from '@core/services/content.service';
 
 @Component({
   selector: 'app-blog-list',
@@ -54,11 +54,9 @@ export class BlogListComponent implements OnInit {
   loading = true;
 
   ngOnInit(): void {
-    this.contentService.getAll().subscribe({
-      next: (content) => {
-        this.posts = (content.blogPosts ?? [])
-          .filter((p) => p.published)
-          .sort((a, b) => (b.publishedAt || '').localeCompare(a.publishedAt || ''));
+    this.contentService.getPublishedBlogPosts().subscribe({
+      next: (posts) => {
+        this.posts = posts;
         this.loading = false;
       },
       error: () => {

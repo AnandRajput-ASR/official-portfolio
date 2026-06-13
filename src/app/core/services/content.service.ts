@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { PortfolioContent, SiteSettings, Testimonial } from '@core/models';
+import { inject, Injectable } from '@angular/core';
+import { ApiResponse, BlogPost, PortfolioContent, SiteSettings, Testimonial } from '@core/models';
 import { environment } from '@env/environment';
-import { Observable } from 'rxjs';
+import { map, Observable, shareReplay } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -11,6 +11,7 @@ export class ContentService {
   private http = inject(HttpClient);
 
   private base = environment.api.baseUrl + '/content';
+  private cachedContent$?: Observable<PortfolioContent>;
 
   /** Resolve a stored image value to a full URL.
    *  Handles: /uploads/... paths (from new file storage) and legacy data: base64 */
@@ -33,14 +34,46 @@ export class ContentService {
     return this.http.get<PortfolioContent>(this.base + '/page-content');
   }
 
+  /** Cached page-content stream to prevent repeated heavy payload requests. */
+  getAllCached(): Observable<PortfolioContent> {
+    if (!this.cachedContent$) {
+      this.cachedContent$ = this.getAll().pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    }
+    return this.cachedContent$;
+  }
+
+  getPublishedBlogPosts(): Observable<BlogPost[]> {
+    return this.getAllCached().pipe(
+      map((content) =>
+        (content.blogPosts ?? [])
+          .filter((p) => p.published)
+          .sort((a, b) => (b.publishedAt || '').localeCompare(a.publishedAt || '')),
+      ),
+    );
+  }
+
+  getPublishedBlogPostBySlug(
+    slug: string | null,
+  ): Observable<{ post: BlogPost | null; content: PortfolioContent }> {
+    return this.getAllCached().pipe(
+      map((content) => ({
+        content,
+        post: (content.blogPosts ?? []).find((p) => p.slug === slug && p.published) ?? null,
+      })),
+    );
+  }
+
   // Settings
   getSettings(): Observable<SiteSettings> {
     return this.http.get<SiteSettings>(this.base + '/settings');
   }
 
   // Testimonials (admin: all + pending)
-  submitTestimonial(t: Partial<Testimonial>): Observable<any> {
-    return this.http.post(environment.api.baseUrl + '/admin' + '/testimonials/submit', t);
+  submitTestimonial(t: Partial<Testimonial>): Observable<ApiResponse> {
+    return this.http.post<ApiResponse>(
+      environment.api.baseUrl + '/admin' + '/testimonials/submit',
+      t,
+    );
   }
 
   // Blog
@@ -50,12 +83,16 @@ export class ContentService {
   trackEvent(event: string, meta?: Record<string, unknown>): void {
     this.http
       .post(this.base + '/analytics/track', { event, ...meta })
-      .subscribe({ error: () => {} });
+      .subscribe({
+        error: (err) => this.reportClientError('analytics.track', err, { event, meta }),
+      });
   }
 
   /** Record a resume-gate lead. Fire-and-forget — never blocks the download. */
   trackResumeLead(email: string): void {
-    this.http.post(this.base + '/resume-lead', { email }).subscribe({ error: () => {} });
+    this.http
+      .post(this.base + '/resume-lead', { email })
+      .subscribe({ error: (err) => this.reportClientError('resume.lead', err) });
   }
 
   getVisitorCount(): Observable<{ thisMonth: number; lastMonth: number }> {
@@ -76,7 +113,22 @@ export class ContentService {
   }
 
   // Reorder
-  reorder(section: string, items: { id: string; displayOrder: number }[]): Observable<any> {
-    return this.http.put(this.base + '/reorder/' + section, items);
+  reorder(section: string, items: { id: string; displayOrder: number }[]): Observable<ApiResponse> {
+    return this.http.put<ApiResponse>(this.base + '/reorder/' + section, items);
+  }
+
+  private reportClientError(source: string, err: unknown, meta?: Record<string, unknown>): void {
+    const payload = {
+      source,
+      message: err instanceof Error ? err.message : String(err),
+      context: meta,
+      ts: Date.now(),
+    };
+
+    this.http.post(`${environment.api.baseUrl}/track/error`, payload).subscribe({
+      error: () => {
+        if (!environment.production) console.error('[content-service]', payload);
+      },
+    });
   }
 }

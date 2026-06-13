@@ -1,19 +1,20 @@
 import { CommonModule } from '@angular/common';
 import {
-    AfterViewInit,
-    Component,
-    OnDestroy,
-    OnInit,
-    ViewEncapsulation,
-    inject,
+  AfterViewInit,
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewEncapsulation,
+  inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { PortfolioContent } from '@core/models';
 import { ReducedMotionDirective } from '@core/directives/reduced-motion.directive';
+import { BlogPost, PortfolioContent, Testimonial } from '@core/models';
 import { ContentService } from '@core/services/content.service';
 import { LanguageService } from '@core/services/language.service';
 import { LoadingService } from '@core/services/loading.service';
+import { ObservabilityService } from '@core/services/observability.service';
 import { ResumeInfo, ResumeService } from '@core/services/resume.service';
 import { StorageService } from '@core/services/storage.service';
 import { ThemeService } from '@core/services/theme.service';
@@ -71,6 +72,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   themeService = inject(ThemeService);
   langService = inject(LanguageService);
   private loadingService = inject(LoadingService);
+  private observability = inject(ObservabilityService);
   private storage = inject(StorageService);
 
   content: PortfolioContent | null = null;
@@ -116,7 +118,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
             next: (c) => {
               if (c.thisMonth >= threshold) this.visitorCount = c.thisMonth;
             },
-            error: () => {},
+            error: (err) => this.observability.captureError(err, { source: 'home.visitorCount' }),
           });
         }
       },
@@ -128,7 +130,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     });
     this.resumeService.getInfo().subscribe({
       next: (info) => (this.resumeInfo = info),
-      error: () => {},
+      error: (err) => this.observability.captureError(err, { source: 'home.resumeInfo' }),
     });
   }
 
@@ -196,8 +198,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.contentService.trackEvent('socialClick');
   }
 
-  private _visibleTestis: any[] = [];
-  private _publishedPosts: any[] = [];
+  private _visibleTestis: Testimonial[] = [];
+  private _publishedPosts: BlogPost[] = [];
 
   visibleTestimonials() {
     return this._visibleTestis;
