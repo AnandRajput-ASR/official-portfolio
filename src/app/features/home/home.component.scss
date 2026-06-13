@@ -38,14 +38,6 @@
   overflow: hidden;
 }
 
-// When using @defer (on viewport), Angular shows this placeholder until it
-// enters the viewport. If it has zero height, the real section may never load.
-.section-placeholder {
-  display: block;
-  min-height: 260px;
-}
-
-
 @keyframes sk-shimmer {
   0% {
     background-position: -600px 0;

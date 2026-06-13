@@ -30,22 +30,16 @@
   <app-work-section [content]="content" [openCompanies]="openCompanies" (toggleCompany)="toggleCompany($event)" />
 
   <!-- ═══ PERSONAL & FREELANCE PROJECTS ═══════════════════════════════════════ -->
-  @defer (on viewport) {
   <app-personal-projects-section *ngIf="content.siteSettings.sections.personalProjects !== false" [content]="content" />
-  } @placeholder { <div class="section-placeholder"></div> }
 
   <!-- ═══ CERTIFICATIONS ═══════════════════════════════════════════════════════ -->
-  @defer (on viewport) {
   <app-certs-section *ngIf="
         content.siteSettings.sections.certifications !== false &&
         (content.certifications?.length ?? 0) > 0
       " [content]="content" />
-  } @placeholder { <div class="section-placeholder"></div> }
 
   <!-- ═══ EXPERIENCE ═══════════════════════════════════════════════════════════ -->
-  @defer (on viewport) {
   <app-experience-section *ngIf="content.siteSettings.sections.experience !== false" [content]="content" />
-  } @placeholder { <div class="section-placeholder"></div> }
 
   <!-- ═══ TESTIMONIALS ═══════════════════════════════════════════════════════ -->
   <app-testimonials-section
@@ -53,38 +47,28 @@
     [content]="content" />
 
   <!-- ═══ BLOG / WRITING ═════════════════════════════════════════════════════ -->
-  @defer (on viewport) {
   <app-blog-section *ngIf="content.siteSettings.sections.blog !== false && publishedPosts().length > 0"
     [content]="content" />
-  } @placeholder { <div class="section-placeholder"></div> }
 
   <!-- ═══ CURRENTLY LEARNING ════════════════════════════════════════════════════════ -->
-  @defer (on viewport) {
   <app-learning-section *ngIf="content.siteSettings.learning?.enabled && content.siteSettings.learning?.items?.length"
     [content]="content" />
-  } @placeholder { <div class="section-placeholder"></div> }
 
   <!-- ═══ FREELANCE CTA ════════════════════════════════════════════════════════ -->
-  @defer (on viewport) {
   <app-freelance-cta-section *ngIf="
         content.siteSettings.freelance.enabled &&
         content.siteSettings.freelance.showCtaSection !== false
       " [content]="content" [resumeInfo]="resumeInfo" (resumeClick)="handleResumeClick($event)" />
-  } @placeholder { <div class="section-placeholder"></div> }
 
   <!-- ═══ CONTACT ══════════════════════════════════════════════════════════════ -->
   <app-contact-section [content]="content" />
 
   <!-- ═══ RESUME BANNER ════════════════════════════════════════════════════════ -->
-  @defer (on idle) {
   <app-resume-banner *ngIf="resumeInfo?.available" [resumeInfo]="resumeInfo"
     (resumeClick)="handleResumeClick($event)" />
-  } @placeholder { <div class="section-placeholder"></div> }
 
   <!-- ═══ FOOTER ═══════════════════════════════════════════════════════════════ -->
-  @defer (on viewport) {
   <app-footer-section [content]="content" [visitorCount]="visitorCount" (socialClick)="trackSocialClick()" />
-  } @placeholder { <div class="section-placeholder"></div> }
 </div>
 
 <!-- ═══ RESUME GATE MODAL ═══════════════════════════════════════════════════ -->
