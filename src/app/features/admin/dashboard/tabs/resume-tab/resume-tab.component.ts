@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
-import { AuthService } from '@core/services/auth.service';
 import { ConfirmService } from '@core/services/confirm.service';
 import { ResumeStateService } from '@core/services/resume-state.service';
 import { ResumeService, UploadProgress } from '@core/services/resume.service';
@@ -17,7 +16,6 @@ import { ToastService } from '@shared/components/toast/toast.component';
 export class ResumeTabComponent {
   readonly resumeService = inject(ResumeService);
   readonly resumeState = inject(ResumeStateService);
-  private readonly auth = inject(AuthService);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
 
@@ -57,7 +55,7 @@ export class ResumeTabComponent {
     this.uploadState = 'reading';
     this.uploadProgress = 0;
     this.uploadErrorMsg = '';
-    this.resumeService.uploadResumeWithProgress(file, this.auth.getToken() || '').subscribe({
+    this.resumeService.uploadResumeWithProgress(file).subscribe({
       next: (ev: UploadProgress) => {
         if (ev.type === 'progress') {
           this.uploadState = 'uploading';

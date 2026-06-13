@@ -1,4 +1,5 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { ObservabilityService } from './observability.service';
 import { ResumeInfo, ResumeService } from './resume.service';
 
 /**
@@ -9,13 +10,14 @@ import { ResumeInfo, ResumeService } from './resume.service';
 @Injectable({ providedIn: 'root' })
 export class ResumeStateService {
   private readonly resumeService = inject(ResumeService);
+  private readonly observability = inject(ObservabilityService);
 
   readonly info = signal<ResumeInfo | null>(null);
 
   load(): void {
     this.resumeService.getInfo().subscribe({
       next: (i) => this.info.set(i),
-      error: () => {},
+      error: (err) => this.observability.captureError(err, { source: 'resume-state.load' }),
     });
   }
 
