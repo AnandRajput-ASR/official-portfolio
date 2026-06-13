@@ -1,5 +1,6 @@
 ﻿import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { StorageService } from './storage.service';
 
 // Supported languages â€” to add a new one:
 //  1. Create src/assets/i18n/<code>.json with all translation keys
@@ -16,11 +17,11 @@ export const LANG_LABELS: Record<Lang, string> = {
 
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
-  private readonly STORAGE_KEY = 'portfolio_lang';
-  private readonly http = inject(HttpClient);
-
+  private static readonly STORAGE_KEY = 'lang';
+  private readonly http: HttpClient = inject(HttpClient);
+  private readonly storage: StorageService = inject(StorageService);
   /** Currently active language code */
-  lang = signal<Lang>(this.getSavedLang());
+  private lang = signal<Lang>(this.getSavedLang());
 
   /** Languages currently enabled via admin settings (subset of SUPPORTED_LANGS) */
   activeLangs = signal<Lang[]>(SUPPORTED_LANGS);
@@ -60,8 +61,10 @@ export class LanguageService {
   /** Switch to a specific language directly */
   setLang(lang: Lang): void {
     this.lang.set(lang);
-    localStorage.setItem(this.STORAGE_KEY, lang);
-    document.documentElement.setAttribute('lang', lang);
+    this.storage.set(LanguageService.STORAGE_KEY, lang);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('lang', lang);
+    }
     this.loadLang(lang);
   }
 
@@ -111,7 +114,7 @@ export class LanguageService {
   }
 
   private getSavedLang(): Lang {
-    const saved = localStorage.getItem(this.STORAGE_KEY) as Lang;
-    return SUPPORTED_LANGS.includes(saved) ? saved : 'en';
+    const saved = this.storage.get<Lang>(LanguageService.STORAGE_KEY);
+    return saved && SUPPORTED_LANGS.includes(saved) ? saved : 'en';
   }
 }

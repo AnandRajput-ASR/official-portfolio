@@ -10,10 +10,12 @@ import {
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { PortfolioContent } from '@core/models';
+import { ReducedMotionDirective } from '@core/directives/reduced-motion.directive';
 import { ContentService } from '@core/services/content.service';
 import { LanguageService } from '@core/services/language.service';
 import { LoadingService } from '@core/services/loading.service';
 import { ResumeInfo, ResumeService } from '@core/services/resume.service';
+import { StorageService } from '@core/services/storage.service';
 import { ThemeService } from '@core/services/theme.service';
 import { AboutSectionComponent } from './sections/about/about-section.component';
 import { BlogSectionComponent } from './sections/blog/blog-section.component';
@@ -40,6 +42,7 @@ import { WorkSectionComponent } from './sections/work/work-section.component';
     CommonModule,
     FormsModule,
     RouterModule,
+    ReducedMotionDirective,
     HeaderSectionComponent,
     HeroSectionComponent,
     TickerSectionComponent,
@@ -68,13 +71,14 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   themeService = inject(ThemeService);
   langService = inject(LanguageService);
   private loadingService = inject(LoadingService);
+  private storage = inject(StorageService);
 
   content: PortfolioContent | null = null;
   loading = true;
   apiError = false;
   resumeInfo: ResumeInfo | null = null;
   openCompanies = new Set<string>();
-  otwDismissed = false;
+  otwDismissed = this.storage.getWithExpiry<boolean>('otw-dismissed') === true;
   private destroyed = false;
   private scrollHandler: (() => void) | null = null;
   private observers: IntersectionObserver[] = [];
@@ -154,6 +158,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   dismissOtw(): void {
     this.otwDismissed = true;
+    // Persist 7 days; the banner re-shows after a week of absence.
+    this.storage.setWithExpiry('otw-dismissed', true, 7 * 24 * 60 * 60 * 1000);
   }
 
   toggleCompany(id: string): void {
@@ -179,7 +185,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   trackProjectClick(projectId: string): void {
-    this.contentService.trackEvent('projectClick', projectId);
+    this.contentService.trackEvent('projectClick', { projectId });
   }
 
   trackResumeDownload(): void {
