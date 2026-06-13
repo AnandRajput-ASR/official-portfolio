@@ -47,9 +47,9 @@ export class ContentService {
 
   // Analytics
 
-  trackEvent(event: string, projectId?: string): void {
+  trackEvent(event: string, meta?: Record<string, unknown>): void {
     this.http
-      .post(this.base + '/analytics/track', { event, projectId })
+      .post(this.base + '/analytics/track', { event, ...meta })
       .subscribe({ error: () => {} });
   }
 
