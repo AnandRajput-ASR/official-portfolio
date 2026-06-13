@@ -9,12 +9,18 @@ import {
   inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DragListDirective } from '@core/directives/drag-list.directive';
 import { Company, CompanyProject } from '@core/models';
+import { AdminContentStore } from '@core/services/admin-content.store';
+import { AdminService } from '@core/services/admin.service';
+import { ConfirmService } from '@core/services/confirm.service';
+import { ContentService } from '@core/services/content.service';
 import {
+  PROJECT_STATUSES,
   applyDefaultPeriod,
   calcTenure,
-  getCompletionRate,
   getCompletedCount,
+  getCompletionRate,
   getDuplicateProjectTitles,
   getInProgressCount,
   getProjectsMissingDetailsCount,
@@ -30,14 +36,8 @@ import {
   isValidWebsite,
   projectStatusIcon,
   projectStatusLabel,
-  PROJECT_STATUSES,
 } from '@core/utils/company-metrics';
-import { AdminContentStore } from '@core/services/admin-content.store';
-import { AdminService } from '@core/services/admin.service';
-import { ConfirmService } from '@core/services/confirm.service';
-import { ContentService } from '@core/services/content.service';
 import { ToastService } from '@shared/components/toast/toast.component';
-import { DragListDirective } from '@core/directives/drag-list.directive';
 
 @Component({
   selector: 'app-companies-tab',
@@ -147,6 +147,10 @@ export class CompaniesTabComponent implements OnInit, OnDestroy {
   submitAddCompany(): void {
     this.adminService.addCompany(this.newCompany).subscribe({
       next: (res) => {
+        if (!res.data) {
+          this.toast.error('Add failed: empty response');
+          return;
+        }
         this.companiesEdit.push(res.data);
         this.syncContentCompanies(this.companiesEdit);
         this.showAddCompany = false;
@@ -182,6 +186,10 @@ export class CompaniesTabComponent implements OnInit, OnDestroy {
   submitAddCompanyProject(companyId: string): void {
     this.adminService.addCompanyProject(companyId, this.newCompanyProject).subscribe({
       next: (res) => {
+        if (!res.data) {
+          this.toast.error('Add failed: empty response');
+          return;
+        }
         const co = this.companiesEdit.find((c) => c.id === companyId);
         if (co) co.projects.push(res.data);
         this.syncContentCompanies(this.companiesEdit);
@@ -266,11 +274,7 @@ export class CompaniesTabComponent implements OnInit, OnDestroy {
     this.showAddCompany = true;
   }
 
-  moveProjectToCompany(
-    projectId: string,
-    fromCompanyId: string,
-    toCompanyId: string,
-  ): void {
+  moveProjectToCompany(projectId: string, fromCompanyId: string, toCompanyId: string): void {
     const fromCompany = this.companiesEdit.find((c) => c.id === fromCompanyId);
     const toCompany = this.companiesEdit.find((c) => c.id === toCompanyId);
 
@@ -367,10 +371,7 @@ export class CompaniesTabComponent implements OnInit, OnDestroy {
       '',
       'Key Projects:',
       ...co.projects.map(
-        (p) =>
-          `• ${p.title}: ${p.description}${
-            p.tech.length ? ` [${p.tech.join(', ')}]` : ''
-          }`,
+        (p) => `• ${p.title}: ${p.description}${p.tech.length ? ` [${p.tech.join(', ')}]` : ''}`,
       ),
     ];
     navigator.clipboard.writeText(lines.join('\n')).then(() => {
@@ -392,9 +393,7 @@ export class CompaniesTabComponent implements OnInit, OnDestroy {
     if (section === 'companies') {
       this.companiesEdit = reorder(this.companiesEdit) as Company[];
     } else if (section.startsWith('company-projects-')) {
-      const co = this.companiesEdit.find(
-        (c) => c.id === section.replace('company-projects-', ''),
-      );
+      const co = this.companiesEdit.find((c) => c.id === section.replace('company-projects-', ''));
       if (co) co.projects = reorder(co.projects) as CompanyProject[];
     }
     this.contentService.reorder(section, orderPayload).subscribe({

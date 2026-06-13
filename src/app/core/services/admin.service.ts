@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
+  ApiResponse,
   Analytics,
   BlogPost,
   Certification,
@@ -30,80 +31,86 @@ export class AdminService {
     return this.http.get<PortfolioContent>(this.base + '/page-content');
   }
 
-  updateHeroSection(heroContent: Hero): Observable<unknown> {
-    return this.http.put(this.base + '/heroSection', heroContent);
+  updateHeroSection(heroContent: Hero): Observable<ApiResponse<Hero>> {
+    return this.http.put<ApiResponse<Hero>>(this.base + '/heroSection', heroContent);
   }
 
-  updateSkills(s: Skill[]): Observable<unknown> {
-    return this.http.put(this.base + '/skills', s);
+  updateSkills(s: Skill[]): Observable<ApiResponse<Skill[]>> {
+    return this.http.put<ApiResponse<Skill[]>>(this.base + '/skills', s);
   }
 
-  addSkill(s: Skill): Observable<unknown> {
-    return this.http.post(this.base + '/skills', s);
+  addSkill(s: Skill): Observable<ApiResponse<Skill>> {
+    return this.http.post<ApiResponse<Skill>>(this.base + '/skills', s);
   }
 
-  deleteSkill(id: string): Observable<unknown> {
-    return this.http.delete(this.base + '/skills/' + id);
+  deleteSkill(id: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(this.base + '/skills/' + id);
   }
 
-  updateCompanies(c: Company[]): Observable<unknown> {
-    return this.http.put(this.base + '/companies', c);
+  updateCompanies(c: Company[]): Observable<ApiResponse<Company[]>> {
+    return this.http.put<ApiResponse<Company[]>>(this.base + '/companies', c);
   }
 
-  addCompany(c: Partial<Company>): Observable<unknown> {
-    return this.http.post(this.base + '/companies', c);
+  addCompany(c: Partial<Company>): Observable<ApiResponse<Company>> {
+    return this.http.post<ApiResponse<Company>>(this.base + '/companies', c);
   }
 
-  deleteCompany(id: string): Observable<unknown> {
-    return this.http.delete(this.base + '/companies/' + id);
+  deleteCompany(id: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(this.base + '/companies/' + id);
   }
 
-  addCompanyProject(coId: string, p: Partial<CompanyProject>): Observable<unknown> {
-    return this.http.post(`${this.base}/companies/${coId}/projects`, p);
+  addCompanyProject(
+    coId: string,
+    p: Partial<CompanyProject>,
+  ): Observable<ApiResponse<CompanyProject>> {
+    return this.http.post<ApiResponse<CompanyProject>>(
+      `${this.base}/companies/${coId}/projects`,
+      p,
+    );
   }
 
-  deleteCompanyProject(pid: string): Observable<unknown> {
-    return this.http.delete(`${this.base}/projects/${pid}`);
+  deleteCompanyProject(pid: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(`${this.base}/projects/${pid}`);
   }
 
-  updatePersonalProjects(p: PersonalProject[]): Observable<unknown> {
-    return this.http.put(this.base + '/personal-projects', p);
+  updatePersonalProjects(p: PersonalProject[]): Observable<ApiResponse<PersonalProject[]>> {
+    return this.http.put<ApiResponse<PersonalProject[]>>(this.base + '/personal-projects', p);
   }
 
-  addPersonalProject(p: Partial<PersonalProject>): Observable<unknown> {
-    return this.http.post(this.base + '/personal-projects', p);
+  addPersonalProject(p: Partial<PersonalProject>): Observable<ApiResponse<PersonalProject>> {
+    return this.http.post<ApiResponse<PersonalProject>>(this.base + '/personal-projects', p);
   }
 
-  deletePersonalProject(id: string): Observable<unknown> {
-    return this.http.delete(this.base + '/personal-projects/' + id);
+  deletePersonalProject(id: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(this.base + '/personal-projects/' + id);
   }
 
-  updateExperience(e: Experience[]): Observable<unknown> {
-    return this.http.put(this.base + '/experience', e);
+  updateExperience(e: Experience[]): Observable<ApiResponse<Experience[]>> {
+    return this.http.put<ApiResponse<Experience[]>>(this.base + '/experience', e);
   }
 
-  addExperience(e: Experience): Observable<unknown> {
-    return this.http.post(this.base + '/experience', e);
+  addExperience(e: Experience): Observable<ApiResponse<Experience>> {
+    return this.http.post<ApiResponse<Experience>>(this.base + '/experience', e);
   }
 
-  deleteExperience(id: string): Observable<unknown> {
-    return this.http.delete(this.base + '/experience/' + id);
+  deleteExperience(id: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(this.base + '/experience/' + id);
   }
 
-  updateStats(s: Stat[]): Observable<unknown> {
-    return this.http.put(this.base + '/stats', s);
+  updateStats(s: Stat[]): Observable<ApiResponse<Stat[]>> {
+    return this.http.put<ApiResponse<Stat[]>>(this.base + '/stats', s);
   }
 
-  updateCertifications(c: Certification[]): Observable<unknown> {
-    return this.http.put(this.base + '/certifications', c);
+  updateCertifications(c: Certification[]): Observable<ApiResponse<Certification[]>> {
+    return this.http.put<ApiResponse<Certification[]>>(this.base + '/certifications', c);
   }
 
-  addCertification(c: Partial<Certification>): Observable<unknown> {
-    return this.http.post(this.base + '/certifications', c);
+  addCertification(c: Partial<Certification>): Observable<ApiResponse<Certification>> {
+    return this.http.post<ApiResponse<Certification>>(this.base + '/certifications', c);
   }
 
-  deleteCertification(id: string): Observable<unknown> {
-    return this.http.delete(this.base + '/certifications/' + id);
+  deleteCertification(id: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(this.base + '/certifications/' + id);
   }
 
   getAllTestimonials(): Observable<{ approved: Testimonial[]; pending: Testimonial[] }> {
@@ -112,48 +119,51 @@ export class AdminService {
     );
   }
 
-  updateTestimonials(t: Testimonial[]): Observable<unknown> {
-    return this.http.put(this.base + '/testimonials', t);
+  updateTestimonials(t: Testimonial[]): Observable<ApiResponse<Testimonial[]>> {
+    return this.http.put<ApiResponse<Testimonial[]>>(this.base + '/testimonials', t);
   }
 
-  addTestimonial(t: Partial<Testimonial>): Observable<unknown> {
-    return this.http.post(this.base + '/testimonials', t);
+  addTestimonial(t: Partial<Testimonial>): Observable<ApiResponse<Testimonial>> {
+    return this.http.post<ApiResponse<Testimonial>>(this.base + '/testimonials', t);
   }
 
-  updateTestimonial(id: string, d: Partial<Testimonial>): Observable<unknown> {
-    return this.http.put(this.base + '/testimonials/' + id, d);
+  updateTestimonial(id: string, d: Partial<Testimonial>): Observable<ApiResponse<Testimonial>> {
+    return this.http.put<ApiResponse<Testimonial>>(this.base + '/testimonials/' + id, d);
   }
 
-  deleteTestimonial(id: string): Observable<unknown> {
-    return this.http.delete(this.base + '/testimonials/' + id);
+  deleteTestimonial(id: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(this.base + '/testimonials/' + id);
   }
 
-  approveTestimonial(id: string): Observable<unknown> {
-    return this.http.put(`${this.base}/testimonials/pending/${id}/approve`, {});
+  approveTestimonial(id: string): Observable<ApiResponse<Testimonial>> {
+    return this.http.put<ApiResponse<Testimonial>>(
+      `${this.base}/testimonials/pending/${id}/approve`,
+      {},
+    );
   }
 
-  rejectTestimonial(id: string): Observable<unknown> {
-    return this.http.put(`${this.base}/testimonials/pending/${id}/reject`, {});
+  rejectTestimonial(id: string): Observable<ApiResponse> {
+    return this.http.put<ApiResponse>(`${this.base}/testimonials/pending/${id}/reject`, {});
   }
 
-  deletePendingTestimonial(id: string): Observable<unknown> {
-    return this.http.delete(`${this.base}/testimonials/pending/${id}`);
+  deletePendingTestimonial(id: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(`${this.base}/testimonials/pending/${id}`);
   }
 
-  updateBlogPosts(p: BlogPost[]): Observable<unknown> {
-    return this.http.put(this.base + '/blog', p);
+  updateBlogPosts(p: BlogPost[]): Observable<ApiResponse<BlogPost[]>> {
+    return this.http.put<ApiResponse<BlogPost[]>>(this.base + '/blog', p);
   }
 
-  addBlogPost(p: Partial<BlogPost>): Observable<unknown> {
-    return this.http.post(this.base + '/blog', p);
+  addBlogPost(p: Partial<BlogPost>): Observable<ApiResponse<BlogPost>> {
+    return this.http.post<ApiResponse<BlogPost>>(this.base + '/blog', p);
   }
 
-  updateBlogPost(id: string, d: Partial<BlogPost>): Observable<unknown> {
-    return this.http.put(this.base + '/blog/' + id, d);
+  updateBlogPost(id: string, d: Partial<BlogPost>): Observable<ApiResponse<BlogPost>> {
+    return this.http.put<ApiResponse<BlogPost>>(this.base + '/blog/' + id, d);
   }
 
-  deleteBlogPost(id: string): Observable<unknown> {
-    return this.http.delete(this.base + '/blog/' + id);
+  deleteBlogPost(id: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(this.base + '/blog/' + id);
   }
 
   getAnalytics(): Observable<Analytics> {
@@ -162,11 +172,11 @@ export class AdminService {
       .pipe(map((r) => r.data));
   }
 
-  resetAnalytics(): Observable<unknown> {
-    return this.http.delete(this.base + '/analytics/reset');
+  resetAnalytics(): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(this.base + '/analytics/reset');
   }
 
-  updateSettings(s: Partial<SiteSettings>): Observable<unknown> {
-    return this.http.put(this.base + '/settings', s);
+  updateSettings(s: Partial<SiteSettings>): Observable<ApiResponse<SiteSettings>> {
+    return this.http.put<ApiResponse<SiteSettings>>(this.base + '/settings', s);
   }
 }

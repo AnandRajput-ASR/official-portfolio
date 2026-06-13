@@ -67,7 +67,7 @@ export class AccountTabComponent {
         if (res.emailSent) {
           this.toast.info('Reset link sent to ' + res.email);
         } else {
-          this.forgotTokenResult = res.resetToken;
+          this.forgotTokenResult = res.resetToken ?? null;
           this.showResetForm = true;
           this.toast.warning('Email not configured — token shown below for manual reset');
         }
