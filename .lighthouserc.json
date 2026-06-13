@@ -1,0 +1,27 @@
+{
+  "ci": {
+    "collect": {
+      "staticDistDir": "./dist/official-portfolio-frontend/browser",
+      "url": [
+        "/",
+        "/blog"
+      ],
+      "numberOfRuns": 1,
+      "settings": {
+        "preset": "desktop",
+        "skipAudits": [
+          "uses-http2",
+          "is-on-https"
+        ]
+      }
+    },
+    "assert": {
+      // Phase 0: informational. First run just records the baseline.
+      // Flip to "error" once we have a baseline in `.lighthouseci/`.
+      "assertMatrix": []
+    },
+    "upload": {
+      "target": "temporary-public-storage"
+    }
+  }
+}
