@@ -1,6 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { PortfolioContent, Testimonial } from '@core/models';
-import { ActiveTab } from '../../features/admin/dashboard/tabs/active-tab.type';
+import { ActiveTab, PortfolioContent, Testimonial } from '@core/models';
 
 /**
  * Shared signal-based source of truth for the admin dashboard.

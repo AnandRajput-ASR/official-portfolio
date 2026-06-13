@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { ApiResponse, MessagesResponse } from '@core/models';
 import { environment } from '@env/environment';
-import { MessagesResponse } from '@core/models';
+import { Observable } from 'rxjs';
 
 export interface ContactPayload {
   name: string;
@@ -27,22 +27,22 @@ export class MessagesService {
   }
 
   // Admin — mark one as read
-  markRead(id: string): Observable<any> {
-    return this.http.patch(`${this.base}/${id}/read`, {});
+  markRead(id: string): Observable<ApiResponse> {
+    return this.http.patch<ApiResponse>(`${this.base}/${id}/read`, {});
   }
 
   // Admin — toggle star
-  toggleStar(id: string): Observable<any> {
-    return this.http.patch(`${this.base}/${id}/star`, {});
+  toggleStar(id: string): Observable<ApiResponse> {
+    return this.http.patch<ApiResponse>(`${this.base}/${id}/star`, {});
   }
 
   // Admin — delete
-  deleteMessage(id: string): Observable<any> {
-    return this.http.delete(`${this.base}/${id}`);
+  deleteMessage(id: string): Observable<ApiResponse> {
+    return this.http.delete<ApiResponse>(`${this.base}/${id}`);
   }
 
   // Admin — mark all read
-  markAllRead(): Observable<any> {
-    return this.http.patch(`${this.base}/mark-all-read`, {});
+  markAllRead(): Observable<ApiResponse> {
+    return this.http.patch<ApiResponse>(`${this.base}/mark-all-read`, {});
   }
 }

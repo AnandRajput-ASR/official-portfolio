@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { ActiveTab } from '@core/models';
 import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
 import { AuditLogService } from '@core/services/audit-log.service';
@@ -8,10 +9,9 @@ import { ConfirmService } from '@core/services/confirm.service';
 import { MessagesStateService } from '@core/services/messages-state.service';
 import { ResumeStateService } from '@core/services/resume-state.service';
 import { ThemeService } from '@core/services/theme.service';
-import { ToastComponent } from '@shared/components/toast/toast.component';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
+import { ToastComponent } from '@shared/components/toast/toast.component';
 import { AccountTabComponent } from './tabs/account-tab/account-tab.component';
-import { ActiveTab } from './tabs/active-tab.type';
 import { AnalyticsTabComponent } from './tabs/analytics-tab/analytics-tab.component';
 import { AuditLogComponent } from './tabs/audit-log/audit-log.component';
 import { BlogTabComponent } from './tabs/blog-tab/blog-tab.component';
