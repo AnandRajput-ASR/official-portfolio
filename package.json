@@ -14,6 +14,7 @@
     "lint": "eslint \"src/**/*.{ts,html}\"",
     "lint:fix": "eslint \"src/**/*.{ts,html}\" --fix",
     "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
+    "audit:security": "npm audit --audit-level=high",
     "verify": "npm run lint && npm run build && npm run test:ci",
     "format": "prettier --write .",
     "prepare": "husky",
