@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, inject } from '@angular/core';
 import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
+import { AuditLogService } from '@core/services/audit-log.service';
 import { AuthService } from '@core/services/auth.service';
 import { ConfirmService } from '@core/services/confirm.service';
 import { MessagesStateService } from '@core/services/messages-state.service';
@@ -12,6 +13,7 @@ import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confir
 import { AccountTabComponent } from './tabs/account-tab/account-tab.component';
 import { ActiveTab } from './tabs/active-tab.type';
 import { AnalyticsTabComponent } from './tabs/analytics-tab/analytics-tab.component';
+import { AuditLogComponent } from './tabs/audit-log/audit-log.component';
 import { BlogTabComponent } from './tabs/blog-tab/blog-tab.component';
 import { CertificationsTabComponent } from './tabs/certifications-tab/certifications-tab.component';
 import { CompaniesTabComponent } from './tabs/companies-tab/companies-tab.component';
@@ -46,6 +48,7 @@ import { TestimonialsTabComponent } from './tabs/testimonials-tab/testimonials-t
     ConfirmDialogComponent,
     AccountTabComponent,
     AnalyticsTabComponent,
+    AuditLogComponent,
     BlogTabComponent,
     CertificationsTabComponent,
     CompaniesTabComponent,
@@ -65,6 +68,7 @@ import { TestimonialsTabComponent } from './tabs/testimonials-tab/testimonials-t
 export class DashboardComponent implements OnInit {
   protected store = inject(AdminContentStore);
   private adminService = inject(AdminService);
+  protected audit = inject(AuditLogService);
   auth = inject(AuthService);
   messagesService = inject(MessagesStateService);
   resumeService = inject(ResumeStateService);
@@ -118,6 +122,7 @@ export class DashboardComponent implements OnInit {
       resume: 'Resume',
       account: 'Account',
       stats: 'Stats',
+      audit: 'Audit Log',
     };
     return map[tab] || tab;
   }
@@ -150,6 +155,7 @@ export class DashboardComponent implements OnInit {
     if (!saver) return;
     e.preventDefault();
     if (this.store.saving()) return;
+    this.audit.log(this.activeTab, 'save', 'Ctrl+S save');
     saver();
   }
 

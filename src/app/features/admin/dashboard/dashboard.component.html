@@ -98,6 +98,14 @@
         <span class="tab-icon">🔐</span> Account
         <span class="dirty-dot" *ngIf="store.isDirty('account')"></span>
       </button>
+      <button [class.active]="activeTab === 'audit'" (click)="mobileSetTab('audit')">
+        <span class="tab-icon">📋</span> Audit Log
+        <span
+          class="unread-badge"
+          *ngIf="audit.events().length > 0"
+          [title]="audit.events().length + ' recent admin actions'"
+        >{{ audit.events().length }}</span>
+      </button>
     </nav>
     <div class="sidebar-footer">
       <button
@@ -129,6 +137,7 @@
     <app-account-tab *ngIf="activeTab === 'account'" />
     <app-messages-tab *ngIf="activeTab === 'messages'"></app-messages-tab>
     <app-resume-tab *ngIf="activeTab === 'resume'" />
+    <app-audit-log *ngIf="activeTab === 'audit'" />
   </main>
 </div>
 

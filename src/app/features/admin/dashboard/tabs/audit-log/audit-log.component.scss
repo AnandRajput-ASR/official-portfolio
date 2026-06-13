@@ -1,0 +1,58 @@
+/* Audit Log tab — relies on the parent dashboard's `.tab-content`
+   and `.tab-header` styles, plus global CSS custom properties. */
+
+.al-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.al-item {
+  display: grid;
+  grid-template-columns: 80px 100px 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent2);
+  padding: 0.6rem 0.9rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.78rem;
+}
+
+.al-action {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--amber);
+
+  &[data-action='delete'] {
+    color: #ff4d6d;
+  }
+  &[data-action='save'] {
+    color: #4caf50;
+  }
+}
+
+.al-tab {
+  color: var(--muted);
+  text-transform: uppercase;
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+}
+
+.al-summary {
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.al-time {
+  color: var(--muted);
+  font-size: 0.7rem;
+}

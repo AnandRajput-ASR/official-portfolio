@@ -14,4 +14,5 @@ export type ActiveTab =
   | 'messages'
   | 'resume'
   | 'account'
-  | 'stats';
+  | 'stats'
+  | 'audit';
