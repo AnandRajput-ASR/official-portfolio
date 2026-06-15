@@ -153,7 +153,8 @@ export function getProjectsWithImpact(co: Company): number {
 
 export function getCompletionRate(co: Company): number {
   if (!co.projects.length) return 0;
-  return Math.round((getCompletedCount(co) / co.projects.length) * 100);
+  const completed = co.projects.filter((p) => effectiveStatus(p) === 'completed').length;
+  return Math.round((completed / co.projects.length) * 100);
 }
 
 /**
@@ -206,8 +207,8 @@ export function applyDefaultPeriod(co: Company): void {
   if (co.period || !startDate) return;
   const start = monthStamp(startDate);
   if (start === null) return;
-  const startYear = Math.floor(start / 12);
-  const startMonth = (start % 12) + 1;
+  const startYear = Math.floor((start - 1) / 12);
+  const startMonth = ((start - 1) % 12) + 1;
   const startStr = `${MONTH_NAMES[startMonth - 1]} ${startYear}`;
 
   if (co.current || !endDate) {
@@ -219,7 +220,7 @@ export function applyDefaultPeriod(co: Company): void {
     co.period = `${startStr} — Present`;
     return;
   }
-  const endYear = Math.floor(end / 12);
-  const endMonth = (end % 12) + 1;
+  const endYear = Math.floor((end - 1) / 12);
+  const endMonth = ((end - 1) % 12) + 1;
   co.period = `${startStr} — ${MONTH_NAMES[endMonth - 1]} ${endYear}`;
 }
