@@ -8,6 +8,7 @@ import {
   inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DragListDirective } from '@core/directives/drag-list.directive';
 import { Certification } from '@core/models';
 import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
@@ -17,7 +18,7 @@ import { ContentService } from '@core/services/content.service';
 import { LoadingService } from '@core/services/loading.service';
 import { CertificationBadgeComponent } from '@shared/components/certification-badge/certification-badge.component';
 import { ToastService } from '@shared/components/toast/toast.component';
-import { DragListDirective } from '@core/directives/drag-list.directive';
+import { removeImageBackgroundToPng } from './certification-image.util';
 
 @Component({
   selector: 'app-certifications-tab',
@@ -280,7 +281,10 @@ export class CertificationsTabComponent implements OnInit, OnDestroy {
     const idx = this.certificationsEdit.findIndex((item) => item.id === cert.id);
 
     try {
-      const processedDataUrl = await this.removeBackgroundToPng(source);
+      const processedDataUrl = await removeImageBackgroundToPng(
+        source,
+        (imageSource) => this.contentService.getImageUrl(imageSource),
+      );
       const base64 = processedDataUrl.split(',')[1];
 
       cert.badgeType = 'upload';
@@ -381,109 +385,6 @@ export class CertificationsTabComponent implements OnInit, OnDestroy {
 
   private badgeProcessingKey(cert: Partial<Certification>): string {
     return cert.id || 'new-cert';
-  }
-
-  private removeBackgroundToPng(source: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const image = new Image();
-      image.crossOrigin = 'anonymous';
-
-      image.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          canvas.width = image.width;
-          canvas.height = image.height;
-
-          const ctx = canvas.getContext('2d');
-          if (!ctx) {
-            reject(new Error('Canvas context unavailable'));
-            return;
-          }
-
-          ctx.drawImage(image, 0, 0);
-          const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const data = frame.data;
-          const width = canvas.width;
-          const height = canvas.height;
-
-          const corners = [
-            this.pixelAt(data, width, 0, 0),
-            this.pixelAt(data, width, width - 1, 0),
-            this.pixelAt(data, width, 0, height - 1),
-            this.pixelAt(data, width, width - 1, height - 1),
-          ];
-          const bg = this.averagePixel(corners);
-
-          const visited = new Uint8Array(width * height);
-          const queue: [number, number][] = [];
-          for (let x = 0; x < width; x++) {
-            queue.push([x, 0], [x, height - 1]);
-          }
-          for (let y = 0; y < height; y++) {
-            queue.push([0, y], [width - 1, y]);
-          }
-
-          const tolerance = 40;
-          while (queue.length) {
-            const [x, y] = queue.shift() as [number, number];
-            const index = y * width + x;
-            if (visited[index]) continue;
-            visited[index] = 1;
-
-            const rgba = this.pixelAt(data, width, x, y);
-            const nearBackground =
-              Math.abs(rgba[0] - bg[0]) <= tolerance &&
-              Math.abs(rgba[1] - bg[1]) <= tolerance &&
-              Math.abs(rgba[2] - bg[2]) <= tolerance &&
-              rgba[3] > 0;
-
-            if (!nearBackground) continue;
-
-            const offset = (y * width + x) * 4;
-            data[offset + 3] = 0;
-
-            if (x > 0) queue.push([x - 1, y]);
-            if (x < width - 1) queue.push([x + 1, y]);
-            if (y > 0) queue.push([x, y - 1]);
-            if (y < height - 1) queue.push([x, y + 1]);
-          }
-
-          ctx.putImageData(frame, 0, 0);
-          resolve(canvas.toDataURL('image/png'));
-        } catch (processingError) {
-          reject(processingError);
-        }
-      };
-
-      image.onerror = () => reject(new Error('Image load failed'));
-      image.src = this.contentService.getImageUrl(source);
-    });
-  }
-
-  private pixelAt(
-    data: Uint8ClampedArray,
-    width: number,
-    x: number,
-    y: number,
-  ): [number, number, number, number] {
-    const i = (y * width + x) * 4;
-    return [data[i], data[i + 1], data[i + 2], data[i + 3]];
-  }
-
-  private averagePixel(
-    samples: [number, number, number, number][],
-  ): [number, number, number, number] {
-    const sum = samples.reduce(
-      (acc, s) => [acc[0] + s[0], acc[1] + s[1], acc[2] + s[2], acc[3] + s[3]],
-      [0, 0, 0, 0],
-    );
-    const n = samples.length || 1;
-    return [
-      Math.round(sum[0] / n),
-      Math.round(sum[1] / n),
-      Math.round(sum[2] / n),
-      Math.round(sum[3] / n),
-    ];
   }
 
   private parseYear(value: string | number | undefined): number | null {
