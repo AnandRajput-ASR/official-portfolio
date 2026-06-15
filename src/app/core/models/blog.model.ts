@@ -1,4 +1,6 @@
-export interface BlogPost {
+import { EntityMetadata } from './api.model';
+
+export interface BlogPost extends EntityMetadata {
   id: string;
   title: string;
   slug: string;

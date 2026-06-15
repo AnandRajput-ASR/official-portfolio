@@ -1,3 +1,5 @@
+import { EntityMetadata } from './api.model';
+
 export interface FreelanceConfig {
   enabled: boolean;
   ctaTitle: string;
@@ -16,7 +18,7 @@ export interface LearningItem {
   url?: string;
 }
 
-export interface SiteSettings {
+export interface SiteSettings extends EntityMetadata {
   openToWork: boolean;
   openToWorkText: string;
   sections: {

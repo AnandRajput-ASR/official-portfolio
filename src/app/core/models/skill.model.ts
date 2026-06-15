@@ -1,4 +1,6 @@
-export interface Skill {
+import { EntityMetadata } from './api.model';
+
+export interface Skill extends EntityMetadata {
   id: string;
   name: string;
   icon: string;

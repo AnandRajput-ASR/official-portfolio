@@ -1,9 +1,11 @@
+import { EntityMetadata } from './api.model';
+
 export interface DailyVisit {
   date: string; // 'YYYY-MM-DD'
   count: number;
 }
 
-export interface Analytics {
+export interface Analytics extends EntityMetadata {
   pageViews: number;
   resumeDownloads: number;
   contactFormViews: number;
