@@ -42,16 +42,16 @@ let configured = false;
 function configure(): void {
   if (configured) return;
   configured = true;
-  DOMPurify.addHook('uponSanitizeAttribute', (_node, ev) => {
-    const hookEv = ev as unknown as { attrName?: string; attrValue?: unknown; tagName?: string };
-    if (hookEv.attrName === 'src' || hookEv.attrName === 'href') {
-      const v = String(hookEv.attrValue ?? '').trim().toLowerCase();
+  DOMPurify.addHook('uponSanitizeAttribute', (node, ev) => {
+    const tagName = (node as Element | null)?.nodeName?.toUpperCase() ?? '';
+    if (ev.attrName === 'src' || ev.attrName === 'href') {
+      const v = String(ev.attrValue ?? '').trim().toLowerCase();
       if (v.startsWith('javascript:') || v.startsWith('data:')) {
         ev.keepAttr = false;
       }
     }
-    if (hookEv.tagName === 'IFRAME' && hookEv.attrName === 'src') {
-      if (!IFRAME_ALLOWED_SRC.test(String(hookEv.attrValue ?? ''))) {
+    if (tagName === 'IFRAME' && ev.attrName === 'src') {
+      if (!IFRAME_ALLOWED_SRC.test(String(ev.attrValue ?? ''))) {
         ev.keepAttr = false;
       }
     }
