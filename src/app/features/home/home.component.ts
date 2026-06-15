@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
 import {
     AfterViewInit,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
     Component,
     OnDestroy,
     OnInit,
@@ -18,6 +20,7 @@ import { ObservabilityService } from '@core/services/observability.service';
 import { ResumeInfo, ResumeService } from '@core/services/resume.service';
 import { StorageService } from '@core/services/storage.service';
 import { ThemeService } from '@core/services/theme.service';
+import { catchError, finalize, map, of, switchMap, tap } from 'rxjs';
 import { AboutSectionComponent } from './sections/about/about-section.component';
 import { BlogSectionComponent } from './sections/blog/blog-section.component';
 import { CertsSectionComponent } from './sections/certs/certs-section.component';
@@ -65,6 +68,7 @@ import { WorkSectionComponent } from './sections/work/work-section.component';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
   encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   contentService = inject(ContentService);
@@ -74,6 +78,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private loadingService = inject(LoadingService);
   private observability = inject(ObservabilityService);
   private storage = inject(StorageService);
+  private cdr = inject(ChangeDetectorRef);
 
   content: PortfolioContent | null = null;
   loading = true;
@@ -92,46 +97,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   resumeGateOpen = false;
 
   ngOnInit(): void {
-    this.loadingService.start('home-content');
-    this.contentService.getAll().subscribe({
-      next: (data) => {
-        this.content = data;
-        this.loading = false;
-        this.refreshCaches();
-        // Propagate admin-configured enabled languages to LanguageService
-        if (data.siteSettings?.enabledLanguages?.length) {
-          this.langService.setEnabledLangs(data.siteSettings.enabledLanguages);
-        }
-        // run reveal AFTER DOM renders
-        setTimeout(() => {
-          this.setupScrollReveal();
-          this.setupCounters();
-        }, 0);
-
-        this.loadingService.stop('home-content');
-        // Track page view
-        this.contentService.trackEvent('pageView');
-        // Load visitor count for public footer widget
-        const threshold = data.siteSettings?.visitorCount?.threshold ?? 100;
-        if (data.siteSettings?.visitorCount?.show) {
-          this.contentService.getVisitorCount().subscribe({
-            next: (c) => {
-              if (c.thisMonth >= threshold) this.visitorCount = c.thisMonth;
-            },
-            error: (err) => this.observability.captureError(err, { source: 'home.visitorCount' }),
-          });
-        }
-      },
-      error: () => {
-        this.loading = false;
-        this.apiError = true;
-        this.loadingService.stop('home-content');
-      },
-    });
-    this.resumeService.getInfo().subscribe({
-      next: (info) => (this.resumeInfo = info),
-      error: (err) => this.observability.captureError(err, { source: 'home.resumeInfo' }),
-    });
+    this.loadContent();
+    this.loadResumeInfo();
   }
 
   ngAfterViewInit(): void {
@@ -291,30 +258,64 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   retryLoad(): void {
     this.apiError = false;
     this.loading = true;
-    this.loadingService.start('home-content');
-    this.contentService.getAll().subscribe({
-      next: (data) => {
-        this.content = data;
-        this.loading = false;
-        this.apiError = false;
-        this.refreshCaches();
-        if (data.siteSettings?.enabledLanguages?.length) {
-          this.langService.setEnabledLangs(data.siteSettings.enabledLanguages);
-        }
-        // run reveal AFTER DOM renders
-        setTimeout(() => {
-          this.setupScrollReveal();
-          this.setupCounters();
-        }, 0);
+    this.loadContent();
+  }
 
-        this.loadingService.stop('home-content');
-        this.contentService.trackEvent('pageView');
+  private loadContent(): void {
+    this.loadingService.start('home-content');
+    this.contentService
+      .getAll()
+      .pipe(
+        tap((data) => {
+          this.content = data;
+          this.refreshCaches();
+          if (data.siteSettings?.enabledLanguages?.length) {
+            this.langService.setEnabledLangs(data.siteSettings.enabledLanguages);
+          }
+          setTimeout(() => {
+            this.setupScrollReveal();
+            this.setupCounters();
+          }, 0);
+        }),
+        switchMap((data) => {
+          const threshold = data.siteSettings?.visitorCount?.threshold ?? 100;
+          if (!data.siteSettings?.visitorCount?.show) {
+            return of<number | null>(null);
+          }
+          return this.contentService.getVisitorCount().pipe(
+            map((count) => (count.thisMonth >= threshold ? count.thisMonth : null)),
+            catchError((err) => {
+              this.observability.captureError(err, { source: 'home.visitorCount' });
+              return of<number | null>(null);
+            }),
+          );
+        }),
+        finalize(() => {
+          this.loadingService.stop('home-content');
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (count) => {
+          this.visitorCount = count;
+          this.loading = false;
+          this.apiError = false;
+          this.contentService.trackEvent('pageView');
+        },
+        error: () => {
+          this.loading = false;
+          this.apiError = true;
+        },
+      });
+  }
+
+  private loadResumeInfo(): void {
+    this.resumeService.getInfo().subscribe({
+      next: (info) => {
+        this.resumeInfo = info;
+        this.cdr.markForCheck();
       },
-      error: () => {
-        this.loading = false;
-        this.apiError = true;
-        this.loadingService.stop('home-content');
-      },
+      error: (err) => this.observability.captureError(err, { source: 'home.resumeInfo' }),
     });
   }
 

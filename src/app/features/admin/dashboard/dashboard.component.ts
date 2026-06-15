@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnInit, inject } from '@angular/core';
 import { ActiveTab } from '@core/models';
 import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
@@ -64,6 +64,7 @@ import { TestimonialsTabComponent } from './tabs/testimonials-tab/testimonials-t
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
   protected store = inject(AdminContentStore);
