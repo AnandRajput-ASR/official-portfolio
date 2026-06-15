@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ApiResponse, BlogPost, PortfolioContent, SiteSettings, Testimonial } from '@core/models';
+import { normalizePortfolioContent, normalizeSettingsSingleton } from '@core/utils/wave2-compat';
 import { environment } from '@env/environment';
 import { map, Observable, shareReplay } from 'rxjs';
 
@@ -31,7 +32,9 @@ export class ContentService {
   }
 
   getAll(): Observable<PortfolioContent> {
-    return this.http.get<PortfolioContent>(this.base + '/page-content');
+    return this.http
+      .get<unknown>(this.base + '/page-content')
+      .pipe(map((res) => normalizePortfolioContent(res)));
   }
 
   /** Cached page-content stream to prevent repeated heavy payload requests. */
@@ -46,7 +49,7 @@ export class ContentService {
     return this.getAllCached().pipe(
       map((content) =>
         (content.blogPosts ?? [])
-          .filter((p) => p.published)
+          .filter((p) => p.published && p.is_deleted !== true)
           .sort((a, b) => (b.publishedAt || '').localeCompare(a.publishedAt || '')),
       ),
     );
@@ -58,14 +61,19 @@ export class ContentService {
     return this.getAllCached().pipe(
       map((content) => ({
         content,
-        post: (content.blogPosts ?? []).find((p) => p.slug === slug && p.published) ?? null,
+        post:
+          (content.blogPosts ?? []).find(
+            (p) => p.slug === slug && p.published && p.is_deleted !== true,
+          ) ?? null,
       })),
     );
   }
 
   // Settings
   getSettings(): Observable<SiteSettings> {
-    return this.http.get<SiteSettings>(this.base + '/settings');
+    return this.http
+      .get<unknown>(this.base + '/settings')
+      .pipe(map((res) => normalizeSettingsSingleton(res)));
   }
 
   // Testimonials (admin: all + pending)

@@ -1,8 +1,8 @@
 import { HttpClient, HttpEventType, HttpResponse } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { ApiResponse } from '@core/models';
 import { environment } from '@env/environment';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 export interface ResumeInfo {
   available: boolean;
@@ -10,6 +10,12 @@ export interface ResumeInfo {
   downloadName?: string;
   uploadedAt?: string;
   size?: number;
+  version?: number;
+  created_by?: string;
+  updated_by?: string;
+  deleted_at?: string | null;
+  is_deleted?: boolean;
+  singleton_key?: string;
 }
 
 export interface UploadProgress {
@@ -26,7 +32,9 @@ export class ResumeService {
   private base = `${environment.api.baseUrl}/resume`;
 
   getInfo(): Observable<ResumeInfo> {
-    return this.http.get<ResumeInfo>(`${this.base}/info`);
+    return this.http
+      .get<unknown>(`${this.base}/info`)
+      .pipe(map((res) => this.normalizeResumeInfo(res)));
   }
 
   getDownloadUrl(): string {
@@ -102,5 +110,19 @@ export class ResumeService {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  private normalizeResumeInfo(rawInfo: unknown): ResumeInfo {
+    const payload =
+      rawInfo && typeof rawInfo === 'object' && !Array.isArray(rawInfo) && 'data' in rawInfo
+        ? (rawInfo as { data?: unknown }).data
+        : rawInfo;
+    const candidate = Array.isArray(payload)
+      ? payload.find((entry) => (entry as { is_deleted?: boolean })?.is_deleted !== true) ?? payload[0]
+      : payload;
+
+    const normalized = (candidate as ResumeInfo) ?? { available: false };
+    if (normalized.is_deleted === true) return { available: false };
+    return normalized;
   }
 }
