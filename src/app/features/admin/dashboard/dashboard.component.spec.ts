@@ -1,302 +1,181 @@
 import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
-import { Company, CompanyProject, Message, Testimonial } from '@core/models';
+import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
+import { AuditLogService } from '@core/services/audit-log.service';
 import { AuthService } from '@core/services/auth.service';
-import { CertBadgeService } from '@core/services/cert-badge.service';
-import { ContentService } from '@core/services/content.service';
-import { LoadingService } from '@core/services/loading.service';
-import { MessagesService } from '@core/services/messages.service';
-import { ResumeService } from '@core/services/resume.service';
+import { ConfirmService } from '@core/services/confirm.service';
+import { MessagesStateService } from '@core/services/messages-state.service';
+import { ResumeStateService } from '@core/services/resume-state.service';
 import { ThemeService } from '@core/services/theme.service';
-import { ToastService } from '@shared/components/toast/toast.component';
+import { of } from 'rxjs';
 import { DashboardComponent } from './dashboard.component';
 
 /**
- * Baseline regression tests for the dashboard's pure logic.
- * The (very large) template is overridden so these run fast and in isolation —
- * they exercise the class methods, not the markup.
+ * Tests for the dashboard *shell*.
+ *
+ * All edit buffers and per-tab logic now live in `tabs/<name>-tab/` and are
+ * covered by their own specs (plus the pure helpers in
+ * `@core/utils/company-metrics`). These tests exercise only the shell's
+ * responsibilities: tab switching with the unsaved-changes guard, the sidebar,
+ * the dirty-tab bar, and the Ctrl/Cmd+S dispatch.
  */
-describe('DashboardComponent (logic)', () => {
+describe('DashboardComponent (shell)', () => {
   let component: DashboardComponent;
-
-  const stub = (): unknown => ({});
+  let store: AdminContentStore;
+  let confirmAsk: jasmine.Spy;
+  let messagesLoad: jasmine.Spy;
+  let auditLog: jasmine.Spy;
 
   beforeEach(async () => {
+    confirmAsk = jasmine.createSpy('ask').and.resolveTo(true);
+    messagesLoad = jasmine.createSpy('load');
+    auditLog = jasmine.createSpy('log');
+
     await TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [
-        { provide: ContentService, useValue: { getImageUrl: (s: string) => s } },
-        { provide: AdminService, useValue: stub() },
-        { provide: AuthService, useValue: stub() },
-        { provide: MessagesService, useValue: stub() },
-        { provide: ResumeService, useValue: stub() },
+        { provide: AdminService, useValue: { getAll: () => of(null) } },
+        { provide: AuthService, useValue: {} },
+        { provide: AuditLogService, useValue: { log: auditLog } },
+        { provide: MessagesStateService, useValue: { load: messagesLoad } },
+        { provide: ResumeStateService, useValue: { load: () => {} } },
         { provide: ThemeService, useValue: { isDark: () => false, toggle: () => {} } },
-        { provide: CertBadgeService, useValue: stub() },
+        { provide: ConfirmService, useValue: { ask: confirmAsk } },
         { provide: Router, useValue: { navigate: () => Promise.resolve(true) } },
-        { provide: ToastService, useValue: { success: () => {}, error: () => {}, info: () => {}, warning: () => {} } },
-        { provide: LoadingService, useValue: { start: () => {}, stop: () => {} } },
       ],
     })
-      // Replace the heavy template/styles so we only test class behaviour.
+      // Replace the heavy template/styles so we only test shell behaviour.
       .overrideComponent(DashboardComponent, {
         set: { template: '<div></div>', styles: [], imports: [] },
       })
       .compileComponents();
 
     component = TestBed.createComponent(DashboardComponent).componentInstance;
+    store = TestBed.inject(AdminContentStore);
     // Note: ngOnInit is intentionally NOT called, so no HTTP requests fire.
   });
 
-  function makeProject(p: Partial<CompanyProject>): CompanyProject {
-    return {
-      id: p.id ?? 'p1',
-      title: p.title ?? 'Project',
-      description: p.description ?? 'desc',
-      tech: p.tech ?? [],
-      displayOrder: p.displayOrder ?? 0,
-      status: p.status ?? null,
-      impact: p.impact ?? '',
-    } as CompanyProject;
-  }
-
-  function makeCompany(c: Partial<Company>): Company {
-    return {
-      id: c.id ?? 'c1',
-      name: c.name ?? 'Acme',
-      role: c.role ?? 'Engineer',
-      period: c.period ?? '',
-      location: c.location ?? 'Pune',
-      logo: c.logo ?? '',
-      projects: c.projects ?? [],
-      displayOrder: c.displayOrder ?? 0,
-      startDate: c.startDate,
-      endDate: c.endDate,
-      current: c.current,
-    } as Company;
-  }
+  afterEach(() => {
+    store.dirtyTabs.clear();
+  });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  // ── Skill level helpers ───────────────────────────────────────────────────
-  describe('skill level', () => {
-    it('maps proficiency to a level label', () => {
-      expect(component.skillLevel(95)).toBe('Expert');
-      expect(component.skillLevel(80)).toBe('Advanced');
-      expect(component.skillLevel(60)).toBe('Strong');
-      expect(component.skillLevel(40)).toBe('Growing');
-    });
-
-    it('maps proficiency to a level class', () => {
-      expect(component.skillLevelClass(95)).toBe('elite');
-      expect(component.skillLevelClass(80)).toBe('advanced');
-      expect(component.skillLevelClass(60)).toBe('strong');
-      expect(component.skillLevelClass(40)).toBe('growing');
-    });
-
-    it('falls back to a default when proficiency is missing', () => {
-      expect(component.skillLevel(undefined)).toBe('Advanced');
-    });
-
-    it('labels years of experience', () => {
-      expect(component.skillExperienceLabel('')).toBe('Experience optional');
-      expect(component.skillExperienceLabel('1')).toBe('1 year');
-      expect(component.skillExperienceLabel('3')).toBe('3 years');
-      expect(component.skillExperienceLabel('5+')).toBe('5+ years');
-      expect(component.skillExperienceLabel('3 years')).toBe('3 years');
-    });
-  });
-
-  // ── Tabs / settings ───────────────────────────────────────────────────────
-  describe('tabs & settings', () => {
+  describe('tabLabel', () => {
     it('returns a friendly label per tab', () => {
       expect(component.tabLabel('hero')).toBe('Hero Section');
       expect(component.tabLabel('companies')).toBe('Work / Companies');
       expect(component.tabLabel('settings')).toBe('Site Settings');
     });
+  });
 
-    it('defaultSettings contains the expected top-level keys', () => {
-      const s = component.defaultSettings();
-      expect(s.sections).toBeDefined();
-      expect(s.freelance).toBeDefined();
-      expect(s.hero).toBeDefined();
-      expect(s.enabledLanguages).toContain('en');
+  describe('setTab', () => {
+    it('switches tab when there are no unsaved changes', async () => {
+      await component.setTab('skills');
+      expect(component.activeTab).toBe('skills');
+      expect(confirmAsk).not.toHaveBeenCalled();
     });
 
-    it('mergeWithDefaults deep-merges missing nested keys', () => {
-      const defaults = { a: 1, nested: { x: 1, y: 2 } };
-      const loaded = { nested: { x: 9 } };
-      const merged = component.mergeWithDefaults(defaults, loaded as typeof defaults);
-      expect(merged).toEqual({ a: 1, nested: { x: 9, y: 2 } });
+    it('loads messages when switching to the messages tab', async () => {
+      await component.setTab('messages');
+      expect(messagesLoad).toHaveBeenCalled();
     });
 
-    it('toggleLang never removes English', () => {
-      component.settingsEdit = component.defaultSettings();
-      component.settingsEdit.enabledLanguages = ['en', 'hi'];
-      component.toggleLang('en');
-      expect(component.settingsEdit.enabledLanguages).toContain('en');
-      component.toggleLang('hi');
-      expect(component.settingsEdit.enabledLanguages).not.toContain('hi');
+    it('is a no-op when selecting the already-active tab', async () => {
+      await component.setTab('hero');
+      expect(component.activeTab).toBe('hero');
+      expect(confirmAsk).not.toHaveBeenCalled();
+    });
+
+    it('stays on the dirty tab when the user cancels the guard', async () => {
+      confirmAsk.and.resolveTo(false);
+      store.markDirty('hero');
+      await component.setTab('skills');
+      expect(component.activeTab).toBe('hero');
+      expect(store.isDirty('hero')).toBeTrue();
+    });
+
+    it('leaves and clears the dirty marker when the user confirms', async () => {
+      confirmAsk.and.resolveTo(true);
+      store.markDirty('hero');
+      await component.setTab('skills');
+      expect(component.activeTab).toBe('skills');
+      expect(store.isDirty('hero')).toBeFalse();
     });
   });
 
-  // ── Project status ────────────────────────────────────────────────────────
-  describe('project status', () => {
-    it('returns label and icon for a status', () => {
-      expect(component.projectStatusLabel('completed')).toBe('Completed');
-      expect(component.projectStatusIcon('in-progress')).toBe('🔄');
+  describe('dirty bar', () => {
+    it('exposes the dirty tab count from the store', () => {
+      expect(component.dirtyTabCount).toBe(0);
+      store.markDirty('hero');
+      store.markDirty('skills');
+      expect(component.dirtyTabCount).toBe(2);
     });
 
-    it('returns "No Status" for null/undefined', () => {
-      expect(component.projectStatusLabel(null)).toBe('No Status');
-      expect(component.projectStatusLabel(undefined)).toBe('No Status');
-    });
-  });
-
-  // ── Companies: tenure & validation ────────────────────────────────────────
-  describe('companies', () => {
-    it('calculates tenure across years and months', () => {
-      expect(component.calcTenure(makeCompany({ startDate: '2020-01', endDate: '2022-01' }))).toBe('2y');
-      expect(component.calcTenure(makeCompany({ startDate: '2020-01', endDate: '2020-04' }))).toBe('3mo');
-      expect(component.calcTenure(makeCompany({ startDate: '2020-01', endDate: '2021-04' }))).toBe('1y 3mo');
-    });
-
-    it('detects an invalid date range', () => {
-      expect(component.hasInvalidDateRange(makeCompany({ startDate: '2022-01', endDate: '2020-01' }))).toBeTrue();
-      expect(component.hasInvalidDateRange(makeCompany({ startDate: '2020-01', endDate: '2022-01' }))).toBeFalse();
-      expect(component.hasInvalidDateRange(makeCompany({}))).toBeFalse();
-    });
-
-    it('validates website URLs', () => {
-      expect(component.isValidWebsite('')).toBeTrue();
-      expect(component.isValidWebsite('https://example.com')).toBeTrue();
-      expect(component.isValidWebsite('not-a-url')).toBeFalse();
-      expect(component.isValidWebsite('ftp://example.com')).toBeFalse();
-    });
-
-    it('aggregates unique tech ordered by frequency', () => {
-      const co = makeCompany({
-        projects: [
-          makeProject({ id: 'a', tech: ['Angular', 'Node'] }),
-          makeProject({ id: 'b', tech: ['Angular'] }),
-        ],
-      });
-      expect(component.getUniqueTechStack(co)).toEqual(['Angular', 'Node']);
-      expect(component.getTechProjectCount(co, 'Angular')).toBe(2);
-    });
-
-    it('finds duplicate project titles', () => {
-      const co = makeCompany({
-        projects: [
-          makeProject({ id: 'a', title: 'API' }),
-          makeProject({ id: 'b', title: 'api' }),
-          makeProject({ id: 'c', title: 'Web' }),
-        ],
-      });
-      expect(component.getDuplicateProjectTitles(co)).toEqual(['api']);
-      expect(component.isDuplicateProjectTitle(co, co.projects[0])).toBeTrue();
-      expect(component.isDuplicateProjectTitle(co, co.projects[2])).toBeFalse();
-    });
-
-    it('flags projects missing details', () => {
-      expect(component.isProjectDetailsMissing(makeProject({ description: '', tech: [] }))).toBeTrue();
-      expect(component.isProjectDetailsMissing(makeProject({ description: 'x', tech: ['Node'] }))).toBeFalse();
-    });
-
-    it('computes completion rate from project statuses', () => {
-      const co = makeCompany({
-        projects: [
-          makeProject({ id: 'a', status: 'completed' }),
-          makeProject({ id: 'b', status: 'in-progress' }),
-        ],
-      });
-      expect(component.getCompletedCount(co)).toBe(1);
-      expect(component.getInProgressCount(co)).toBe(1);
-      expect(component.getCompletionRate(co)).toBe(50);
+    it('joins dirty tab labels for display', () => {
+      store.markDirty('hero');
+      store.markDirty('settings');
+      expect(component.getDirtyTabsLabel()).toBe('Hero Section, Site Settings');
     });
   });
 
-  // ── Impact scoring ────────────────────────────────────────────────────────
-  describe('impact scoring', () => {
-    it('returns 0 for empty impact', () => {
-      expect(component.impactScore('')).toBe(0);
-      expect(component.impactStrengthLabel('')).toBe('Weak');
+  describe('sidebar', () => {
+    it('toggles and closes', () => {
+      expect(component.sidebarOpen).toBeFalse();
+      component.toggleSidebar();
+      expect(component.sidebarOpen).toBeTrue();
+      component.closeSidebar();
+      expect(component.sidebarOpen).toBeFalse();
     });
 
-    it('scores a strong, metric-rich impact statement highly', () => {
-      const strong = 'Reduced API latency by 40% and improved uptime for 1000 active users';
-      expect(component.impactScore(strong)).toBeGreaterThanOrEqual(75);
-      expect(component.impactStrengthLabel(strong)).toBe('Strong');
-      expect(component.impactStrengthClass(strong)).toBe('strong');
-    });
-  });
-
-  // ── Messages ──────────────────────────────────────────────────────────────
-  describe('messages', () => {
-    const msg = (over: Partial<Message>): Message =>
-      ({
-        id: over.id ?? 'm',
-        name: 'n',
-        email: 'e',
-        message: 'hi',
-        read: over.read ?? false,
-        starred: over.starred ?? false,
-        receivedAt: '',
-      } as Message);
-
-    it('filters by unread and starred', () => {
-      component.messages = [
-        msg({ id: '1', read: false, starred: true }),
-        msg({ id: '2', read: true, starred: false }),
-      ];
-      component.messageFilter = 'unread';
-      expect(component.filteredMessages.map((m) => m.id)).toEqual(['1']);
-      component.messageFilter = 'starred';
-      expect(component.filteredMessages.map((m) => m.id)).toEqual(['1']);
-      component.messageFilter = 'all';
-      expect(component.filteredMessages.length).toBe(2);
-    });
-
-    it('returns empty string for a missing date', () => {
-      expect(component.formatDate('')).toBe('');
+    it('mobileSetTab switches the tab and closes the sidebar', () => {
+      component.sidebarOpen = true;
+      component.mobileSetTab('analytics');
+      expect(component.activeTab).toBe('analytics');
+      expect(component.sidebarOpen).toBeFalse();
     });
   });
 
-  // ── Testimonials ──────────────────────────────────────────────────────────
-  it('ratingStars returns an array of the given length', () => {
-    expect(component.ratingStars(3).length).toBe(3);
-    const t: Testimonial = { rating: 4 } as Testimonial;
-    expect(component.ratingStars(t.rating).length).toBe(4);
-  });
-
-  // ── Ctrl/Cmd+S shortcut ─────────────────────────────────────────────────
   describe('save shortcut', () => {
     it('dispatches to the active tab saver and prevents default', () => {
-      const saveSpy = spyOn(component, 'saveSkills');
+      const saver = jasmine.createSpy('saver');
+      store.registerSaver('skills', saver);
+      component.activeTab = 'skills';
       const event = new KeyboardEvent('keydown');
       const preventSpy = spyOn(event, 'preventDefault');
-      component.activeTab = 'skills';
+
       component.onSaveShortcut(event);
+
       expect(preventSpy).toHaveBeenCalled();
-      expect(saveSpy).toHaveBeenCalled();
+      expect(saver).toHaveBeenCalled();
+      expect(auditLog).toHaveBeenCalled();
+      store.unregisterSaver('skills');
     });
 
-    it('does nothing on read-only tabs', () => {
+    it('does nothing on read-only tabs without a registered saver', () => {
+      component.activeTab = 'analytics';
       const event = new KeyboardEvent('keydown');
       const preventSpy = spyOn(event, 'preventDefault');
-      component.activeTab = 'analytics';
+
       component.onSaveShortcut(event);
+
       expect(preventSpy).not.toHaveBeenCalled();
     });
 
     it('skips saving while a save is already in flight', () => {
-      const saveSpy = spyOn(component, 'saveHero');
+      const saver = jasmine.createSpy('saver');
+      store.registerSaver('hero', saver);
       component.activeTab = 'hero';
-      component.saving = true;
+      store.saving.set(true);
+
       component.onSaveShortcut(new KeyboardEvent('keydown'));
-      expect(saveSpy).not.toHaveBeenCalled();
+
+      expect(saver).not.toHaveBeenCalled();
+      store.saving.set(false);
+      store.unregisterSaver('hero');
     });
   });
 });

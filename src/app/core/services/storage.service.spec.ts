@@ -57,7 +57,7 @@ describe('StorageService', () => {
 
   it('respects TTL — returns the value before expiry', () => {
     service.setWithExpiry('later', { v: 1 }, 60_000);
-    expect(service.getWithExpiry('later')).toEqual(1);
+    expect(service.getWithExpiry('later')).toEqual({ v: 1 });
   });
 
   it('silently survives when localStorage throws (Safari private mode)', () => {
