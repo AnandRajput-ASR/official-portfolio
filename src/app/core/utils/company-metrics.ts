@@ -33,6 +33,10 @@ export const PROJECT_STATUSES: { value: ProjectStatus; label: string; icon: stri
   { value: 'archived', label: 'Archived', icon: '📦' },
 ];
 
+function effectiveStatus(project: CompanyProject): ProjectStatus {
+  return project.status_v2 ?? project.status ?? null;
+}
+
 export function projectStatusLabel(status?: ProjectStatus): string {
   return PROJECT_STATUSES.find((s) => s.value === (status ?? null))?.label ?? 'No Status';
 }
@@ -59,14 +63,16 @@ export function hasInvalidDateRange(co: Company): boolean {
 
 /** "2y" / "3mo" / "1y 3mo" tenure label. */
 export function calcTenure(co: Company, now: Date = new Date()): string {
-  if (!co.startDate) return '';
-  const start = monthStamp(co.startDate);
+  const startDate = co.startDate;
+  const endDate = co.endDate;
+  if (!startDate) return '';
+  const start = monthStamp(startDate);
   if (start === null) return '';
   let endStamp: number;
-  if (co.current || !co.endDate) {
+  if (co.current || !endDate) {
     endStamp = now.getFullYear() * 12 + (now.getMonth() + 1);
   } else {
-    const e = monthStamp(co.endDate);
+    const e = monthStamp(endDate);
     if (e === null) return '';
     endStamp = e;
   }
@@ -131,11 +137,14 @@ export function getProjectsMissingDetailsCount(co: Company): number {
 }
 
 export function getCompletedCount(co: Company): number {
-  return co.projects.filter((p) => !p.status || p.status === 'completed').length;
+  return co.projects.filter((p) => {
+    const status = effectiveStatus(p);
+    return !status || status === 'completed';
+  }).length;
 }
 
 export function getInProgressCount(co: Company): number {
-  return co.projects.filter((p) => p.status === 'in-progress').length;
+  return co.projects.filter((p) => effectiveStatus(p) === 'in-progress').length;
 }
 
 export function getProjectsWithImpact(co: Company): number {
@@ -192,18 +201,20 @@ export function impactStrengthClass(impact: string | undefined): ImpactStrength 
  * fills when `co.period` is empty so user-typed values are never clobbered.
  */
 export function applyDefaultPeriod(co: Company): void {
-  if (co.period || !co.startDate) return;
-  const start = monthStamp(co.startDate);
+  const startDate = co.startDate;
+  const endDate = co.endDate;
+  if (co.period || !startDate) return;
+  const start = monthStamp(startDate);
   if (start === null) return;
   const startYear = Math.floor(start / 12);
   const startMonth = (start % 12) + 1;
   const startStr = `${MONTH_NAMES[startMonth - 1]} ${startYear}`;
 
-  if (co.current || !co.endDate) {
+  if (co.current || !endDate) {
     co.period = `${startStr} — Present`;
     return;
   }
-  const end = monthStamp(co.endDate);
+  const end = monthStamp(endDate);
   if (end === null) {
     co.period = `${startStr} — Present`;
     return;
