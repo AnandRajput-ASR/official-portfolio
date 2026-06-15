@@ -1,31 +1,13 @@
 <div
   class="portfolio"
   appReducedMotion
-  [class.otw-active]="!!content && content.siteSettings.openToWork && !otwDismissed"
-  *ngIf="!loading && content && !apiError; else loader"
+  [class.otw-active]="content.siteSettings.openToWork && !otwDismissed"
+  *ngIf="!loading() && !apiError() && content() as content; else loader"
 >
-  <!-- DEBUG STATE (temporary): shows what the app thinks is happening -->
-  <div
-    style="
-      position: fixed;
-      left: 12px;
-      bottom: 12px;
-      z-index: 99999;
-      background: rgba(0, 0, 0, 0.7);
-      color: #fff;
-      padding: 8px 10px;
-      font-family: monospace;
-      font-size: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    "
-  >
-    loading={{ loading }} | hasContent={{ !!content }} | apiError={{ apiError }}
-  </div>
-
   <!-- ═══ HEADER (OTW banner + nav + mobile menu) ═════════════════════════════ -->
   <app-header-section
     [content]="content"
-    [resumeInfo]="resumeInfo"
+    [resumeInfo]="resumeInfo()"
     [otwDismissed]="otwDismissed"
     [showReviewsLink]="
       content.siteSettings.sections.testimonials !== false && visibleTestimonials().length > 0
@@ -38,7 +20,7 @@
   <!-- ═══ HERO ═════════════════════════════════════════════════════════════════ -->
   <app-hero-section
     [content]="content"
-    [resumeInfo]="resumeInfo"
+    [resumeInfo]="resumeInfo()"
     (resumeClick)="handleResumeClick($event)"
   />
 
@@ -71,7 +53,7 @@
   <app-certs-section
     *ngIf="
       content.siteSettings.sections.certifications !== false &&
-      (content.certifications?.length ?? 0) > 0
+      content.certifications.length > 0
     "
     [content]="content"
   />
@@ -96,7 +78,7 @@
 
   <!-- ═══ CURRENTLY LEARNING ════════════════════════════════════════════════════════ -->
   <app-learning-section
-    *ngIf="content.siteSettings.learning?.enabled && content.siteSettings.learning?.items?.length"
+    *ngIf="content.siteSettings.learning.enabled && content.siteSettings.learning.items.length"
     [content]="content"
   />
 
@@ -107,7 +89,7 @@
       content.siteSettings.freelance.showCtaSection !== false
     "
     [content]="content"
-    [resumeInfo]="resumeInfo"
+    [resumeInfo]="resumeInfo()"
     (resumeClick)="handleResumeClick($event)"
   />
 
@@ -116,15 +98,15 @@
 
   <!-- ═══ RESUME BANNER ════════════════════════════════════════════════════════ -->
   <app-resume-banner
-    *ngIf="resumeInfo?.available"
-    [resumeInfo]="resumeInfo"
+    *ngIf="resumeInfo()?.available"
+    [resumeInfo]="resumeInfo()"
     (resumeClick)="handleResumeClick($event)"
   />
 
   <!-- ═══ FOOTER ═══════════════════════════════════════════════════════════════ -->
   <app-footer-section
     [content]="content"
-    [visitorCount]="visitorCount"
+    [visitorCount]="visitorCount()"
     (socialClick)="trackSocialClick()"
   />
 </div>
@@ -134,7 +116,7 @@
 
 <ng-template #loader>
   <!-- API error state — shown when request fails -->
-  <div class="api-error-page" *ngIf="apiError && !loading; else skeletonTpl">
+  <div class="api-error-page" *ngIf="apiError() && !loading(); else skeletonTpl">
     <div class="api-error-card">
       <div class="ae-icon">⚡</div>
       <h2 class="ae-title">Couldn't load portfolio</h2>

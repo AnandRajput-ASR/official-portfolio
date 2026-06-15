@@ -2,17 +2,20 @@ import { CommonModule } from '@angular/common';
 import {
     AfterViewInit,
     ChangeDetectionStrategy,
-    ChangeDetectorRef,
     Component,
+    DestroyRef,
     OnDestroy,
     OnInit,
     ViewEncapsulation,
+    computed,
     inject,
+    signal,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ReducedMotionDirective } from '@core/directives/reduced-motion.directive';
-import { BlogPost, PortfolioContent, Testimonial } from '@core/models';
+import { PortfolioContent } from '@core/models';
 import { ContentService } from '@core/services/content.service';
 import { LanguageService } from '@core/services/language.service';
 import { LoadingService } from '@core/services/loading.service';
@@ -78,23 +81,52 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private loadingService = inject(LoadingService);
   private observability = inject(ObservabilityService);
   private storage = inject(StorageService);
-  private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
 
-  content: PortfolioContent | null = null;
-  loading = true;
-  apiError = false;
-  resumeInfo: ResumeInfo | null = null;
+  readonly content = signal<PortfolioContent | null>(null);
+  readonly loading = signal(true);
+  readonly apiError = signal(false);
+  readonly resumeInfo = signal<ResumeInfo | null>(null);
+  /** Visitor counter (public footer widget). */
+  readonly visitorCount = signal<number | null>(null);
+
+  /** Visible (non-deleted) testimonials, derived from loaded content. */
+  readonly visibleTestimonials = computed(() =>
+    (this.content()?.testimonials ?? []).filter((t) => t.visible && t.is_deleted !== true),
+  );
+
+  /** Published (non-deleted) blog posts, derived from loaded content. */
+  readonly publishedPosts = computed(() =>
+    (this.content()?.blogPosts ?? []).filter((p) => p.published && p.is_deleted !== true),
+  );
+
+  /** Ticker items from settings, falling back to a default tech list. */
+  readonly tickerItems = computed(
+    () => this.content()?.siteSettings?.ticker?.items ?? HomeComponent.DEFAULT_TICKER,
+  );
+
   openCompanies = new Set<string>();
   otwDismissed = this.storage.getWithExpiry<boolean>('otw-dismissed') === true;
   private destroyed = false;
   private scrollHandler: (() => void) | null = null;
   private observers: IntersectionObserver[] = [];
 
-  // Visitor counter (public footer widget)
-  visitorCount: number | null = null;
-
   // Resume gate modal
   resumeGateOpen = false;
+
+  private static readonly DEFAULT_TICKER = [
+    'Angular',
+    'TypeScript',
+    'Azure DevOps',
+    'Node.js',
+    'AWS Lambda',
+    'RxJS',
+    'NgRx',
+    'PostgreSQL',
+    'Cosmos DB',
+    'AZ-400 Expert',
+    'CI/CD Pipelines',
+  ];
 
   ngOnInit(): void {
     this.loadContent();
@@ -165,43 +197,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.contentService.trackEvent('socialClick');
   }
 
-  private _visibleTestis: Testimonial[] = [];
-  private _publishedPosts: BlogPost[] = [];
-
-  visibleTestimonials() {
-    return this._visibleTestis;
-  }
-  publishedPosts() {
-    return this._publishedPosts;
-  }
-
-  private refreshCaches(): void {
-    this._visibleTestis = (this.content?.testimonials || []).filter(
-      (t) => t.visible && t.is_deleted !== true,
-    );
-    this._publishedPosts = (this.content?.blogPosts || []).filter(
-      (p) => p.published && p.is_deleted !== true,
-    );
-  }
-
-  tickerItems(): string[] {
-    return (
-      this.content?.siteSettings?.ticker?.items || [
-        'Angular',
-        'TypeScript',
-        'Azure DevOps',
-        'Node.js',
-        'AWS Lambda',
-        'RxJS',
-        'NgRx',
-        'PostgreSQL',
-        'Cosmos DB',
-        'AZ-400 Expert',
-        'CI/CD Pipelines',
-      ]
-    );
-  }
-
   private setupScrollReveal(): void {
     const io = new IntersectionObserver(
       (entries) => {
@@ -256,19 +251,18 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   retryLoad(): void {
-    this.apiError = false;
-    this.loading = true;
+    this.apiError.set(false);
+    this.loading.set(true);
     this.loadContent();
   }
 
   private loadContent(): void {
     this.loadingService.start('home-content');
     this.contentService
-      .getAll()
+      .getAllCached()
       .pipe(
         tap((data) => {
-          this.content = data;
-          this.refreshCaches();
+          this.content.set(data);
           if (data.siteSettings?.enabledLanguages?.length) {
             this.langService.setEnabledLangs(data.siteSettings.enabledLanguages);
           }
@@ -290,33 +284,31 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
             }),
           );
         }),
-        finalize(() => {
-          this.loadingService.stop('home-content');
-          this.cdr.markForCheck();
-        }),
+        finalize(() => this.loadingService.stop('home-content')),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: (count) => {
-          this.visitorCount = count;
-          this.loading = false;
-          this.apiError = false;
+          this.visitorCount.set(count);
+          this.loading.set(false);
+          this.apiError.set(false);
           this.contentService.trackEvent('pageView');
         },
         error: () => {
-          this.loading = false;
-          this.apiError = true;
+          this.loading.set(false);
+          this.apiError.set(true);
         },
       });
   }
 
   private loadResumeInfo(): void {
-    this.resumeService.getInfo().subscribe({
-      next: (info) => {
-        this.resumeInfo = info;
-        this.cdr.markForCheck();
-      },
-      error: (err) => this.observability.captureError(err, { source: 'home.resumeInfo' }),
-    });
+    this.resumeService
+      .getInfo()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (info) => this.resumeInfo.set(info),
+        error: (err) => this.observability.captureError(err, { source: 'home.resumeInfo' }),
+      });
   }
 
   ngOnDestroy(): void {
@@ -331,7 +323,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Opens the resume-gate modal if protection is on, otherwise downloads directly. */
   handleResumeClick(event: Event): void {
-    if (this.content?.siteSettings?.resumeProtected) {
+    if (this.content()?.siteSettings?.resumeProtected) {
       event.preventDefault();
       this.resumeGateOpen = true;
       // Tracking fires only after the gate is submitted (see ResumeGateComponent)
