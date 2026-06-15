@@ -1,6 +1,5 @@
 import { CommonModule } from '@angular/common';
 import {
-    AfterViewInit,
     Component,
     ElementRef,
     EventEmitter,
@@ -114,7 +113,7 @@ import {
     `,
   ],
 })
-export class CustomSliderComponent implements OnInit, AfterViewInit {
+export class CustomSliderComponent implements OnInit {
   @Input() min = 10;
   @Input() max = 100;
   @Input() step = 5;
@@ -133,10 +132,6 @@ export class CustomSliderComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.calculatePercentage();
     this.generateMarkers();
-  }
-
-  ngAfterViewInit() {
-    // Track element will be available
   }
 
   private calculatePercentage() {

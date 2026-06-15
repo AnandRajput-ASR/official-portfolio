@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { GlobalLoaderComponent } from '@shared/components/global-loader/global-loader.component';
 
@@ -10,5 +10,6 @@ import { GlobalLoaderComponent } from '@shared/components/global-loader/global-l
     <app-global-loader />
     <router-outlet />
   `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {}
