@@ -10,15 +10,15 @@
   </div>
 
   <!-- Empty state for visitors -->
-  <div class="pp-empty" *ngIf="!content.personalProjects || content.personalProjects.length === 0">
+  <div class="pp-empty" *ngIf="visibleProjects().length === 0">
     <span>🚀</span>
     <p>Projects coming soon — check back!</p>
   </div>
 
-  <div class="pp-grid" *ngIf="content.personalProjects && content.personalProjects.length > 0">
+  <div class="pp-grid" *ngIf="visibleProjects().length > 0">
     <div
       class="pp-card reveal"
-      *ngFor="let project of content.personalProjects; trackBy: trackById"
+      *ngFor="let project of visibleProjects(); trackBy: trackById"
       [class.pp-featured]="project.featured"
     >
       <!-- Status + type badges -->

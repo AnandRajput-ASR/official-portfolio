@@ -5,7 +5,7 @@
     <h2 class="section-title">Experience &amp; Education</h2>
   </div>
   <div class="timeline">
-    <div class="tl-item reveal" *ngFor="let exp of content.experience; trackBy: trackById">
+    <div class="tl-item reveal" *ngFor="let exp of visibleExperience(); trackBy: trackById">
       <div class="tl-dot"></div>
       <div class="tl-content">
         <p class="tl-period">{{ exp.period }}</p>

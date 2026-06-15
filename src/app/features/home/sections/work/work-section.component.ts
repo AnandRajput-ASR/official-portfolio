@@ -23,6 +23,15 @@ export class WorkSectionComponent {
   @Input() openCompanies = new Set<string>();
   @Output() toggleCompany = new EventEmitter<string>();
 
+  visibleCompanies() {
+    return (this.content?.companies ?? []).filter((co) => co.is_deleted !== true);
+  }
+
+  visibleProjects(companyId: string) {
+    const company = (this.content?.companies ?? []).find((co) => co.id === companyId);
+    return (company?.projects ?? []).filter((project) => project.is_deleted !== true);
+  }
+
   isCompanyOpen(id: string): boolean {
     return this.openCompanies.has(id);
   }

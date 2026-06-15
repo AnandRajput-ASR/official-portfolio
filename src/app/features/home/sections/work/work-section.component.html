@@ -11,7 +11,7 @@
   <div class="companies-list">
     <div
       class="company-block reveal"
-      *ngFor="let company of content.companies; trackBy: trackById"
+      *ngFor="let company of visibleCompanies(); trackBy: trackById"
     >
       <!-- Company header (accordion toggle) -->
       <div
@@ -47,8 +47,8 @@
         </div>
         <div class="co-header-right">
           <span class="co-proj-count"
-            >{{ company.projects.length }} project{{
-              company.projects.length !== 1 ? 's' : ''
+            >{{ visibleProjects(company.id).length }} project{{
+              visibleProjects(company.id).length !== 1 ? 's' : ''
             }}</span
           >
           <span class="co-chevron" [class.rotated]="isCompanyOpen(company.id)">›</span>
@@ -59,7 +59,10 @@
       <div class="company-body" [class.open]="isCompanyOpen(company.id)">
         <p class="co-description">{{ company.description }}</p>
         <div class="co-projects-grid">
-          <div class="co-proj-card" *ngFor="let project of company.projects; trackBy: trackById">
+          <div
+            class="co-proj-card"
+            *ngFor="let project of visibleProjects(company.id); trackBy: trackById"
+          >
             <div class="co-proj-num" [style.color]="company.accentColor">
               {{ project.number }}
             </div>

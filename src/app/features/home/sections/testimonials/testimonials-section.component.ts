@@ -39,7 +39,7 @@ export class TestimonialsSectionComponent {
   }
 
   visibleTestimonials() {
-    return (this.content?.testimonials || []).filter((t) => t.visible);
+    return (this.content?.testimonials || []).filter((t) => t.visible && t.is_deleted !== true);
   }
 
   stars(n: number): number[] {

@@ -19,6 +19,10 @@ import { PortfolioContent } from '@core/models';
 export class PersonalProjectsSectionComponent {
   @Input({ required: true }) content!: PortfolioContent;
 
+  visibleProjects() {
+    return (this.content?.personalProjects ?? []).filter((project) => project.is_deleted !== true);
+  }
+
   trackById(_: number, item: { id: string }): string {
     return item.id;
   }

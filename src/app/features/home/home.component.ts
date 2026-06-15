@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import {
-  AfterViewInit,
-  Component,
-  OnDestroy,
-  OnInit,
-  ViewEncapsulation,
-  inject,
+    AfterViewInit,
+    Component,
+    OnDestroy,
+    OnInit,
+    ViewEncapsulation,
+    inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -209,8 +209,12 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private refreshCaches(): void {
-    this._visibleTestis = (this.content?.testimonials || []).filter((t) => t.visible);
-    this._publishedPosts = (this.content?.blogPosts || []).filter((p) => p.published);
+    this._visibleTestis = (this.content?.testimonials || []).filter(
+      (t) => t.visible && t.is_deleted !== true,
+    );
+    this._publishedPosts = (this.content?.blogPosts || []).filter(
+      (p) => p.published && p.is_deleted !== true,
+    );
   }
 
   tickerItems(): string[] {

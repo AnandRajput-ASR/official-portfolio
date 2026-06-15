@@ -19,6 +19,10 @@ import { PortfolioContent } from '@core/models';
 export class ExperienceSectionComponent {
   @Input({ required: true }) content!: PortfolioContent;
 
+  visibleExperience() {
+    return (this.content?.experience ?? []).filter((exp) => exp.is_deleted !== true);
+  }
+
   trackById(_: number, item: { id: string }): string {
     return item.id;
   }
