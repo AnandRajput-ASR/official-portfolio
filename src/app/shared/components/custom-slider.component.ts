@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
 import {
-  AfterViewInit,
-  Component,
-  EventEmitter,
-  HostListener,
-  Input,
-  OnInit,
-  Output,
+    AfterViewInit,
+    Component,
+    ElementRef,
+    EventEmitter,
+    HostListener,
+    Input,
+    OnInit,
+    Output,
+    ViewChild,
 } from '@angular/core';
 
 @Component({
@@ -125,7 +127,8 @@ export class CustomSliderComponent implements OnInit, AfterViewInit {
   percentage = 50;
   markers: number[] = [];
   isDragging = false;
-  trackElement: HTMLElement | null = null;
+
+  @ViewChild('track') trackRef?: ElementRef<HTMLElement>;
 
   ngOnInit() {
     this.calculatePercentage();
@@ -170,7 +173,7 @@ export class CustomSliderComponent implements OnInit, AfterViewInit {
   onMouseMove(event: MouseEvent) {
     if (!this.isDragging) return;
 
-    const track = document.querySelector('.slider-track') as HTMLElement;
+    const track = this.trackRef?.nativeElement;
     if (!track) return;
 
     const rect = track.getBoundingClientRect();
