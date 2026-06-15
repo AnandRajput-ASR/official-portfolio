@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { AuthResponse } from '@core/models';
 import { environment } from '@env/environment';
-import { BehaviorSubject, catchError, Observable, of, tap } from 'rxjs';
+import { catchError, Observable, of, tap } from 'rxjs';
 import { StorageService } from './storage.service';
 
 interface ForgotPasswordResponse {
@@ -40,9 +41,17 @@ export class AuthService {
   private router = inject(Router);
   private storage = inject(StorageService);
 
-  private loggedIn$ = new BehaviorSubject<boolean>(this.hasValidSession());
-  /** Reactive current-user info; null when signed out. */
-  readonly currentUser = signal<{ username: string; role: string } | null>(null);
+  /**
+   * Single source of truth for auth state. Reactive current-user info;
+   * null when signed out. Login state is derived from this signal.
+   */
+  readonly currentUser = signal<{ username: string; role: string } | null>(this.initialUser());
+
+  /** Derived login state. True whenever a current user is present. */
+  private readonly loggedIn = computed(() => this.currentUser() !== null);
+
+  /** Observable view of `loggedIn`, for consumers that need a stream. */
+  private readonly loggedIn$ = toObservable(this.loggedIn);
 
   login(username: string, password: string): Observable<AuthResponse> {
     if (environment.cookieAuth) {
@@ -103,11 +112,11 @@ export class AuthService {
   }
 
   isLoggedIn(): Observable<boolean> {
-    return this.loggedIn$.asObservable();
+    return this.loggedIn$;
   }
 
   isLoggedInSnapshot(): boolean {
-    return this.loggedIn$.value;
+    return this.loggedIn();
   }
 
   /**
@@ -126,14 +135,8 @@ export class AuthService {
       })
       .pipe(
         tap({
-          next: (u) => {
-            this.markLoggedIn(u.username, u.role);
-            this.loggedIn$.next(true);
-          },
-          error: () => {
-            this.markLoggedOut();
-            this.loggedIn$.next(false);
-          },
+          next: (u) => this.markLoggedIn(u.username, u.role),
+          error: () => this.markLoggedOut(),
         }),
         catchError(() => of(null)),
       );
@@ -184,11 +187,18 @@ export class AuthService {
     });
   }
 
+  /**
+   * Seeds the current user at construction. Cookie mode can't know until
+   * the first `/me` call, so it starts null. Legacy mode trusts a valid,
+   * unexpired JWT in storage and restores the stored user.
+   */
+  private initialUser(): { username: string; role: string } | null {
+    if (environment.cookieAuth) return null;
+    if (!this.hasValidSession()) return null;
+    return this.storage.get<{ username: string; role: string }>(AuthService.USER_KEY) ?? null;
+  }
+
   private hasValidSession(): boolean {
-    if (environment.cookieAuth) {
-      // We can't know until the first /me call. Optimistically false.
-      return false;
-    }
     const token = this.storage.get<string>(AuthService.TOKEN_KEY);
     if (!token) return false;
     try {
@@ -201,11 +211,9 @@ export class AuthService {
 
   private markLoggedIn(username: string, role = 'admin'): void {
     this.currentUser.set({ username, role });
-    this.loggedIn$.next(true);
   }
 
   private markLoggedOut(): void {
     this.currentUser.set(null);
-    this.loggedIn$.next(false);
   }
 }
