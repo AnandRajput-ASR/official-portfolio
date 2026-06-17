@@ -1,15 +1,15 @@
 import { CommonModule } from '@angular/common';
 import {
-    AfterViewInit,
-    ChangeDetectionStrategy,
-    Component,
-    DestroyRef,
-    OnDestroy,
-    OnInit,
-    ViewEncapsulation,
-    computed,
-    inject,
-    signal,
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  ViewEncapsulation,
+  computed,
+  inject,
+  signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';

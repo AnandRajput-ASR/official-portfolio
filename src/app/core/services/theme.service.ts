@@ -1,4 +1,4 @@
-import { Injectable, signal, effect, inject } from '@angular/core';
+import { effect, inject, Injectable, signal } from '@angular/core';
 import { StorageService } from './storage.service';
 
 export type Theme = 'dark' | 'light';

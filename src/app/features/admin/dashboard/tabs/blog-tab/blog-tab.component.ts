@@ -1,18 +1,18 @@
 import { CommonModule } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  OnDestroy,
-  OnInit,
-  inject,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    OnDestroy,
+    OnInit,
+    inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { BlogPost } from '@core/models';
 import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
-import { ContentService } from '@core/services/content.service';
 import { ConfirmService } from '@core/services/confirm.service';
+import { ContentService } from '@core/services/content.service';
 import { ToastService } from '@shared/components/toast/toast.component';
 
 @Component({

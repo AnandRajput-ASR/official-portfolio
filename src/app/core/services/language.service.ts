@@ -1,7 +1,7 @@
-﻿import { Injectable, signal, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { StorageService } from './storage.service';
+﻿import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, signal } from '@angular/core';
 import { map, Observable, of, tap } from 'rxjs';
+import { StorageService } from './storage.service';
 
 // Supported languages â€” to add a new one:
 //  1. Create src/assets/i18n/<code>.json with all translation keys
