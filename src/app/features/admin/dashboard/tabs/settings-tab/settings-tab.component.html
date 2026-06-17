@@ -331,6 +331,47 @@
     >
   </div>
 
+  <div class="settings-card mt-card">
+    <h3 class="card-title-xs">🈯 Multi-language Content Editor</h3>
+    <p class="lang-intro">
+      Edit UI translations for each language as JSON. Changes apply immediately and are stored
+      locally in this browser.
+    </p>
+    <div class="form-row">
+      <div class="form-group xs">
+        <label>Language</label>
+        <select
+          [ngModel]="i18nEditorLang"
+          (ngModelChange)="onI18nLangChange($event)"
+        >
+          <option *ngFor="let lang of i18nLangs" [value]="lang">{{ lang.toUpperCase() }}</option>
+        </select>
+      </div>
+      <div class="i18n-editor-actions">
+        <button class="btn btn-outline btn-sm" (click)="reloadI18nEditor()">
+          Reload
+        </button>
+        <button class="btn btn-outline btn-sm" (click)="resetI18nEditor()">Reset</button>
+        <button class="btn btn-primary btn-sm" (click)="saveI18nEditor()">Save Translation</button>
+      </div>
+    </div>
+
+    <div class="form-group" *ngIf="!i18nEditorLoading; else i18nLoadingTpl">
+      <label>Translation JSON</label>
+      <textarea
+        class="i18n-json-editor"
+        [(ngModel)]="i18nEditorText"
+        spellcheck="false"
+      ></textarea>
+      <small class="hint-text"
+        >Expected format: &#123;"key": "value"&#125; flat key/value pairs.</small
+      >
+    </div>
+    <ng-template #i18nLoadingTpl>
+      <p class="muted-text">Loading translations...</p>
+    </ng-template>
+  </div>
+
   <!-- Currently Learning -->
   <div class="settings-card" style="margin-top: 1.25rem">
     <h3 style="margin-bottom: 1.25rem">📖 Currently Learning Widget</h3>

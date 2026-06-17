@@ -11,6 +11,7 @@ import { FormsModule } from '@angular/forms';
 import { SiteSettings } from '@core/models';
 import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
+import { Lang, SUPPORTED_LANGS, LanguageService } from '@core/services/language.service';
 import { ToastService } from '@shared/components/toast/toast.component';
 
 @Component({
@@ -26,6 +27,7 @@ export class SettingsTabComponent implements OnInit, OnDestroy {
 
   private store = inject(AdminContentStore);
   private adminService = inject(AdminService);
+  private languageService = inject(LanguageService);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   private autosaveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -34,6 +36,11 @@ export class SettingsTabComponent implements OnInit, OnDestroy {
   newFreelanceService = '';
   autosaveEnabled = false;
   private initialSnapshot = '';
+
+  readonly i18nLangs: Lang[] = SUPPORTED_LANGS;
+  i18nEditorLang: Lang = 'en';
+  i18nEditorText = '';
+  i18nEditorLoading = false;
 
   collapsedGroups = new Set<'core' | 'presentation' | 'content'>(['presentation', 'content']);
 
@@ -102,6 +109,7 @@ export class SettingsTabComponent implements OnInit, OnDestroy {
     this.settingsEdit = this.mergeWithDefaults(this.defaultSettings(), raw);
     this.initialSnapshot = this.snapshot(this.settingsEdit);
     this.store.registerSaver('settings', () => this.saveSettings());
+    this.loadI18nEditor(this.i18nEditorLang);
   }
 
   ngOnDestroy(): void {
@@ -309,6 +317,41 @@ export class SettingsTabComponent implements OnInit, OnDestroy {
     if (i > -1) list.splice(i, 1);
   }
 
+  onI18nLangChange(lang: Lang): void {
+    this.i18nEditorLang = lang;
+    this.loadI18nEditor(lang);
+  }
+
+  saveI18nEditor(): void {
+    try {
+      const parsed = JSON.parse(this.i18nEditorText) as Record<string, unknown>;
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        this.toast.error('Translation JSON must be an object of key-value pairs.');
+        return;
+      }
+
+      const normalized: Record<string, string> = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        if (typeof v === 'string') normalized[k] = v;
+      }
+
+      this.languageService.saveMessagesForLang(this.i18nEditorLang, normalized);
+      this.toast.success(`Saved translation overrides for ${this.i18nEditorLang.toUpperCase()}`);
+    } catch {
+      this.toast.error('Invalid JSON. Please fix formatting before saving.');
+    }
+  }
+
+  resetI18nEditor(): void {
+    this.languageService.resetMessagesForLang(this.i18nEditorLang);
+    this.loadI18nEditor(this.i18nEditorLang);
+    this.toast.success(`Reset overrides for ${this.i18nEditorLang.toUpperCase()}`);
+  }
+
+  reloadI18nEditor(): void {
+    this.loadI18nEditor(this.i18nEditorLang);
+  }
+
   private scheduleAutosave(): void {
     if (!this.hasUnsavedChanges || this.saving) return;
     if (this.autosaveTimer) clearTimeout(this.autosaveTimer);
@@ -316,6 +359,23 @@ export class SettingsTabComponent implements OnInit, OnDestroy {
       this.autosaveTimer = null;
       if (this.hasUnsavedChanges && !this.saving) this.saveSettings();
     }, SettingsTabComponent.AUTOSAVE_DELAY_MS);
+  }
+
+  private loadI18nEditor(lang: Lang): void {
+    this.i18nEditorLoading = true;
+    this.languageService.getMessagesForLang(lang).subscribe({
+      next: (data) => {
+        this.i18nEditorText = JSON.stringify(data, null, 2);
+        this.i18nEditorLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.i18nEditorText = '{}';
+        this.i18nEditorLoading = false;
+        this.toast.error('Could not load translations for selected language.');
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   private changedKeys(): string[] {

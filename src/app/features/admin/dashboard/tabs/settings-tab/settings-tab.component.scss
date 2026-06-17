@@ -276,6 +276,24 @@ code {
   display: block;
 }
 
+.i18n-editor-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.i18n-json-editor {
+  width: 100%;
+  min-height: 280px;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.74rem;
+  line-height: 1.55;
+  resize: vertical;
+  white-space: pre;
+}
+
 .settings-header-actions {
   display: grid;
   grid-auto-flow: column;
@@ -402,5 +420,9 @@ code {
       margin-top: 0.15rem;
       margin-bottom: 0;
     }
+  }
+
+  .i18n-editor-actions {
+    margin-left: 0;
   }
 }
