@@ -11,6 +11,8 @@
       <button class="btn btn-outline btn-sm" (click)="markAllRead()" *ngIf="unreadCount > 0">
         Mark all read
       </button>
+      <button class="btn btn-outline btn-sm" (click)="exportCsv(true)">Export Filtered CSV</button>
+      <button class="btn btn-outline btn-sm" (click)="exportCsv(false)">Export All CSV</button>
       <button class="btn btn-outline btn-sm" (click)="loadMessages()">⟳ Refresh</button>
     </div>
   </div>
@@ -25,6 +27,20 @@
     <button [class.active]="messageFilter === 'starred'" (click)="messageFilter = 'starred'">
       ★ Starred <span class="filter-count">{{ getStarredCount() }}</span>
     </button>
+    <button [class.active]="messageFilter === 'archived'" (click)="messageFilter = 'archived'">
+      Archived <span class="filter-count">{{ getArchivedCount() }}</span>
+    </button>
+  </div>
+
+  <div class="label-filters" *ngIf="availableLabels.length > 0">
+    <button [class.active]="activeLabel === 'all'" (click)="setActiveLabel('all')">All Labels</button>
+    <button
+      *ngFor="let label of availableLabels"
+      [class.active]="activeLabel === label"
+      (click)="setActiveLabel(label)"
+    >
+      {{ label }}
+    </button>
   </div>
 
   <div class="msg-loading" *ngIf="messagesLoading">
@@ -37,6 +53,7 @@
     <p *ngIf="messageFilter === 'all'">No messages yet. Share your portfolio to get messages!</p>
     <p *ngIf="messageFilter === 'unread'">No unread messages.</p>
     <p *ngIf="messageFilter === 'starred'">No starred messages.</p>
+    <p *ngIf="messageFilter === 'archived'">No archived messages.</p>
   </div>
 
   <div class="msg-layout" *ngIf="!messagesLoading && filteredMessages.length > 0">
@@ -56,6 +73,13 @@
           </div>
           <div class="msg-row-email">{{ msg.email }}</div>
           <div class="msg-row-preview">{{ msg.message }}</div>
+          <div class="msg-row-labels" *ngIf="(msg.labels || []).length > 0">
+            <span class="label-chip" *ngFor="let label of msg.labels">{{ label }}</span>
+          </div>
+          <div class="msg-row-flags">
+            <span *ngIf="msg.archived" class="msg-flag">Archived</span>
+            <span *ngIf="msg.repliedAt" class="msg-flag">Replied</span>
+          </div>
         </div>
         <div class="msg-row-actions">
           <button
@@ -83,6 +107,13 @@
                 d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"
               />
             </svg>
+          </button>
+          <button
+            class="del-btn"
+            (click)="toggleArchived(msg, $event)"
+            [title]="msg.archived ? 'Move to inbox' : 'Archive message'"
+          >
+            {{ msg.archived ? '↩' : '🗂' }}
           </button>
         </div>
       </div>
@@ -119,6 +150,62 @@
         </div>
       </div>
       <div class="msg-detail-body">{{ selectedMessage.message }}</div>
+
+      <div class="msg-detail-crm">
+        <div class="msg-detail-labels">
+          <h4>Labels</h4>
+          <div class="detail-label-list" *ngIf="(selectedMessage.labels || []).length > 0; else noLabelsYet">
+            <span class="label-chip" *ngFor="let label of selectedMessage.labels">
+              {{ label }}
+              <button (click)="removeLabel(selectedMessage, label, $event)" title="Remove label">×</button>
+            </span>
+          </div>
+          <ng-template #noLabelsYet>
+            <p class="crm-empty">No labels yet.</p>
+          </ng-template>
+
+          <div class="label-input-row">
+            <input
+              type="text"
+              [(ngModel)]="labelInput"
+              placeholder="Add label"
+              (keydown.enter)="addLabel(selectedMessage)"
+            />
+            <button class="btn btn-outline btn-sm" (click)="addLabel(selectedMessage)">Add</button>
+          </div>
+
+          <div class="quick-labels">
+            <button
+              class="btn btn-outline btn-xs"
+              *ngFor="let label of suggestedLabels"
+              (click)="quickAddLabel(selectedMessage, label, $event)"
+            >
+              + {{ label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="msg-detail-quick-replies">
+          <h4>Quick Replies</h4>
+          <p class="crm-empty">Open a pre-filled email template.</p>
+          <div class="quick-reply-actions">
+            <a
+              *ngFor="let qr of quickReplies"
+              class="btn btn-outline btn-sm"
+              [href]="getQuickReplyHref(selectedMessage, qr)"
+              (click)="markQuickReplySent(selectedMessage)"
+            >
+              {{ qr.title }}
+            </a>
+          </div>
+          <p class="crm-empty" *ngIf="selectedMessage.repliedAt">
+            Last quick reply opened: {{ formatDate(selectedMessage.repliedAt) }}
+          </p>
+          <button class="btn btn-outline btn-sm" (click)="toggleArchived(selectedMessage)">
+            {{ selectedMessage.archived ? 'Move to Inbox' : 'Archive Message' }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <ng-template #noSelection>

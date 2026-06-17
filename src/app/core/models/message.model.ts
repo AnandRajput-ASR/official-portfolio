@@ -7,6 +7,9 @@ export interface Message {
   starred: boolean;
   notifiedAt: string | null;
   receivedAt: string;
+  labels?: string[];
+  archived?: boolean;
+  repliedAt?: string | null;
 }
 
 export interface MessagesResponse {

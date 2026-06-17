@@ -50,6 +50,31 @@
   }
 }
 
+.label-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: -0.65rem 0 1.1rem;
+
+  button {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.66rem;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.55rem;
+    cursor: pointer;
+
+    &.active,
+    &:hover {
+      border-color: var(--accent1);
+      color: var(--accent1);
+    }
+  }
+}
+
 .msg-loading {
   display: flex;
   align-items: center;
@@ -185,6 +210,29 @@
     max-width: 200px;
   }
 
+  .msg-row-labels {
+    margin-top: 0.35rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .msg-row-flags {
+    margin-top: 0.3rem;
+    display: flex;
+    gap: 0.35rem;
+  }
+
+  .msg-flag {
+    font-size: 0.58rem;
+    padding: 0.12rem 0.34rem;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
   .msg-row-actions {
     display: flex;
     flex-direction: column;
@@ -197,6 +245,27 @@
 
   &:hover .msg-row-actions {
     opacity: 1;
+  }
+}
+
+.label-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.62rem;
+  font-family: 'Space Mono', monospace;
+  padding: 0.16rem 0.38rem;
+
+  button {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    line-height: 1;
+    font-size: 0.72rem;
   }
 }
 
@@ -323,5 +392,59 @@
   }
   p {
     font-size: 0.9rem;
+  }
+}
+
+.msg-detail-crm {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+
+  h4 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 0.55rem;
+    font-family: 'Space Mono', monospace;
+  }
+}
+
+.detail-label-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.55rem;
+}
+
+.label-input-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+
+  input {
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+.quick-labels,
+.quick-reply-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.crm-empty {
+  color: var(--muted);
+  font-size: 0.74rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 1000px) {
+  .msg-detail-crm {
+    grid-template-columns: 1fr;
   }
 }

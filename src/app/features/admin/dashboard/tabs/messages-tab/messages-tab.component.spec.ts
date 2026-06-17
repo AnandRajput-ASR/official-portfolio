@@ -17,7 +17,14 @@ describe('MessagesTabComponent', () => {
     deleteMessage: jasmine.Spy;
     markAllRead: jasmine.Spy;
   };
-  let stateStub: { state: ReturnType<typeof signal>; load: jasmine.Spy; patch: jasmine.Spy };
+  let stateStub: {
+    state: ReturnType<typeof signal>;
+    load: jasmine.Spy;
+    patch: jasmine.Spy;
+    setArchived: jasmine.Spy;
+    setLabels: jasmine.Spy;
+    markQuickReplied: jasmine.Spy;
+  };
 
   beforeEach(async () => {
     serviceStub = {
@@ -31,6 +38,9 @@ describe('MessagesTabComponent', () => {
       state: signal({ messages: [], unreadCount: 0, loading: false }),
       load: jasmine.createSpy('load'),
       patch: jasmine.createSpy('patch'),
+      setArchived: jasmine.createSpy('setArchived'),
+      setLabels: jasmine.createSpy('setLabels'),
+      markQuickReplied: jasmine.createSpy('markQuickReplied'),
     };
 
     await TestBed.configureTestingModule({
@@ -111,5 +121,18 @@ describe('MessagesTabComponent', () => {
   it('formats recent dates', () => {
     expect(component.formatDate('')).toBe('');
     expect(component.formatDate(new Date().toISOString())).toBe('just now');
+  });
+
+  it('archives message via state service', () => {
+    const msg: any = { id: '1', archived: false };
+    component.toggleArchived(msg);
+    expect(stateStub.setArchived).toHaveBeenCalledWith('1', true);
+  });
+
+  it('adds label through state service', () => {
+    const msg: any = { id: '1', labels: [] };
+    component.labelInput = 'Recruiter';
+    component.addLabel(msg);
+    expect(stateStub.setLabels).toHaveBeenCalledWith('1', ['Recruiter']);
   });
 });
