@@ -11,7 +11,8 @@ import { FormsModule } from '@angular/forms';
 import { SiteSettings } from '@core/models';
 import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
-import { Lang, SUPPORTED_LANGS, LanguageService } from '@core/services/language.service';
+import { Lang, LanguageService, SUPPORTED_LANGS } from '@core/services/language.service';
+import { Theme, ThemeService, ThemeToken, ThemeTokens } from '@core/services/theme.service';
 import { ToastService } from '@shared/components/toast/toast.component';
 
 @Component({
@@ -28,6 +29,7 @@ export class SettingsTabComponent implements OnInit, OnDestroy {
   private store = inject(AdminContentStore);
   private adminService = inject(AdminService);
   private languageService = inject(LanguageService);
+  private themeService = inject(ThemeService);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
   private autosaveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -41,6 +43,29 @@ export class SettingsTabComponent implements OnInit, OnDestroy {
   i18nEditorLang: Lang = 'en';
   i18nEditorText = '';
   i18nEditorLoading = false;
+
+  readonly themeModes: Theme[] = ['dark', 'light'];
+  themeMode: Theme = 'dark';
+  themeTokensEdit: ThemeTokens = {
+    bg: '#0d0d0d',
+    surface: '#141414',
+    surface2: '#1a1a1a',
+    border: '#252525',
+    text: '#f0ede8',
+    muted: '#7a7570',
+    amber: '#f5a623',
+    green: '#4caf50',
+  };
+  readonly themeTokenFields: Array<{ key: ThemeToken; label: string }> = [
+    { key: 'bg', label: 'Background' },
+    { key: 'surface', label: 'Surface 1' },
+    { key: 'surface2', label: 'Surface 2' },
+    { key: 'border', label: 'Border' },
+    { key: 'text', label: 'Text' },
+    { key: 'muted', label: 'Muted Text' },
+    { key: 'amber', label: 'Accent Amber' },
+    { key: 'green', label: 'Success Green' },
+  ];
 
   collapsedGroups = new Set<'core' | 'presentation' | 'content'>(['presentation', 'content']);
 
@@ -110,6 +135,7 @@ export class SettingsTabComponent implements OnInit, OnDestroy {
     this.initialSnapshot = this.snapshot(this.settingsEdit);
     this.store.registerSaver('settings', () => this.saveSettings());
     this.loadI18nEditor(this.i18nEditorLang);
+    this.loadThemeBuilderState();
   }
 
   ngOnDestroy(): void {
@@ -352,6 +378,26 @@ export class SettingsTabComponent implements OnInit, OnDestroy {
     this.loadI18nEditor(this.i18nEditorLang);
   }
 
+  onThemeModeChange(theme: Theme): void {
+    this.themeMode = theme;
+    this.themeService.setTheme(theme);
+    this.themeTokensEdit = this.themeService.getThemeTokens();
+    this.toast.success(`Theme switched to ${theme}.`);
+  }
+
+  onThemeColorChange(token: ThemeToken, value: string): void {
+    const normalized = this.normalizeHexColor(value);
+    if (!normalized) return;
+    this.themeTokensEdit = { ...this.themeTokensEdit, [token]: normalized };
+    this.themeService.updateThemeTokens({ [token]: normalized });
+  }
+
+  resetThemeBuilder(): void {
+    this.themeService.resetThemeTokens();
+    this.themeTokensEdit = this.themeService.getThemeTokens();
+    this.toast.success('Theme colors reset to defaults for current mode.');
+  }
+
   private scheduleAutosave(): void {
     if (!this.hasUnsavedChanges || this.saving) return;
     if (this.autosaveTimer) clearTimeout(this.autosaveTimer);
@@ -359,6 +405,19 @@ export class SettingsTabComponent implements OnInit, OnDestroy {
       this.autosaveTimer = null;
       if (this.hasUnsavedChanges && !this.saving) this.saveSettings();
     }, SettingsTabComponent.AUTOSAVE_DELAY_MS);
+  }
+
+  private loadThemeBuilderState(): void {
+    this.themeMode = this.themeService.theme();
+    this.themeTokensEdit = this.themeService.getThemeTokens();
+  }
+
+  private normalizeHexColor(input: string): string | null {
+    const value = input.trim();
+    if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value)) {
+      return value;
+    }
+    return null;
   }
 
   private loadI18nEditor(lang: Lang): void {

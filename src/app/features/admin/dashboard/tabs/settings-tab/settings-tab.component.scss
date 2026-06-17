@@ -284,6 +284,54 @@ code {
   margin-left: auto;
 }
 
+.theme-builder-actions {
+  display: flex;
+  align-items: flex-end;
+  margin-left: auto;
+}
+
+.theme-token-grid {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 0.65rem 0.9rem;
+}
+
+.theme-token-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.35rem;
+
+  > label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'Space Mono', monospace;
+  }
+}
+
+.theme-token-inputs {
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 0.45rem;
+  align-items: center;
+
+  input[type='color'] {
+    width: 46px;
+    height: 34px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    padding: 2px;
+    cursor: pointer;
+  }
+
+  input[type='text'] {
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+}
+
 .i18n-json-editor {
   width: 100%;
   min-height: 280px;
@@ -424,5 +472,13 @@ code {
 
   .i18n-editor-actions {
     margin-left: 0;
+  }
+
+  .theme-builder-actions {
+    margin-left: 0;
+  }
+
+  .theme-token-grid {
+    grid-template-columns: 1fr;
   }
 }

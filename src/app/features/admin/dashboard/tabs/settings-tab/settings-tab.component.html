@@ -331,6 +331,49 @@
     >
   </div>
 
+  <div
+    class="settings-card mt-card"
+    (input)="$event.stopPropagation()"
+    (change)="$event.stopPropagation()"
+  >
+    <h3 class="card-title-xs">🎨 Visual Theme Builder</h3>
+    <p class="lang-intro">
+      Configure public color tokens in real time. Changes are saved locally for this browser and
+      apply instantly across the site.
+    </p>
+
+    <div class="form-row">
+      <div class="form-group xs">
+        <label>Theme Mode</label>
+        <select [ngModel]="themeMode" (ngModelChange)="onThemeModeChange($event)">
+          <option *ngFor="let mode of themeModes" [value]="mode">{{ mode | titlecase }}</option>
+        </select>
+      </div>
+      <div class="theme-builder-actions">
+        <button class="btn btn-outline btn-sm" (click)="resetThemeBuilder()">Reset Colors</button>
+      </div>
+    </div>
+
+    <div class="theme-token-grid">
+      <div class="theme-token-row" *ngFor="let token of themeTokenFields">
+        <label>{{ token.label }}</label>
+        <div class="theme-token-inputs">
+          <input
+            type="color"
+            [ngModel]="themeTokensEdit[token.key]"
+            (ngModelChange)="onThemeColorChange(token.key, $event)"
+          />
+          <input
+            type="text"
+            [ngModel]="themeTokensEdit[token.key]"
+            (ngModelChange)="onThemeColorChange(token.key, $event)"
+            placeholder="#000000"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="settings-card mt-card">
     <h3 class="card-title-xs">🈯 Multi-language Content Editor</h3>
     <p class="lang-intro">
