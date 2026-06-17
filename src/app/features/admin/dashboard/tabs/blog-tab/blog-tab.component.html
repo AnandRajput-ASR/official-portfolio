@@ -31,7 +31,7 @@
           post.published ? '● Published' : '○ Draft'
         }}</span>
         <strong class="blog-admin-title">{{ post.title || 'Untitled Post' }}</strong>
-        <span class="muted-text blog-date-chip">{{ post.publishedAt }}</span>
+        <span class="muted-text blog-date-chip">{{ formatScheduleChip(post) }}</span>
         <button class="btn btn-outline btn-xs" (click)="toggleEditBlog(post.id)">
           {{ editingBlogId === post.id ? 'Collapse' : 'Edit' }}
         </button>
@@ -68,7 +68,11 @@
             ><input type="number" [(ngModel)]="post.readingTime" min="1" />
           </div>
           <div class="form-group xs">
-            <label>Publish Date</label><input type="date" [(ngModel)]="post.publishedAt" />
+            <label>Publish At</label><input type="datetime-local" [(ngModel)]="post.publishedAt" />
+          </div>
+          <div class="form-group xs">
+            <label>Unpublish At <small>(optional)</small></label
+            ><input type="datetime-local" [(ngModel)]="post.unpublishedAt" />
           </div>
         </div>
         <div class="form-group">
@@ -143,7 +147,11 @@
         <input type="number" [(ngModel)]="newBlog.readingTime" min="1" max="60" />
       </div>
       <div class="form-group xs">
-        <label>Publish Date</label><input type="date" [(ngModel)]="newBlog.publishedAt" />
+        <label>Publish At</label><input type="datetime-local" [(ngModel)]="newBlog.publishedAt" />
+      </div>
+      <div class="form-group xs">
+        <label>Unpublish At <small>(optional)</small></label
+        ><input type="datetime-local" [(ngModel)]="newBlog.unpublishedAt" />
       </div>
     </div>
     <div class="form-group">

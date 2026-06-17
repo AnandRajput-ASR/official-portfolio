@@ -13,6 +13,11 @@ export const routes: Routes = [
       import('@features/blog/blog-list/blog-list.component').then((m) => m.BlogListComponent),
   },
   {
+    path: 'blog/tag/:tag',
+    loadComponent: () =>
+      import('@features/blog/blog-list/blog-list.component').then((m) => m.BlogListComponent),
+  },
+  {
     path: 'admin/dashboard',
     canMatch: [authGuard],
     loadComponent: () =>

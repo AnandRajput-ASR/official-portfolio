@@ -88,6 +88,64 @@
       </ng-template>
     </div>
 
+    <div class="analytics-section">
+      <div class="analytics-funnel-head">
+        <h3 class="analytics-section-title">Resume Funnel</h3>
+        <div class="analytics-funnel-range">
+          <button
+            class="btn btn-outline btn-xs"
+            [class.is-active]="resumeFunnelDays === 7"
+            (click)="setResumeFunnelDays(7)"
+          >
+            Last 7d
+          </button>
+          <button
+            class="btn btn-outline btn-xs"
+            [class.is-active]="resumeFunnelDays === 30"
+            (click)="setResumeFunnelDays(30)"
+          >
+            Last 30d
+          </button>
+        </div>
+      </div>
+
+      <div class="analytics-funnel-cards">
+        <div class="analytics-card">
+          <span class="ac-icon">👀</span>
+          <div class="ac-val">{{ resumeFunnel.totals.views }}</div>
+          <div class="ac-label">Resume Views</div>
+        </div>
+        <div class="analytics-card">
+          <span class="ac-icon">🖱</span>
+          <div class="ac-val">{{ resumeFunnel.totals.clicks }}</div>
+          <div class="ac-label">Resume Clicks</div>
+        </div>
+        <div class="analytics-card ac-highlight">
+          <span class="ac-icon">⬇</span>
+          <div class="ac-val">{{ resumeFunnel.totals.downloads }}</div>
+          <div class="ac-label">Resume Downloads</div>
+        </div>
+      </div>
+
+      <div class="analytics-table" *ngIf="resumeFunnel.bySource.length > 0; else noFunnelData">
+        <div class="at-row at-header at-row-funnel">
+          <span>Source</span><span>Views</span><span>Clicks</span><span>Downloads</span><span>Click->Download</span>
+        </div>
+        <div class="at-row at-row-funnel" *ngFor="let source of resumeFunnel.bySource">
+          <span class="at-name">{{ source.source }}</span>
+          <span class="at-count">{{ source.views }}</span>
+          <span class="at-count">{{ source.clicks }}</span>
+          <span class="at-count">{{ source.downloads }}</span>
+          <span>{{ source.clickToDownloadRate | number: '1.0-1' }}%</span>
+        </div>
+      </div>
+      <ng-template #noFunnelData>
+        <p class="muted-text analytics-empty-note">
+          No resume funnel data tracked yet for this range.
+        </p>
+      </ng-template>
+    </div>
+
     <!-- Project clicks table -->
     <div class="analytics-section" *ngIf="topProjectClicks().length > 0">
       <h3 class="analytics-section-title">Project Clicks</h3>

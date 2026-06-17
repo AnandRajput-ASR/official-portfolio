@@ -41,7 +41,9 @@ export class BlogTabComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.blogEdit = JSON.parse(JSON.stringify(this.store.content()?.blogPosts ?? []));
+    this.blogEdit = JSON.parse(JSON.stringify(this.store.content()?.blogPosts ?? [])).map(
+      (post: BlogPost) => this.normalizePostSchedule(post),
+    );
     this.store.registerSaver('blog', () => this.saveBlog());
   }
 
@@ -54,6 +56,7 @@ export class BlogTabComponent implements OnInit, OnDestroy {
   }
 
   saveBlog(): void {
+    this.blogEdit = this.blogEdit.map((post) => this.normalizePostSchedule(post));
     this.store.saving.set(true);
     this.adminService.updateBlogPosts(this.blogEdit).subscribe({
       next: () => {
@@ -77,6 +80,8 @@ export class BlogTabComponent implements OnInit, OnDestroy {
   }
 
   submitAddBlog(): void {
+    const normalizedPublishedAt = this.normalizeDateTimeInput(this.newBlog.publishedAt, false);
+    const normalizedUnpublishAt = this.normalizeDateTimeInput(this.newBlog.unpublishedAt, true);
     const post: BlogPost = {
       id: 'b_' + Date.now(),
       title: this.newBlog.title || '',
@@ -89,8 +94,8 @@ export class BlogTabComponent implements OnInit, OnDestroy {
       tags: this.newBlog.tags || [],
       coverImage: this.newBlog.coverImage || '',
       published: this.newBlog.published || false,
-      publishedAt:
-        this.newBlog.publishedAt || new Date().toISOString().split('T')[0],
+      publishedAt: normalizedPublishedAt,
+      unpublishedAt: normalizedUnpublishAt,
       readingTime: this.newBlog.readingTime || 5,
       displayOrder: this.blogEdit.length,
     };
@@ -144,8 +149,10 @@ export class BlogTabComponent implements OnInit, OnDestroy {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
     }
+    const payload = this.normalizePostSchedule(post);
+    this.assignPost(post, payload);
     this.store.saving.set(true);
-    this.adminService.updateBlogPost(post.id, post).subscribe({
+    this.adminService.updateBlogPost(post.id, payload).subscribe({
       next: () => {
         this.store.saving.set(false);
         this.editingBlogId = null;
@@ -166,6 +173,15 @@ export class BlogTabComponent implements OnInit, OnDestroy {
 
   viewBlog(slug: string): void {
     window.open('/blog/' + slug, '_blank');
+  }
+
+  formatScheduleChip(post: BlogPost): string {
+    const publishAt = this.normalizeDateTimeInput(post.publishedAt, false);
+    const unpublishAt = this.normalizeDateTimeInput(post.unpublishedAt, true);
+
+    if (!publishAt) return 'Not scheduled';
+    if (unpublishAt) return `${publishAt} -> ${unpublishAt}`;
+    return publishAt;
   }
 
   addBlogTag(p: Partial<BlogPost>, e: Event): void {
@@ -201,6 +217,7 @@ export class BlogTabComponent implements OnInit, OnDestroy {
   }
 
   private emptyBlog(): Partial<BlogPost> {
+    const nowLocal = this.toDateTimeLocalInput(new Date().toISOString());
     return {
       title: '',
       excerpt: '',
@@ -208,8 +225,42 @@ export class BlogTabComponent implements OnInit, OnDestroy {
       tags: [],
       coverImage: '',
       published: false,
-      publishedAt: new Date().toISOString().split('T')[0],
+      publishedAt: nowLocal,
+      unpublishedAt: '',
       readingTime: 5,
     };
+  }
+
+  private normalizePostSchedule(post: BlogPost): BlogPost {
+    const normalizedPublishedAt = this.normalizeDateTimeInput(post.publishedAt, false);
+    const normalizedUnpublishAt = this.normalizeDateTimeInput(post.unpublishedAt, true);
+
+    return {
+      ...post,
+      publishedAt: normalizedPublishedAt,
+      unpublishedAt:
+        normalizedUnpublishAt && normalizedUnpublishAt > normalizedPublishedAt
+          ? normalizedUnpublishAt
+          : '',
+    };
+  }
+
+  private normalizeDateTimeInput(value: string | undefined, allowEmpty: boolean): string {
+    if (!value) return allowEmpty ? '' : this.toDateTimeLocalInput(new Date().toISOString());
+    const hasTime = value.includes('T');
+    if (hasTime) return value.slice(0, 16);
+    return `${value}T09:00`;
+  }
+
+  private toDateTimeLocalInput(iso: string): string {
+    const parsed = Date.parse(iso);
+    const d = Number.isFinite(parsed) ? new Date(parsed) : new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  private assignPost(target: BlogPost, source: BlogPost): void {
+    target.publishedAt = source.publishedAt;
+    target.unpublishedAt = source.unpublishedAt;
   }
 }

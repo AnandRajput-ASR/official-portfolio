@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { Analytics, DailyVisit } from '@core/models';
 import { AdminService } from '@core/services/admin.service';
+import { ContentService, ResumeFunnelSummary } from '@core/services/content.service';
 import { ConfirmService } from '@core/services/confirm.service';
 import { LoadingService } from '@core/services/loading.service';
 import { ToastService } from '@shared/components/toast/toast.component';
@@ -19,6 +20,7 @@ export class AnalyticsTabComponent implements OnInit {
   private static readonly MIN_LOADER_MS = 450;
 
   private readonly adminService = inject(AdminService);
+  private readonly contentService = inject(ContentService);
   private readonly toast = inject(ToastService);
   private readonly confirm = inject(ConfirmService);
   private readonly loadingService = inject(LoadingService);
@@ -26,8 +28,15 @@ export class AnalyticsTabComponent implements OnInit {
 
   analytics: Analytics | null = null;
   analyticsLoading = false;
+  resumeFunnelDays: 7 | 30 = 30;
+  resumeFunnel: ResumeFunnelSummary = {
+    timeframeDays: 30,
+    totals: { views: 0, clicks: 0, downloads: 0 },
+    bySource: [],
+  };
 
   ngOnInit(): void {
+    this.loadResumeFunnel();
     this.loadAnalytics();
   }
 
@@ -46,6 +55,7 @@ export class AnalyticsTabComponent implements OnInit {
       .subscribe({
       next: (res: Analytics) => {
         this.analytics = res;
+        this.loadResumeFunnel();
       },
       error: () => {
         this.analytics = null;
@@ -136,6 +146,16 @@ export class AnalyticsTabComponent implements OnInit {
 
   today(): string {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  setResumeFunnelDays(days: 7 | 30): void {
+    this.resumeFunnelDays = days;
+    this.loadResumeFunnel();
+  }
+
+  private loadResumeFunnel(): void {
+    this.resumeFunnel = this.contentService.getResumeFunnelSummary(this.resumeFunnelDays);
+    this.cdr.markForCheck();
   }
 
   private stopLoadersWithMinimumDuration(loaderKey: string, startedAt: number): void {

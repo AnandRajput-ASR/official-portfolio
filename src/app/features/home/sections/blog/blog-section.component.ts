@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { PortfolioContent } from '@core/models';
+import { ContentService } from '@core/services/content.service';
 
 @Component({
   selector: 'app-blog-section',
@@ -22,9 +23,12 @@ export class BlogSectionComponent {
   @Input({ required: true }) content!: PortfolioContent;
 
   private router = inject(Router);
+  private contentService = inject(ContentService);
 
   publishedPosts() {
-    return (this.content?.blogPosts || []).filter((p) => p.published);
+    return (this.content?.blogPosts || [])
+      .filter((p) => this.contentService.isBlogPostLive(p))
+      .sort((a, b) => Date.parse(b.publishedAt || '') - Date.parse(a.publishedAt || ''));
   }
 
   navigateToBlog(slug: string): void {

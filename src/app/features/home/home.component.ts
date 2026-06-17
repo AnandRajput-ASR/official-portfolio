@@ -97,7 +97,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Published (non-deleted) blog posts, derived from loaded content. */
   readonly publishedPosts = computed(() =>
-    (this.content()?.blogPosts ?? []).filter((p) => p.published && p.is_deleted !== true),
+    (this.content()?.blogPosts ?? []).filter((p) => this.contentService.isBlogPostLive(p)),
   );
 
   /** Ticker items from settings, falling back to a default tech list. */
@@ -113,6 +113,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Resume gate modal
   resumeGateOpen = false;
+  resumeGateSource = 'unknown';
 
   private static readonly DEFAULT_TICKER = [
     'Angular',
@@ -189,8 +190,9 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.contentService.trackEvent('projectClick', { projectId });
   }
 
-  trackResumeDownload(): void {
-    this.contentService.trackEvent('resumeDownload');
+  trackResumeDownload(source = 'unknown'): void {
+    this.contentService.trackEvent('resumeDownload', { source });
+    this.contentService.trackResumeFunnel('download', source);
   }
 
   trackSocialClick(): void {
@@ -293,6 +295,7 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.loading.set(false);
           this.apiError.set(false);
           this.contentService.trackEvent('pageView');
+          this.contentService.trackResumeFunnel('view', 'resume-cta');
         },
         error: () => {
           this.loading.set(false);
@@ -323,13 +326,26 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /** Opens the resume-gate modal if protection is on, otherwise downloads directly. */
   handleResumeClick(event: Event): void {
+    const source = this.resolveResumeSource(event);
+    this.contentService.trackResumeFunnel('click', source);
+
     if (this.content()?.siteSettings?.resumeProtected) {
       event.preventDefault();
+      this.resumeGateSource = source;
       this.resumeGateOpen = true;
       // Tracking fires only after the gate is submitted (see ResumeGateComponent)
     } else {
       // Direct download — track immediately
-      this.trackResumeDownload();
+      this.trackResumeDownload(source);
     }
+  }
+
+  private resolveResumeSource(event: Event): string {
+    const target = event.target as HTMLElement | null;
+    if (!target) return 'unknown';
+    if (target.closest('.btn-nav-resume')) return 'nav';
+    if (target.closest('.btn-hero-resume')) return 'hero';
+    if (target.closest('.btn-resume-dl')) return 'banner';
+    return 'resume-cta';
   }
 }

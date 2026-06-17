@@ -181,6 +181,32 @@
   border-bottom: 1px solid var(--border);
 }
 
+.analytics-funnel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.analytics-funnel-range {
+  display: flex;
+  gap: 0.5rem;
+
+  .btn.is-active {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: color-mix(in srgb, var(--amber) 10%, var(--surface));
+  }
+}
+
+.analytics-funnel-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 .analytics-table {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -203,6 +229,10 @@
     &:hover {
       background-color: var(--surface2);
     }
+  }
+
+  .at-row-funnel {
+    grid-template-columns: minmax(120px, 1fr) repeat(4, minmax(70px, auto));
   }
 
   .at-header {
@@ -236,5 +266,14 @@
     height: 100%;
     background: var(--amber);
     transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@media (max-width: 900px) {
+  .analytics-table {
+    .at-row-funnel {
+      grid-template-columns: 1fr 1fr;
+      gap: 0.45rem 0.75rem;
+    }
   }
 }

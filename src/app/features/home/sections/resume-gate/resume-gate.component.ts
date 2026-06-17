@@ -26,6 +26,7 @@ import { ResumeService } from '@core/services/resume.service';
 })
 export class ResumeGateComponent implements OnChanges {
   @Input() open = false;
+  @Input() source = 'resume-gate';
   @Output() openChange = new EventEmitter<boolean>();
 
   private contentService = inject(ContentService);
@@ -55,7 +56,8 @@ export class ResumeGateComponent implements OnChanges {
     // Send the email to the backend (stored in resume_leads + email notification)
     this.contentService.trackResumeLead(email);
     // Track it as a resumeDownload analytics event
-    this.contentService.trackEvent('resumeDownload');
+    this.contentService.trackEvent('resumeDownload', { source: this.source, gated: true });
+    this.contentService.trackResumeFunnel('download', this.source || 'resume-gate');
     this.openChange.emit(false);
     // Trigger download programmatically
     const a = document.createElement('a');

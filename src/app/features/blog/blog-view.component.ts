@@ -75,7 +75,7 @@ export class BlogViewComponent implements OnInit {
         if (post) {
           this.post = post;
           this.renderedContent = renderMarkdown(post.content ?? '');
-          this.contentService.trackEvent('blogView');
+          this.contentService.trackBlogView(post.slug);
           this.setMetaTags(post, content);
         } else {
           this.notFound = true;

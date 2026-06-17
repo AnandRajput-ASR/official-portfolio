@@ -10,6 +10,7 @@ export interface BlogPost extends EntityMetadata {
   coverImage: string;
   published: boolean;
   publishedAt: string;
+  unpublishedAt?: string;
   readingTime: number;
   displayOrder: number;
 }
