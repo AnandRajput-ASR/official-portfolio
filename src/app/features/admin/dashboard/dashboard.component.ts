@@ -102,6 +102,7 @@ export class DashboardComponent implements OnInit {
       // Each tab owns its edit buffer; "leaving" only clears the dirty
       // marker. The user can re-enter and save their changes.
       this.store.clearDirty(this.activeTab);
+      this.audit.log(this.activeTab, 'revert', 'Discarded unsaved changes on tab switch');
     }
     this.activeTab = tab;
     if (tab === 'messages') this.messagesService.load();
@@ -156,7 +157,6 @@ export class DashboardComponent implements OnInit {
     if (!saver) return;
     e.preventDefault();
     if (this.store.saving()) return;
-    this.audit.log(this.activeTab, 'save', 'Ctrl+S save');
     saver();
   }
 

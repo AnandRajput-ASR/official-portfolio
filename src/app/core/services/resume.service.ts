@@ -1,8 +1,9 @@
 import { HttpClient, HttpEventType, HttpResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { ApiResponse } from '@core/models';
+import { AuditLogService } from '@core/services/audit-log.service';
 import { environment } from '@env/environment';
-import { map, Observable } from 'rxjs';
+import { map, Observable, tap } from 'rxjs';
 
 export interface ResumeInfo {
   available: boolean;
@@ -28,6 +29,7 @@ export interface UploadProgress {
 @Injectable({ providedIn: 'root' })
 export class ResumeService {
   private http = inject(HttpClient);
+  private audit = inject(AuditLogService);
 
   private base = `${environment.api.baseUrl}/resume`;
 
@@ -69,6 +71,7 @@ export class ResumeService {
                 const percent = total ? Math.round((event.loaded / total) * 100) : 0;
                 observer.next({ type: 'progress', percent });
               } else if (event instanceof HttpResponse) {
+                this.audit.log('resume', 'upload', `Uploaded resume: ${file.name}`);
                 observer.next({
                   type: 'complete',
                   result: event.body ?? {
@@ -102,7 +105,9 @@ export class ResumeService {
   }
 
   deleteResume(): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(this.base);
+    return this.http
+      .delete<{ message: string }>(this.base)
+      .pipe(tap(() => this.audit.log('resume', 'delete', 'Deleted resume')));
   }
 
   formatSize(bytes: number): string {

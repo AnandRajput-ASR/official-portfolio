@@ -3,6 +3,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { AuthResponse } from '@core/models';
+import { AuditLogService } from '@core/services/audit-log.service';
 import { environment } from '@env/environment';
 import { catchError, Observable, of, tap } from 'rxjs';
 import { StorageService } from './storage.service';
@@ -40,6 +41,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
   private storage = inject(StorageService);
+  private audit = inject(AuditLogService);
 
   /**
    * Single source of truth for auth state. Reactive current-user info;
@@ -76,6 +78,7 @@ export class AuthService {
   }
 
   logout(): void {
+    this.audit.log('account', 'revert', 'Logged out admin session');
     if (environment.cookieAuth) {
       // Best-effort: tell the backend to clear cookies. Always continue
       // to local cleanup even if the call fails.
@@ -158,7 +161,7 @@ export class AuthService {
           newUsername,
         },
         { withCredentials: true },
-      );
+      ).pipe(tap(() => this.audit.log('account', 'save', 'Changed account credentials')));
     }
     return this.http
       .put<AuthResponse>(`${environment.api.baseUrl}/auth/change-password`, {
@@ -172,19 +175,24 @@ export class AuthService {
             this.storage.set(AuthService.TOKEN_KEY, res.token);
             this.storage.set(AuthService.USER_KEY, { username: res.username, role: res.role });
           }
+          this.audit.log('account', 'save', 'Changed account credentials');
         }),
       );
   }
 
   forgotPassword(): Observable<ForgotPasswordResponse> {
-    return this.http.post<ForgotPasswordResponse>(`${environment.api.baseUrl}/auth/forgot-password`, {});
+    return this.http
+      .post<ForgotPasswordResponse>(`${environment.api.baseUrl}/auth/forgot-password`, {})
+      .pipe(tap(() => this.audit.log('account', 'save', 'Generated password reset token')));
   }
 
   resetPassword(token: string, newPassword: string): Observable<{ message?: string }> {
-    return this.http.post<{ message?: string }>(`${environment.api.baseUrl}/auth/reset-password`, {
-      token,
-      newPassword,
-    });
+    return this.http
+      .post<{ message?: string }>(`${environment.api.baseUrl}/auth/reset-password`, {
+        token,
+        newPassword,
+      })
+      .pipe(tap(() => this.audit.log('account', 'save', 'Completed password reset with token')));
   }
 
   /**

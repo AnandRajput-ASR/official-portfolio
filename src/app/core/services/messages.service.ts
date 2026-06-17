@@ -1,8 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { ApiResponse, MessagesResponse } from '@core/models';
+import { AuditLogService } from '@core/services/audit-log.service';
 import { environment } from '@env/environment';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 
 export interface ContactPayload {
   name: string;
@@ -13,6 +14,7 @@ export interface ContactPayload {
 @Injectable({ providedIn: 'root' })
 export class MessagesService {
   private http = inject(HttpClient);
+  private audit = inject(AuditLogService);
 
   private base = `${environment.api.baseUrl}/messages`;
 
@@ -28,21 +30,29 @@ export class MessagesService {
 
   // Admin — mark one as read
   markRead(id: string): Observable<ApiResponse> {
-    return this.http.patch<ApiResponse>(`${this.base}/${id}/read`, {});
+    return this.http
+      .patch<ApiResponse>(`${this.base}/${id}/read`, {})
+      .pipe(tap(() => this.audit.log('messages', 'save', 'Marked message as read')));
   }
 
   // Admin — toggle star
   toggleStar(id: string): Observable<ApiResponse> {
-    return this.http.patch<ApiResponse>(`${this.base}/${id}/star`, {});
+    return this.http
+      .patch<ApiResponse>(`${this.base}/${id}/star`, {})
+      .pipe(tap(() => this.audit.log('messages', 'save', 'Toggled message star')));
   }
 
   // Admin — delete
   deleteMessage(id: string): Observable<ApiResponse> {
-    return this.http.delete<ApiResponse>(`${this.base}/${id}`);
+    return this.http
+      .delete<ApiResponse>(`${this.base}/${id}`)
+      .pipe(tap(() => this.audit.log('messages', 'delete', 'Deleted message')));
   }
 
   // Admin — mark all read
   markAllRead(): Observable<ApiResponse> {
-    return this.http.patch<ApiResponse>(`${this.base}/mark-all-read`, {});
+    return this.http
+      .patch<ApiResponse>(`${this.base}/mark-all-read`, {})
+      .pipe(tap(() => this.audit.log('messages', 'save', 'Marked all messages as read')));
   }
 }
