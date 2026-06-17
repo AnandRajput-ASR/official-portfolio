@@ -1,5 +1,9 @@
 @use '../admin-base';
 
+.hidden-file-input {
+  display: none;
+}
+
 .resume-current {
   display: flex;
   align-items: center;
@@ -8,6 +12,14 @@
   border: 1px solid rgba(168, 255, 62, 0.25);
   padding: 1.5rem 2rem;
   margin-bottom: 2rem;
+  border-radius: 6px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 8px 16px rgba(168, 255, 62, 0.1);
+  }
 
   .resume-current-icon {
     font-size: 2.5rem;
@@ -16,11 +28,14 @@
 
   .resume-current-info {
     flex: 1;
+
     .resume-filename {
       font-size: 1rem;
       font-weight: 700;
       margin-bottom: 0.25rem;
+      color: var(--text);
     }
+
     .resume-meta {
       font-family: 'Space Mono', monospace;
       font-size: 0.7rem;
@@ -28,6 +43,7 @@
       letter-spacing: 0.05em;
       margin-bottom: 0.4rem;
     }
+
     .resume-live-note {
       font-family: 'Space Mono', monospace;
       font-size: 0.7rem;
@@ -144,23 +160,38 @@
 
 .resume-info-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
 
   .resume-info-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    padding: 1.5rem;
+    padding: 1.75rem 1.5rem;
+    border-radius: 6px;
+    transition:
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+
+    &:hover {
+      border-color: var(--amber);
+      box-shadow: 0 8px 20px #0000000f;
+      transform: translateY(-2px);
+    }
+
     .info-icon {
       font-size: 1.5rem;
       display: block;
       margin-bottom: 0.75rem;
     }
+
     h4 {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       font-weight: 700;
       margin-bottom: 0.5rem;
+      color: var(--text);
     }
+
     p {
       font-size: 0.82rem;
       color: var(--muted);

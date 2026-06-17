@@ -100,20 +100,25 @@
   padding: 1rem 1.2rem;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: background 0.15s;
+  transition:
+    background 0.2s ease,
+    border-left-color 0.2s ease;
   position: relative;
 
   &:hover {
     background: rgba(255, 255, 255, 0.03);
   }
+
   &.selected {
     background: rgba(0, 229, 255, 0.05);
     border-left: 2px solid var(--accent1);
   }
+
   &.unread .msg-row-name {
     color: var(--accent1);
     font-weight: 800;
   }
+
   &.unread::before {
     content: '';
     position: absolute;
@@ -138,6 +143,7 @@
     font-weight: 800;
     font-size: 0.85rem;
     color: var(--bg);
+    box-shadow: 0 2px 8px rgba(0, 229, 255, 0.2);
   }
 
   .msg-row-body {
@@ -151,20 +157,25 @@
     align-items: center;
     margin-bottom: 0.15rem;
   }
+
   .msg-row-name {
     font-size: 0.9rem;
     font-weight: 600;
+    transition: color 0.2s ease;
   }
+
   .msg-row-time {
     font-family: 'Space Mono', monospace;
     font-size: 0.6rem;
     color: var(--muted);
   }
+
   .msg-row-email {
     font-size: 0.75rem;
     color: var(--muted);
     margin-bottom: 0.2rem;
   }
+
   .msg-row-preview {
     font-size: 0.78rem;
     color: var(--muted);
@@ -180,6 +191,12 @@
     gap: 0.25rem;
     align-items: center;
     flex-shrink: 0;
+    opacity: 0.6;
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover .msg-row-actions {
+    opacity: 1;
   }
 }
 
@@ -218,11 +235,12 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  background: var(--surface);
 
   .msg-detail-header {
     display: flex;
-    align-items: center;
-    gap: 1rem;
+    align-items: flex-start;
+    gap: 1.5rem;
     padding-bottom: 1.5rem;
     border-bottom: 1px solid var(--border);
     flex-wrap: wrap;
@@ -239,21 +257,31 @@
       font-weight: 800;
       font-size: 1.1rem;
       color: var(--bg);
+      box-shadow: 0 4px 12px rgba(0, 229, 255, 0.3);
     }
+
+    > div {
+      flex: 1;
+    }
+
     h2 {
       font-size: 1.2rem;
       font-weight: 800;
       margin-bottom: 0.15rem;
     }
+
     .msg-detail-email {
       font-family: 'Space Mono', monospace;
       font-size: 0.75rem;
       color: var(--accent1);
       letter-spacing: 0.05em;
+      transition: color 0.2s ease;
+
       &:hover {
         text-decoration: underline;
       }
     }
+
     .msg-detail-meta {
       margin-left: auto;
       display: flex;
@@ -261,6 +289,7 @@
       gap: 0.75rem;
       flex-wrap: wrap;
     }
+
     .msg-detail-time {
       font-family: 'Space Mono', monospace;
       font-size: 0.7rem;
@@ -277,6 +306,7 @@
     color: var(--text);
     white-space: pre-wrap;
     flex: 1;
+    border-radius: 4px;
   }
 }
 

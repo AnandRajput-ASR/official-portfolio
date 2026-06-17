@@ -1,3 +1,37 @@
-// Experience tab reuses only structural primitives from the admin base.
-// No additional styling required.
 @use '../admin-base';
+
+.edit-card {
+  border-left: 3px solid var(--accent2);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover {
+    border-color: var(--accent1);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+  }
+}
+
+.edit-card-header {
+  .muted {
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+.form-group textarea {
+  min-height: 102px;
+}
+
+@media (max-width: 900px) {
+  .edit-card-header {
+    flex-wrap: wrap;
+    gap: 0.55rem;
+
+    .ml-auto {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+}

@@ -53,7 +53,7 @@ export interface SiteSettings extends EntityMetadata {
   about: {
     heading: string;
     paragraphs: string[];
-    accentureBadge: { company: string; role: string; period: string; award: string };
+    companyBadge: { company: string; role: string; period: string; award: string };
   };
   ticker: { items: string[] };
   contact: { heading: string; successMessage: string };

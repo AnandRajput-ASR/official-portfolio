@@ -52,16 +52,19 @@
         </div>
       </div>
       <div
-        class="about-accenture-badge"
-        *ngIf="content.siteSettings.about.accentureBadge.company"
+        class="about-company-badge"
+        *ngIf="content.siteSettings.about.companyBadge.company"
       >
         <span class="acc-logo">⬡</span>
         <div>
-          <p class="acc-company">{{ content.siteSettings.about.accentureBadge.company }}</p>
-          <p class="acc-role">{{ content.siteSettings.about.accentureBadge.role }}</p>
-          <p class="acc-period">{{ content.siteSettings.about.accentureBadge.period }}</p>
+          <p class="acc-company">{{ content.siteSettings.about.companyBadge.company }}</p>
+          <p class="acc-role">{{ content.siteSettings.about.companyBadge.role }}</p>
+          <p class="acc-period">{{ content.siteSettings.about.companyBadge.period }}</p>
         </div>
-        <div class="acc-award">{{ content.siteSettings.about.accentureBadge.award }}</div>
+        <div
+          class="acc-award"
+          [innerHTML]="content.siteSettings.about.companyBadge.award"
+        ></div>
       </div>
     </div>
   </div>

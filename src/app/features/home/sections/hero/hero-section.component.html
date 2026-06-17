@@ -7,7 +7,10 @@
   </div>
   <div class="hero-inner">
     <div class="hero-left">
-      <div class="hero-badge anim-1">
+      <div class="hero-badge anim-1" *ngIf="
+                content.siteSettings.freelance.enabled &&
+                content.siteSettings.freelance.showInHero !== false
+              ">
         <span class="badge-dot"></span>
         {{ content.siteSettings.hero.badgeText || 'Available for Freelance · Pune, India' }}
       </div>
@@ -63,7 +66,7 @@
               >● {{ content.siteSettings.hero.cardStatusText || 'Open to work' }}</span
             >
           </div>
-          <div class="card-stats">
+          <div class="card-stats" *ngIf="content.siteSettings.sections.stats !== false">
             <ng-container *ngFor="let st of content.siteSettings.hero.cardStats; let i = index">
               <div class="cs-div" *ngIf="i > 0"></div>
               <div class="cs">

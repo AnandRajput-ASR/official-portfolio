@@ -1,5 +1,26 @@
 @use '../admin-base';
 
+.blog-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.blog-save-row {
+  text-align: right;
+  margin-top: 0.5rem;
+}
+
+.blog-date-chip {
+  margin-left: auto;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
 .blog-admin-list {
   display: flex;
   flex-direction: column;
@@ -10,6 +31,16 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-left: 3px solid var(--amber);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--amber) 45%, var(--border));
+    box-shadow: 0 10px 24px #0000001c;
+    transform: translateY(-1px);
+  }
 
   &.draft {
     border-left-color: var(--border);
@@ -67,4 +98,26 @@
   line-height: 1.7;
   min-height: 260px;
   resize: vertical;
+}
+
+@media (max-width: 900px) {
+  .blog-admin-topbar {
+    gap: 0.6rem;
+    padding: 0.85rem 1rem;
+
+    .blog-admin-title {
+      flex-basis: 100%;
+      order: 2;
+      margin-top: 0.1rem;
+    }
+  }
+
+  .blog-date-chip {
+    margin-left: 0;
+    order: 3;
+  }
+
+  .blog-save-row {
+    text-align: left;
+  }
 }

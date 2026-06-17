@@ -7,7 +7,7 @@
         portfolio.
       </p>
     </div>
-    <div style="display: flex; gap: 0.75rem">
+    <div class="blog-header-actions">
       <button class="btn btn-primary btn-sm" (click)="showAddBlog = true">+ New Post</button>
       <button class="btn btn-outline btn-sm" (click)="saveBlog()" [disabled]="saving">
         {{ saving ? 'Saving...' : 'Save All' }}
@@ -31,7 +31,7 @@
           post.published ? '● Published' : '○ Draft'
         }}</span>
         <strong class="blog-admin-title">{{ post.title || 'Untitled Post' }}</strong>
-        <span class="muted-text" style="margin-left: auto">{{ post.publishedAt }}</span>
+        <span class="muted-text blog-date-chip">{{ post.publishedAt }}</span>
         <button class="btn btn-outline btn-xs" (click)="toggleEditBlog(post.id)">
           {{ editingBlogId === post.id ? 'Collapse' : 'Edit' }}
         </button>
@@ -98,7 +98,7 @@
             portfolio)
           </label>
         </div>
-        <div style="text-align: right; margin-top: 0.5rem">
+        <div class="blog-save-row">
           <button class="btn btn-primary btn-sm" (click)="saveBlog()" [disabled]="saving">
             {{ saving ? 'Saving...' : 'Save Post' }}
           </button>

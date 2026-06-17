@@ -6,7 +6,7 @@
     </div>
     <div class="header-actions">
       <button class="btn btn-outline btn-sm" (click)="showAddExp = true">+ Add Entry</button>
-      <button class="btn btn-primary" (click)="saveExperience()" [disabled]="saving">
+      <button class="btn btn-primary btn-sm" (click)="saveExperience()" [disabled]="saving">
         {{ saving ? 'Saving...' : 'Save All' }}
       </button>
     </div>

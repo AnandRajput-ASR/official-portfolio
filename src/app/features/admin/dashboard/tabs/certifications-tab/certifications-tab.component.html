@@ -7,7 +7,7 @@
         custom badge or use styled default
       </p>
     </div>
-    <div style="display: flex; gap: 0.75rem">
+    <div class="cert-header-actions">
       <button class="btn btn-primary btn-sm" (click)="showAddCert = true">
         + Add Certification
       </button>
@@ -203,7 +203,7 @@
           [id]="'badge-upload-' + cert.id"
           type="file"
           accept="image/*"
-          style="display: none"
+          class="badge-upload-input"
           (change)="onCertBadgeUpload(cert, $event)"
         />
         <button

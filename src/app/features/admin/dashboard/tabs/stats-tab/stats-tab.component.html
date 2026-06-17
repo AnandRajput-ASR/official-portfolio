@@ -5,7 +5,7 @@
       <h1>About Stats</h1>
       <p>The animated counter numbers shown in the About section of your portfolio.</p>
     </div>
-    <button class="btn btn-primary" (click)="saveStats()" [disabled]="saving">
+    <button class="btn btn-primary btn-sm" (click)="saveStats()" [disabled]="saving">
       {{ saving ? 'Saving...' : 'Save Stats' }}
     </button>
   </div>
@@ -16,8 +16,7 @@
         <span class="stat-big">{{ stat.value }}{{ stat.suffix }}</span>
         <span class="stat-lab-preview">{{ stat.label }}</span>
         <button
-          class="btn btn-danger btn-xs"
-          style="margin-top: 0.5rem"
+          class="btn btn-danger btn-xs stats-delete-btn"
           (click)="deleteStat(stat.id)"
         >
           ✕
@@ -41,9 +40,9 @@
       </div>
     </div>
   </div>
-  <div style="display: flex; gap: 0.75rem; margin-top: 1.5rem; align-items: center">
+  <div class="stats-footer-actions">
     <button class="btn btn-outline btn-sm" (click)="addStat()">+ Add Counter</button>
-    <p class="muted-text" style="font-size: 0.8rem; margin: 0">
+    <p class="muted-text stats-footer-note">
       💡 These counters animate on scroll. Add, edit, or remove any stat.
     </p>
   </div>

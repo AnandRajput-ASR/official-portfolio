@@ -8,7 +8,7 @@
 
   <!-- Change credentials -->
   <div class="settings-card">
-    <h3 style="margin-bottom: 1.25rem">🔑 Change Credentials</h3>
+    <h3 class="account-section-title">🔑 Change Credentials</h3>
     <div class="form-row">
       <div class="form-group">
         <label>New Username <small>(leave blank to keep current)</small></label>
@@ -65,7 +65,7 @@
             : 'Strong'
       }}</span>
     </div>
-    <div class="modal-actions" style="margin-top: 1.25rem">
+    <div class="modal-actions account-save-row">
       <button
         class="btn btn-primary btn-sm"
         (click)="changeCredentials()"
@@ -78,9 +78,9 @@
   </div>
 
   <!-- Forgot / Reset Password -->
-  <div class="settings-card" style="margin-top: 1.25rem">
-    <h3 style="margin-bottom: 0.5rem">🔒 Forgot Password / Reset</h3>
-    <p class="muted-text" style="margin-bottom: 1.25rem">
+  <div class="settings-card account-reset-card">
+    <h3 class="account-section-title">🔒 Forgot Password / Reset</h3>
+    <p class="muted-text account-reset-intro">
       Generate a reset token (sent to <strong>{{ auth.getUsername() }}</strong
       >'s registered email when email is configured).
     </p>
@@ -98,8 +98,7 @@
         <p class="muted-text" style="margin-bottom: 0.5rem">Token generated (valid 1 hour):</p>
         <code class="token-code">{{ forgotTokenResult }}</code>
         <button
-          class="btn btn-outline btn-xs"
-          style="margin-top: 0.75rem"
+          class="btn btn-outline btn-xs account-use-token-btn"
           (click)="showResetForm = true"
         >
           Use This Token →
@@ -146,8 +145,8 @@
   </div>
 
   <!-- Session Info -->
-  <div class="settings-card" style="margin-top: 1.25rem">
-    <h3 style="margin-bottom: 0.75rem">📋 Current Session</h3>
+  <div class="settings-card account-session-card">
+    <h3 class="account-section-title">📋 Current Session</h3>
     <div class="session-info">
       <div class="si-row">
         <span class="si-label">Logged in as</span
@@ -157,7 +156,7 @@
         <span class="si-label">Role</span><span class="si-val amber-text">admin</span>
       </div>
     </div>
-    <button class="btn btn-danger btn-sm" (click)="auth.logout()" style="margin-top: 1.25rem">
+    <button class="btn btn-danger btn-sm account-logout-btn" (click)="auth.logout()">
       Logout →
     </button>
   </div>

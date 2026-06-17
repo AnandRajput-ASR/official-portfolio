@@ -5,11 +5,24 @@
       <p>
         Everything configurable — banner, sections, freelance, nav, contact. No redeploy needed.
       </p>
+      <p class="settings-change-summary" *ngIf="hasUnsavedChanges">Pending: {{ changeSummary }}</p>
     </div>
-    <button class="btn btn-primary btn-sm" (click)="saveSettings()" [disabled]="saving">
-      {{ saving ? 'Saving...' : 'Save All Settings' }}
-    </button>
+    <div class="settings-header-actions">
+      <button class="btn btn-outline btn-sm" (click)="expandAllGroups()">Expand All</button>
+      <button class="btn btn-outline btn-sm" (click)="collapseSecondaryGroups()">Focus Core</button>
+      <button class="btn btn-primary btn-sm" (click)="saveSettings()" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save All Settings' }}
+      </button>
+    </div>
   </div>
+
+  <div class="settings-group" [class.collapsed]="!isGroupOpen('core')">
+    <button class="group-toggle" (click)="toggleGroup('core')" type="button">
+      <span class="group-title">Core Controls</span>
+      <span class="group-meta">Banner, Freelance, Visibility, Nav, Language</span>
+      <span class="group-chevron">{{ isGroupOpen('core') ? '▾' : '▸' }}</span>
+    </button>
+    <div class="group-body" *ngIf="isGroupOpen('core')">
 
   <!-- Open to Work Banner -->
   <div class="settings-card">
@@ -30,7 +43,7 @@
         <span class="big-toggle-slider"></span>
       </label>
     </div>
-    <div class="form-row" style="margin-top: 1rem" *ngIf="settingsEdit.openToWork">
+    <div class="form-row otw-stack" style="margin-top: 1rem" *ngIf="settingsEdit.openToWork">
       <div class="form-group">
         <label>Banner HTML Text</label>
         <input
@@ -40,12 +53,16 @@
           placeholder="e.g. <b>Open to Freelance</b> · Available Now"
         />
       </div>
-      <div class="form-group xs">
+      <div class="form-group">
         <label>Preview</label>
         <div
           class="banner-preview"
           [innerHTML]="settingsEdit.openToWorkText || 'Open to Freelance'"
         ></div>
+        <small class="preview-help"
+          >Rendered preview. Supported tags: <code>&lt;b&gt;</code>, <code>&lt;em&gt;</code>,
+          <code>&lt;a&gt;</code>, <code>&lt;br&gt;</code>.</small
+        >
       </div>
     </div>
   </div>
@@ -176,9 +193,9 @@
   </div>
 
   <!-- Section Visibility -->
-  <div class="settings-card" style="margin-top: 1.25rem">
-    <h3 style="margin-bottom: 0.5rem">📐 Section Visibility</h3>
-    <p class="muted-text" style="margin-bottom: 1.5rem">
+  <div class="settings-card mt-card">
+    <h3 class="card-title-sm">📐 Section Visibility</h3>
+    <p class="muted-text card-desc-gap">
       Toggle entire sections on/off. Changes take effect immediately after saving.
     </p>
     <div class="section-toggles">
@@ -203,8 +220,8 @@
   </div>
 
   <!-- Nav / Footer Text -->
-  <div class="settings-card" style="margin-top: 1.25rem">
-    <h3 style="margin-bottom: 1.25rem">🔧 Nav & Footer</h3>
+  <div class="settings-card mt-card">
+    <h3 class="card-title-md">🔧 Nav & Footer</h3>
     <div class="form-row">
       <div class="form-group xs">
         <label>Nav Logo Text</label
@@ -217,7 +234,7 @@
       </div>
       <div class="form-group">
         <label>Show Resume Button in Nav</label>
-        <label class="big-toggle" style="margin-top: 0.35rem"
+        <label class="big-toggle toggle-mt"
           ><input
             type="checkbox"
             [(ngModel)]="settingsEdit.nav.showResume"
@@ -243,7 +260,7 @@
         />
       </div>
     </div>
-    <div class="form-group" style="margin-top: 0.75rem">
+    <div class="form-group form-group-gap-sm">
       <label
         >🌐 Site URL
         <small>(used in robots.txt &amp; sitemap.xml — no redeploy needed)</small></label
@@ -254,49 +271,37 @@
         (ngModelChange)="markDirty()"
         placeholder="https://anandrajput.dev"
       />
-      <small
-        style="color: var(--muted); font-size: 0.72rem; margin-top: 0.35rem; display: block"
-      >
+      <small class="hint-text">
         Changing this updates <code>/robots.txt</code> and <code>/sitemap.xml</code> instantly
         without redeploying.
       </small>
     </div>
 
     <!-- Resume gate -->
-    <div class="form-group" style="margin-top: 0.75rem">
+    <div class="form-group form-group-gap-sm">
       <label>🔒 Require Email Before Resume Download</label>
-      <label class="big-toggle" style="margin-top: 0.35rem">
+      <label class="big-toggle toggle-mt">
         <input
           type="checkbox"
           [(ngModel)]="settingsEdit.resumeProtected"
           (ngModelChange)="markDirty()"
         /><span class="big-toggle-slider"></span>
       </label>
-      <small
-        style="color: var(--muted); font-size: 0.72rem; margin-top: 0.35rem; display: block"
-      >
+      <small class="hint-text">
         When enabled, visitors must enter their email address before the resume PDF downloads.
       </small>
     </div>
   </div>
 
   <!-- Language Toggle -->
-  <div class="settings-card" style="margin-top: 1.25rem">
-    <h3 style="margin-bottom: 0.35rem">🌐 Language Toggle</h3>
-    <p style="font-size: 0.78rem; color: var(--muted); margin-bottom: 1rem">
+  <div class="settings-card mt-card">
+    <h3 class="card-title-xs">🌐 Language Toggle</h3>
+    <p class="lang-intro">
       Check the languages you want visitors to see. The toggle button is hidden automatically
       when only one language is enabled.
     </p>
-    <div style="display: flex; flex-wrap: wrap; gap: 1rem">
-      <label
-        style="
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          font-size: 0.88rem;
-        "
-      >
+    <div class="lang-list">
+      <label class="lang-item">
         <input
           type="checkbox"
           [checked]="settingsEdit.enabledLanguages.includes('en')"
@@ -304,15 +309,7 @@
         />
         English (EN)
       </label>
-      <label
-        style="
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          font-size: 0.88rem;
-        "
-      >
+      <label class="lang-item">
         <input
           type="checkbox"
           [checked]="settingsEdit.enabledLanguages.includes('hi')"
@@ -320,15 +317,7 @@
         />
         हिन्दी (HI)
       </label>
-      <label
-        style="
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          cursor: pointer;
-          font-size: 0.88rem;
-        "
-      >
+      <label class="lang-item">
         <input
           type="checkbox"
           [checked]="settingsEdit.enabledLanguages.includes('jp')"
@@ -337,7 +326,7 @@
         日本語 (JP)
       </label>
     </div>
-    <small style="color: var(--muted); font-size: 0.72rem; margin-top: 0.6rem; display: block"
+    <small class="lang-note"
       >English cannot be removed — it is the fallback language.</small
     >
   </div>
@@ -345,7 +334,7 @@
   <!-- Currently Learning -->
   <div class="settings-card" style="margin-top: 1.25rem">
     <h3 style="margin-bottom: 1.25rem">📖 Currently Learning Widget</h3>
-    <div class="form-group">
+    <div class="form-group learning-toggle-group">
       <label>Show Widget on Portfolio</label>
       <label class="big-toggle" style="margin-top: 0.35rem">
         <input
@@ -362,8 +351,7 @@
       </p>
       <div
         *ngFor="let item of settingsEdit.learning.items; let i = index"
-        class="form-row"
-        style="align-items: flex-end; gap: 0.5rem; margin-bottom: 0.5rem"
+        class="form-row learning-item-row"
       >
         <div class="form-group xs">
           <label>Icon</label
@@ -405,7 +393,6 @@
           class="btn-icon-danger"
           (click)="settingsEdit.learning.items.splice(i, 1); markDirty()"
           title="Remove"
-          style="margin-bottom: 0.1rem"
         >
           ✕
         </button>
@@ -453,6 +440,17 @@
       </div>
     </div>
   </div>
+
+    </div>
+  </div>
+
+  <div class="settings-group" [class.collapsed]="!isGroupOpen('presentation')">
+    <button class="group-toggle" (click)="toggleGroup('presentation')" type="button">
+      <span class="group-title">Presentation Content</span>
+      <span class="group-meta">Hero and About sections</span>
+      <span class="group-chevron">{{ isGroupOpen('presentation') ? '▾' : '▸' }}</span>
+    </button>
+    <div class="group-body" *ngIf="isGroupOpen('presentation')">
 
   <!-- Hero Content -->
   <div class="settings-card" style="margin-top: 1.25rem">
@@ -607,7 +605,7 @@
         <label>Company Name</label
         ><input
           type="text"
-          [(ngModel)]="settingsEdit.about.accentureBadge.company"
+          [(ngModel)]="settingsEdit.about.companyBadge.company"
           (ngModelChange)="markDirty()"
         />
       </div>
@@ -615,7 +613,7 @@
         <label>Your Role</label
         ><input
           type="text"
-          [(ngModel)]="settingsEdit.about.accentureBadge.role"
+          [(ngModel)]="settingsEdit.about.companyBadge.role"
           (ngModelChange)="markDirty()"
         />
       </div>
@@ -625,7 +623,7 @@
         <label>Period</label
         ><input
           type="text"
-          [(ngModel)]="settingsEdit.about.accentureBadge.period"
+          [(ngModel)]="settingsEdit.about.companyBadge.period"
           (ngModelChange)="markDirty()"
         />
       </div>
@@ -633,12 +631,23 @@
         <label>Award / Achievement</label
         ><input
           type="text"
-          [(ngModel)]="settingsEdit.about.accentureBadge.award"
+          [(ngModel)]="settingsEdit.about.companyBadge.award"
           (ngModelChange)="markDirty()"
         />
       </div>
     </div>
   </div>
+
+    </div>
+  </div>
+
+  <div class="settings-group" [class.collapsed]="!isGroupOpen('content')">
+    <button class="group-toggle" (click)="toggleGroup('content')" type="button">
+      <span class="group-title">Content Blocks</span>
+      <span class="group-meta">Ticker and Contact content</span>
+      <span class="group-chevron">{{ isGroupOpen('content') ? '▾' : '▸' }}</span>
+    </button>
+    <div class="group-body" *ngIf="isGroupOpen('content')">
 
   <!-- Ticker -->
   <div class="settings-card" style="margin-top: 1.25rem">
@@ -682,4 +691,8 @@
       </div>
     </div>
   </div>
+
+    </div>
+  </div>
+
 </section>

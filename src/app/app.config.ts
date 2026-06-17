@@ -1,11 +1,11 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
-  ApplicationConfig,
-  ErrorHandler,
-  provideAppInitializer,
-  provideBrowserGlobalErrorListeners,
-  provideZoneChangeDetection,
-  inject,
+    ApplicationConfig,
+    ErrorHandler,
+    inject,
+    provideAppInitializer,
+    provideBrowserGlobalErrorListeners,
+    provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { authInterceptor } from '@core/interceptors/auth.interceptor';

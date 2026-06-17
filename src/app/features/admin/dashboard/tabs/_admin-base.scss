@@ -345,6 +345,26 @@
 }
 
 // ── Drag-to-reorder ───────────────────────────────────────────────────────────
+// ── Inline checkbox label (checkbox + text on same line) ─────────────────────
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--muted);
+  user-select: none;
+
+  input[type='checkbox'] {
+    cursor: pointer;
+    accent-color: var(--accent1);
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+  }
+}
+
+// ── Drag-to-reorder ───────────────────────────────────────────────────────────
 .drag-handle {
   cursor: grab;
   flex-shrink: 0;

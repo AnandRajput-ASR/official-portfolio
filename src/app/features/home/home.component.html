@@ -19,6 +19,7 @@
 
   <!-- ═══ HERO ═════════════════════════════════════════════════════════════════ -->
   <app-hero-section
+    *ngIf="content.siteSettings.sections.hero !== false"
     [content]="content"
     [resumeInfo]="resumeInfo()"
     (resumeClick)="handleResumeClick($event)"
@@ -31,13 +32,18 @@
   />
 
   <!-- ═══ ABOUT ════════════════════════════════════════════════════════════════ -->
-  <app-about-section [content]="content" (socialClick)="trackSocialClick()" />
+  <app-about-section
+    *ngIf="content.siteSettings.sections.about !== false"
+    [content]="content"
+    (socialClick)="trackSocialClick()"
+  />
 
   <!-- ═══ SKILLS ═══════════════════════════════════════════════════════════════ -->
   <app-skills-section *ngIf="content.siteSettings.sections.skills !== false" [content]="content" />
 
   <!-- ═══ WORK EXPERIENCE by COMPANY ═══════════════════════════════════════════ -->
   <app-work-section
+    *ngIf="content.siteSettings.sections.companies !== false"
     [content]="content"
     [openCompanies]="openCompanies"
     (toggleCompany)="toggleCompany($event)"
@@ -94,17 +100,18 @@
   />
 
   <!-- ═══ CONTACT ══════════════════════════════════════════════════════════════ -->
-  <app-contact-section [content]="content" />
+  <app-contact-section *ngIf="content.siteSettings.sections.contact !== false" [content]="content" />
 
   <!-- ═══ RESUME BANNER ════════════════════════════════════════════════════════ -->
   <app-resume-banner
-    *ngIf="resumeInfo()?.available"
+    *ngIf="content.siteSettings.sections.resumeBanner !== false && resumeInfo()?.available"
     [resumeInfo]="resumeInfo()"
     (resumeClick)="handleResumeClick($event)"
   />
 
   <!-- ═══ FOOTER ═══════════════════════════════════════════════════════════════ -->
   <app-footer-section
+    *ngIf="content.siteSettings.sections.footer !== false"
     [content]="content"
     [visitorCount]="visitorCount()"
     (socialClick)="trackSocialClick()"

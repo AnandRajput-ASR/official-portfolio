@@ -6,7 +6,7 @@
     </div>
     <div class="header-actions">
       <button class="btn btn-outline btn-sm" (click)="showAddSkill = true">+ Add Skill</button>
-      <button class="btn btn-primary" (click)="saveSkills()" [disabled]="saving">
+      <button class="btn btn-primary btn-sm" (click)="saveSkills()" [disabled]="saving">
         {{ saving ? 'Saving...' : 'Save All' }}
       </button>
     </div>

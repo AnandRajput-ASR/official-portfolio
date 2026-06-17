@@ -7,7 +7,7 @@
         portfolio.
       </p>
     </div>
-    <div style="display: flex; gap: 0.75rem">
+    <div class="testi-header-actions">
       <button class="btn btn-primary btn-sm" (click)="showAddTestimonial = true">
         + Add Testimonial
       </button>
@@ -114,7 +114,7 @@
                 <input
                   type="file"
                   accept="image/*"
-                  style="display: none"
+                  class="hidden-file-input"
                   (change)="onAvatarUpload(t, $event)"
                 />
               </label>
@@ -165,7 +165,7 @@
           <div class="pending-stars">
             <span *ngFor="let s of ratingStars(p.rating)">★</span>
           </div>
-          <span class="muted-text" style="font-size: 0.65rem; margin-left: auto">{{
+          <span class="muted-text pending-date">{{
             p.submittedAt | date: 'MMM d, y'
           }}</span>
         </div>
@@ -186,8 +186,7 @@
   </div>
 
   <div
-    class="empty-state"
-    style="margin-top: 1.5rem"
+    class="empty-state testi-empty-spaced"
     *ngIf="pendingTestimonials.length === 0 && testimonialsEdit.length === 0"
   >
     <span>💬</span>
@@ -262,7 +261,7 @@
             <input
               type="file"
               accept="image/*"
-              style="display: none"
+              class="hidden-file-input"
               (change)="onAvatarUpload(newTestimonial, $event)"
             />
           </label>

@@ -3,12 +3,14 @@
 .companies-admin-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  background: var(--border);
+  gap: 0.65rem;
+  background: transparent;
 }
 
 .co-admin-block {
   background: var(--bg);
+  border: 1px solid var(--border);
+  transition: border-color 0.2s ease;
   overflow: hidden;
 
   &.open {
@@ -27,13 +29,16 @@
     background 0.2s,
     border-color 0.2s;
   border-left: 3px solid transparent;
+  border-bottom: 1px solid transparent;
 
   &:hover {
     background: var(--surface2);
+    border-left-color: rgba(0, 229, 255, 0.35);
   }
 
   &.open {
     border-left-color: var(--accent1);
+    border-bottom-color: var(--border);
     background: var(--surface2);
   }
 
@@ -146,13 +151,15 @@
   }
 
   .co-chevron {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     color: var(--muted);
     transition: transform 0.3s;
+    opacity: 0.9;
 
     &.open {
       transform: rotate(90deg);
       color: var(--accent1);
+      opacity: 1;
     }
   }
 }

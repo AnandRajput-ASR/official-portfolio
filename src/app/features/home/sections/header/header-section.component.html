@@ -5,7 +5,9 @@
     class="otw-text"
     [innerHTML]="content.siteSettings.openToWorkText || 'Open to Freelance'"
   ></span>
-  <a href="#contact" class="otw-cta">Let's talk →</a>
+  <a href="#contact" class="otw-cta" *ngIf="content.siteSettings.sections.contact !== false"
+    >Let's talk →</a
+  >
   <button class="otw-close" (click)="dismiss.emit()" aria-label="Dismiss">✕</button>
 </div>
 
@@ -17,14 +19,28 @@
 
   <!-- Desktop links -->
   <div class="nav-links">
-    <a href="#about">{{ langService.t('nav.about') }}</a>
-    <a href="#skills">{{ langService.t('nav.skills') }}</a>
-    <a href="#projects">{{ langService.t('nav.work') }}</a>
-    <a href="#personal-projects">{{ langService.t('nav.sideProjects') }}</a>
-    <a href="#certs">{{ langService.t('nav.certs') }}</a>
+    <a href="#about" *ngIf="content.siteSettings.sections.about !== false">{{
+      langService.t('nav.about')
+    }}</a>
+    <a href="#skills" *ngIf="content.siteSettings.sections.skills !== false">{{
+      langService.t('nav.skills')
+    }}</a>
+    <a href="#projects" *ngIf="content.siteSettings.sections.companies !== false">{{
+      langService.t('nav.work')
+    }}</a>
+    <a
+      href="#personal-projects"
+      *ngIf="content.siteSettings.sections.personalProjects !== false"
+      >{{ langService.t('nav.sideProjects') }}</a
+    >
+    <a href="#certs" *ngIf="content.siteSettings.sections.certifications !== false">{{
+      langService.t('nav.certs')
+    }}</a>
     <a href="#testimonials" *ngIf="showReviewsLink">{{ langService.t('nav.reviews') }}</a>
     <a href="#blog" *ngIf="showWritingLink">{{ langService.t('nav.writing') }}</a>
-    <a href="#contact">{{ langService.t('nav.hire') }}</a>
+    <a href="#contact" *ngIf="content.siteSettings.sections.contact !== false">{{
+      langService.t('nav.hire')
+    }}</a>
   </div>
 
   <div class="nav-right">
@@ -52,7 +68,7 @@
 
     <!-- Resume quick link -->
     <a
-      *ngIf="resumeInfo?.available"
+      *ngIf="resumeInfo?.available && content.siteSettings.nav.showResume !== false"
       [href]="resumeService.getDownloadUrl()"
       class="btn-nav-resume"
       download
@@ -83,15 +99,18 @@
       <button class="mobile-close" (click)="closeMobileMenu()" aria-label="Close menu">✕</button>
     </div>
     <nav class="mobile-nav">
-      <a href="#about" (click)="closeMobileMenu()">About</a>
-      <a href="#skills" (click)="closeMobileMenu()">Skills</a>
-      <a href="#projects" (click)="closeMobileMenu()">Projects</a>
-      <a href="#certs" (click)="closeMobileMenu()">Certifications</a>
-      <a href="#contact" (click)="closeMobileMenu()">Hire Me</a>
+      <a href="#about" *ngIf="content.siteSettings.sections.about !== false" (click)="closeMobileMenu()">About</a>
+      <a href="#skills" *ngIf="content.siteSettings.sections.skills !== false" (click)="closeMobileMenu()">Skills</a>
+      <a href="#projects" *ngIf="content.siteSettings.sections.companies !== false" (click)="closeMobileMenu()">Projects</a>
+      <a href="#personal-projects" *ngIf="content.siteSettings.sections.personalProjects !== false" (click)="closeMobileMenu()">Side Projects</a>
+      <a href="#certs" *ngIf="content.siteSettings.sections.certifications !== false" (click)="closeMobileMenu()">Certifications</a>
+      <a href="#testimonials" *ngIf="showReviewsLink" (click)="closeMobileMenu()">Reviews</a>
+      <a href="#blog" *ngIf="showWritingLink" (click)="closeMobileMenu()">Writing</a>
+      <a href="#contact" *ngIf="content.siteSettings.sections.contact !== false" (click)="closeMobileMenu()">Hire Me</a>
     </nav>
     <div class="mobile-menu-footer">
       <a
-        *ngIf="resumeInfo?.available"
+        *ngIf="resumeInfo?.available && content.siteSettings.nav.showResume !== false"
         [href]="resumeService.getDownloadUrl()"
         class="btn-hero-primary"
         download
