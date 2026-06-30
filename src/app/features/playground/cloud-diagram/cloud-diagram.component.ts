@@ -58,7 +58,7 @@ interface DiagramNode {
             <text x="12" y="40" fill="var(--muted)" font-family="Space Mono" font-size="8.5" letter-spacing="0.08em">
               {{ n.sub }}
             </text>
-            <text *ngIf="n.cert" x="148" y="14" fill="var(--amber)" font-size="11" text-anchor="end">📜</text>
+            <text *ngIf="showCerts && n.cert" x="148" y="14" fill="var(--amber)" font-size="11" text-anchor="end">📜</text>
           </g>
         </svg>
 
@@ -66,11 +66,11 @@ interface DiagramNode {
           <h3>{{ h.label }}</h3>
           <p class="cd-info-cat">{{ categoryLabel(h.category) }}</p>
           <p class="cd-info-desc">{{ h.description }}</p>
-          <p *ngIf="h.cert" class="cd-cert">📜 {{ h.cert }}</p>
+          <p *ngIf="showCerts && h.cert" class="cd-cert">📜 {{ h.cert }}</p>
         </aside>
         <aside class="cd-info cd-info-empty" *ngIf="!hovered()">
           <p class="cd-hint">Hover a node →</p>
-          <p class="cd-hint-sub">See how each piece connects and which certifications apply.</p>
+          <p class="cd-hint-sub">See how each piece connects.</p>
         </aside>
       </div>
     </div>
@@ -79,6 +79,8 @@ interface DiagramNode {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CloudDiagramComponent {
+  // Set to true to show certification badges on nodes
+  readonly showCerts = false;
   readonly hovered = signal<DiagramNode | null>(null);
 
   readonly nodes: DiagramNode[] = [
