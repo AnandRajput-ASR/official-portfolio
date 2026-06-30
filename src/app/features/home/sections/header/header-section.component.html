@@ -5,7 +5,11 @@
     class="otw-text"
     [innerHTML]="content.siteSettings.openToWorkText || 'Open to Freelance'"
   ></span>
-  <a href="#contact" class="otw-cta" *ngIf="content.siteSettings.sections.contact !== false"
+  <a
+    href="#contact"
+    class="otw-cta"
+    *ngIf="content.siteSettings.sections.contact !== false"
+    (click)="navigateToSection($event, 'contact')"
     >Let's talk →</a
   >
   <button class="otw-close" (click)="dismiss.emit()" aria-label="Dismiss">✕</button>
@@ -19,26 +23,27 @@
 
   <!-- Desktop links -->
   <div class="nav-links">
-    <a href="#about" *ngIf="content.siteSettings.sections.about !== false">{{
+    <a href="#about" *ngIf="content.siteSettings.sections.about !== false" (click)="navigateToSection($event, 'about')">{{
       langService.t('nav.about')
     }}</a>
-    <a href="#skills" *ngIf="content.siteSettings.sections.skills !== false">{{
+    <a href="#skills" *ngIf="content.siteSettings.sections.skills !== false" (click)="navigateToSection($event, 'skills')">{{
       langService.t('nav.skills')
     }}</a>
-    <a href="#projects" *ngIf="content.siteSettings.sections.companies !== false">{{
+    <a href="#projects" *ngIf="content.siteSettings.sections.companies !== false" (click)="navigateToSection($event, 'projects')">{{
       langService.t('nav.work')
     }}</a>
     <a
       href="#personal-projects"
       *ngIf="content.siteSettings.sections.personalProjects !== false"
+      (click)="navigateToSection($event, 'personal-projects')"
       >{{ langService.t('nav.sideProjects') }}</a
     >
-    <a href="#certs" *ngIf="content.siteSettings.sections.certifications !== false">{{
+    <a href="#certs" *ngIf="content.siteSettings.sections.certifications !== false" (click)="navigateToSection($event, 'certs')">{{
       langService.t('nav.certs')
     }}</a>
-    <a href="#testimonials" *ngIf="showReviewsLink">{{ langService.t('nav.reviews') }}</a>
-    <a href="#blog" *ngIf="showWritingLink">{{ langService.t('nav.writing') }}</a>
-    <a href="#contact" *ngIf="content.siteSettings.sections.contact !== false">{{
+    <a href="#testimonials" *ngIf="showReviewsLink" (click)="navigateToSection($event, 'testimonials')">{{ langService.t('nav.reviews') }}</a>
+    <a href="#blog" *ngIf="showWritingLink" (click)="navigateToSection($event, 'blog')">{{ langService.t('nav.writing') }}</a>
+    <a href="#contact" *ngIf="content.siteSettings.sections.contact !== false" (click)="navigateToSection($event, 'contact')">{{
       langService.t('nav.hire')
     }}</a>
   </div>
@@ -99,14 +104,14 @@
       <button class="mobile-close" (click)="closeMobileMenu()" aria-label="Close menu">✕</button>
     </div>
     <nav class="mobile-nav">
-      <a href="#about" *ngIf="content.siteSettings.sections.about !== false" (click)="closeMobileMenu()">About</a>
-      <a href="#skills" *ngIf="content.siteSettings.sections.skills !== false" (click)="closeMobileMenu()">Skills</a>
-      <a href="#projects" *ngIf="content.siteSettings.sections.companies !== false" (click)="closeMobileMenu()">Projects</a>
-      <a href="#personal-projects" *ngIf="content.siteSettings.sections.personalProjects !== false" (click)="closeMobileMenu()">Side Projects</a>
-      <a href="#certs" *ngIf="content.siteSettings.sections.certifications !== false" (click)="closeMobileMenu()">Certifications</a>
-      <a href="#testimonials" *ngIf="showReviewsLink" (click)="closeMobileMenu()">Reviews</a>
-      <a href="#blog" *ngIf="showWritingLink" (click)="closeMobileMenu()">Writing</a>
-      <a href="#contact" *ngIf="content.siteSettings.sections.contact !== false" (click)="closeMobileMenu()">Hire Me</a>
+      <a href="#about" *ngIf="content.siteSettings.sections.about !== false" (click)="navigateToSection($event, 'about', true)">About</a>
+      <a href="#skills" *ngIf="content.siteSettings.sections.skills !== false" (click)="navigateToSection($event, 'skills', true)">Skills</a>
+      <a href="#projects" *ngIf="content.siteSettings.sections.companies !== false" (click)="navigateToSection($event, 'projects', true)">Projects</a>
+      <a href="#personal-projects" *ngIf="content.siteSettings.sections.personalProjects !== false" (click)="navigateToSection($event, 'personal-projects', true)">Side Projects</a>
+      <a href="#certs" *ngIf="content.siteSettings.sections.certifications !== false" (click)="navigateToSection($event, 'certs', true)">Certifications</a>
+      <a href="#testimonials" *ngIf="showReviewsLink" (click)="navigateToSection($event, 'testimonials', true)">Reviews</a>
+      <a href="#blog" *ngIf="showWritingLink" (click)="navigateToSection($event, 'blog', true)">Writing</a>
+      <a href="#contact" *ngIf="content.siteSettings.sections.contact !== false" (click)="navigateToSection($event, 'contact', true)">Hire Me</a>
     </nav>
     <div class="mobile-menu-footer">
       <a

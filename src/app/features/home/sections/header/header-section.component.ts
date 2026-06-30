@@ -4,6 +4,7 @@ import {
     Component,
     EventEmitter,
     Input,
+    OnInit,
     Output,
     ViewEncapsulation,
     inject,
@@ -21,7 +22,7 @@ import { ThemeService } from '@core/services/theme.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   encapsulation: ViewEncapsulation.None,
 })
-export class HeaderSectionComponent {
+export class HeaderSectionComponent implements OnInit {
   @Input({ required: true }) content!: PortfolioContent;
   @Input() resumeInfo: ResumeInfo | null = null;
   @Input() otwDismissed = false;
@@ -43,5 +44,28 @@ export class HeaderSectionComponent {
 
   closeMobileMenu(): void {
     this.mobileMenuOpen = false;
+  }
+
+  ngOnInit(): void {
+    if (window.location.hash) {
+      history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+    }
+  }
+
+  navigateToSection(event: Event, sectionId: string, closeMenu = false): void {
+    event.preventDefault();
+
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    if (closeMenu) {
+      this.closeMobileMenu();
+    }
+
+    if (window.location.hash) {
+      history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+    }
   }
 }
