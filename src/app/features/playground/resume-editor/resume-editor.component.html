@@ -183,7 +183,7 @@
         <div class="rv-header">
           <h1>{{ data().name | uppercase }}</h1>
           <p>{{ data().phone }} ◇ {{ data().location }}</p>
-          <p>{{ data().email }} ◇ LinkedIn</p>
+          <p><a [href]="'mailto:' + data().email">{{ data().email }}</a> ◇ <a [href]="data().linkedin" target="_blank" rel="noopener">LinkedIn</a></p>
         </div>
         <div class="rv-section">
           <h2>OBJECTIVE</h2>
