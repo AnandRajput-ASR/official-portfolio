@@ -2,8 +2,6 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { PortfolioContent } from '@core/models';
-import { ContentService } from '@core/services/content.service';
 import { ToastComponent, ToastService } from '@shared/components/toast/toast.component';
 import { ResumeData, defaultResumeData, generateLatex } from './resume-latex';
 
@@ -16,16 +14,14 @@ import { ResumeData, defaultResumeData, generateLatex } from './resume-latex';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ResumeEditorComponent implements OnInit {
-  private contentService = inject(ContentService);
   private toast = inject(ToastService);
 
   readonly data = signal<ResumeData>(defaultResumeData());
   readonly activeSection = signal<string>('header');
   readonly previewMode = signal<'visual' | 'latex'>('visual');
-  private initialSnapshot: ResumeData | null = null;
 
   ngOnInit(): void {
-    this.loadFromPortfolio();
+    this.data.set(defaultResumeData());
   }
 
   setSection(s: string): void {
@@ -132,83 +128,31 @@ export class ResumeEditorComponent implements OnInit {
 
   downloadPdf(): void {
     const d = this.data();
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      this.toast.error('Popup blocked — allow popups for PDF download.');
-      return;
-    }
-    printWindow.document.write(this.buildPrintHtml(d));
-    printWindow.document.close();
-    setTimeout(() => {
-      printWindow.print();
-    }, 400);
+    const html = this.buildPrintHtml(d);
+    const blob = new Blob([html], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    iframe.onload = () => {
+      setTimeout(() => {
+        iframe.contentWindow?.print();
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+          URL.revokeObjectURL(url);
+        }, 1000);
+      }, 300);
+    };
   }
 
   resetToDefaults(): void {
-    if (this.initialSnapshot) {
-      this.data.set(structuredClone(this.initialSnapshot));
-    } else {
-      this.data.set(defaultResumeData());
-    }
-    this.toast.info('Reset to initial state.');
-  }
-
-  private loadFromPortfolio(): void {
     this.data.set(defaultResumeData());
-    this.contentService.getAll().subscribe({
-      next: (c) => {
-        this.prefillFromContent(c);
-        this.initialSnapshot = structuredClone(this.data());
-      },
-      error: () => {
-        this.initialSnapshot = structuredClone(this.data());
-      },
-    });
+    this.toast.info('Reset to resume data.');
   }
 
   trackByIndex(i: number): number {
     return i;
-  }
-
-  private prefillFromContent(c: PortfolioContent): void {
-    const h = c.hero;
-    if (!h) return;
-
-    const skills = c.skills?.length
-      ? this.groupSkills(c.skills)
-      : defaultResumeData().skills;
-
-    const certs = c.certifications?.length
-      ? c.certifications
-          .filter((cert) => cert.is_deleted !== true)
-          .map((cert) => ({ code: cert.code || '', name: cert.name || '' }))
-      : defaultResumeData().certifications;
-
-    this.data.update((d) => ({
-      ...d,
-      name: h.name || d.name,
-      location: h.location || d.location,
-      email: h.email || d.email,
-      linkedin: h.linkedin || d.linkedin,
-      objective: h.bio || d.objective,
-      skills: skills.length ? skills : d.skills,
-      certifications: certs.length ? certs : d.certifications,
-    }));
-  }
-
-  private groupSkills(skills: { category?: string; name?: string; title?: string }[]): { category: string; items: string }[] {
-    const groups: Record<string, string[]> = {};
-    for (const s of skills) {
-      const cat = s.category || 'Other';
-      const name = s.name || s.title || '';
-      if (!name) continue;
-      if (!groups[cat]) groups[cat] = [];
-      groups[cat].push(name);
-    }
-    return Object.entries(groups).map(([category, items]) => ({
-      category,
-      items: items.join(', '),
-    }));
   }
 
   private buildPrintHtml(d: ResumeData): string {
