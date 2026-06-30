@@ -118,6 +118,7 @@ const JSON_LD_ID = 'blog-article-jsonld';
               <button class="bv-comment-submit" (click)="addComment()" [disabled]="!commentText.trim()">
                 Post comment
               </button>
+              <p class="bv-social-hint" *ngIf="commentPosted">Comment posted successfully!</p>
             </div>
 
             <div class="bv-comment-list" *ngIf="comments.length > 0; else noComments">
@@ -256,6 +257,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   shareLocked = false;
   likeHintVisible = false;
   shareHintVisible = false;
+  commentPosted = false;
 
   ngOnInit(): void {
     if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
@@ -360,7 +362,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     if (!this.post) return;
     const message = this.commentText.trim();
     if (!message || this.socialLoading || this.socialError) return;
-    const name = this.commentAuthor.trim() || 'Guest Reader';
+    const name = this.commentAuthor.trim() || 'Anonymous';
 
     this.socialLoading = true;
     const payload: BlogCommentInput = { name: name.slice(0, 48), message: message.slice(0, 600) };
@@ -368,7 +370,14 @@ export class BlogViewComponent implements OnInit, OnDestroy {
       next: (state) => {
         this.socialState = this.normalizeSocialState(state);
         this.commentText = '';
+        this.commentAuthor = '';
         this.socialLoading = false;
+        this.commentPosted = true;
+        this.cdr.detectChanges();
+        setTimeout(() => {
+          this.commentPosted = false;
+          this.cdr.detectChanges();
+        }, 5000);
       },
       error: () => {
         this.socialError = true;
