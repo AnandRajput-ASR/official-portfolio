@@ -22,10 +22,26 @@ const renderer: Partial<Renderer> = {
     const rel = external ? ' rel="noopener nofollow" target="_blank"' : '';
     return `<a href="${escapeAttr(href)}"${t}${rel}>${text}</a>`;
   },
+  heading(token) {
+    const text = token.text ?? '';
+    const id = slugify(text);
+    return `<h${token.depth} id="${id}">${token.text}</h${token.depth}>`;
+  },
 };
 
 function escapeAttr(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+}
+
+function slugify(text: string): string {
+  const slug = text
+    .toLowerCase()
+    .replace(/<[^>]*>/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+
+  return slug || 'section';
 }
 
 /** Renders a markdown string to a sanitised HTML string. */

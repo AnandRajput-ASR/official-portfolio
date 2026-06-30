@@ -6,6 +6,55 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.9 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Blog deep-link load reliability | Fixed direct article URL boot path so `/blog/:slug` renders immediately even when opened directly in a fresh tab. |
+| Article render stabilization | Added explicit post-load render flush in article view to prevent rare stuck skeleton states during initial hydration. |
+
+### v1.1.8 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Hide vs Delete moderation model | Admin Blog tab now supports status-based comment moderation (`visible`, `hidden`, `deleted`) instead of permanent removal-only handling. |
+| Status-aware moderation actions | Added explicit `Hide`, `Unhide`, `Soft Delete`, and `Restore` actions mapped to backend moderation transitions. |
+| Filtered moderation queue | Added per-post moderation filters (`All`, `Visible`, `Hidden`, `Deleted`) with live count badges to speed up admin review workflows. |
+
+### v1.1.7 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Admin blog comments moderation | Added per-post comments management inside Admin Dashboard Blog tab with comment loading and delete actions. |
+| Backend delete contract integration | Admin frontend now calls a dedicated delete-comment endpoint by `slug` + `commentId` to remove specific comments safely. |
+| Moderator UX polish | Added loading, empty-state, and delete-progress UI states for comments moderation workflows. |
+
+### v1.1.6 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Backend-first blog social actions | Blog likes, comments, shares, and per-post viewer state now use backend APIs instead of local browser storage. |
+| API contract alignment | Frontend now expects social state, like toggles, comment creation, and share tracking endpoints for each blog slug. |
+| UI interaction state | Social controls now load from server state and show loading/error feedback instead of silently falling back to local data. |
+
+### v1.1.5 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Article reading UX upgrade | Blog article pages now include sticky reading-progress indicator, in-page mini TOC for long content, cover-image hero, and skeleton loading states. |
+| Post discovery continuity | Added related-post recommendations by shared tags and optional series-aware previous/next navigation when posts include `series:*` and `part:*` tagging. |
+| Engagement and trust signals | Added lightweight `Helpful`, `Insightful`, and `Save for later` actions (local persistence), tech-stack trust badges, and referenced-link surfacing from markdown sources. |
+| SEO depth pass | Added canonical URL handling, richer Open Graph/Twitter tags (`og:url`, `twitter:image`, etc.), and per-article JSON-LD `BlogPosting` schema output. |
+| Performance polish | Featured/blog hero images now use higher-priority loading hints while non-critical card media remains lazy-loaded with async decoding. |
+
+### v1.1.4 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Blog listing UX redesign | `/blog` now includes an editorial hero, live content stats, featured-story spotlight, image-forward post cards, and improved visual hierarchy for faster scanning. |
+| Discovery and filtering improvements | Added explicit result-state messaging, one-click filter reset, clearer tag chips, and better empty states to reduce dead ends when searching or filtering posts. |
+| Responsive polish for blog browsing | Desktop and mobile layouts now preserve readable spacing, content hierarchy, and touch-friendly controls across hero, toolbar, featured, and grid sections. |
+
 ### v1.1.3 (2026-06-30)
 
 | Feature | Details |
@@ -53,7 +102,7 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 - **Portfolio homepage** — hero section, skills grid, work experience (by company), side projects, certifications, testimonials, blog posts, about stats, contact form, resume download
 - **Dark / light theme** — toggled via `ThemeService`, persisted in localStorage
-- **Blog** — markdown-rendered individual blog post pages (`/blog/:slug`)
+- **Blog** — editorial-style listing experience (`/blog`, `/blog/tag/:tag`) with search, sort, tag filters, featured story spotlight, and markdown-rendered article pages (`/blog/:slug`)
 - **Admin dashboard** — full CRUD for all portfolio sections, analytics, messages inbox, resume upload, site settings
 - **Secret admin login** — admin page is hidden behind a configurable secret URL slug
 - **Scroll reveal animations** — `IntersectionObserver`-powered entry animations
@@ -153,6 +202,8 @@ Configured in `tsconfig.json` for clean imports:
 | Path               | Component            | Guard             | Description                |
 | ------------------ | -------------------- | ----------------- | -------------------------- |
 | `/`                | `HomeComponent`      | —                 | Main portfolio page        |
+| `/blog`            | `BlogListComponent`  | —                 | Blog discovery page        |
+| `/blog/tag/:tag`   | `BlogListComponent`  | —                 | Blog listing filtered by tag |
 | `/blog/:slug`      | `BlogViewComponent`  | —                 | Individual blog post       |
 | `/admin/dashboard` | `DashboardComponent` | `authGuard`       | Admin panel (JWT required) |
 | `/:slug`           | `LoginComponent`     | `secretSlugGuard` | Secret admin login URL     |
@@ -166,6 +217,193 @@ All feature components are **lazy-loaded** via dynamic `import()`.
 2. Opening an article from Blog list/tag pages stores the current blog listing URL as the source.
 3. On article page, Back button returns to the stored source route.
 4. If no source route is available (direct deep-link), Back defaults to `/blog`.
+
+### Blog Article Experience (`/blog/:slug`)
+
+| Section | Behavior |
+| ------- | -------- |
+| Sticky top bar + progress rail | Shows reading-time context and continuously updates article read-progress percentage while scrolling. |
+| Mini TOC (`h2`/`h3`) | Renders a sticky in-page navigation panel for long posts and highlights the active section as users scroll. |
+| Trust panel | Displays author metadata and tag-derived tech badges to reinforce topic credibility. |
+| Reactions and save action | Readers can mark posts as `Helpful`/`Insightful` and bookmark posts locally for later review. |
+| Related posts | Suggests up to 3 contextually similar posts based on shared tag overlap. |
+| Referenced links | Extracts and surfaces external markdown links as a quick source list near article end. |
+
+### Reader Interaction Model
+
+The blog article actions are now expected to be stored in the backend and loaded per post.
+
+| Action | Storage | Scope | Notes |
+| ------ | ------- | ----- | ----- |
+| Like | Backend | Per post | The backend should persist viewer state and like counts for each slug. |
+| Comment | Backend | Per post | Comments should be stored per slug and returned in display order. |
+| Share | Backend | Per post | Share actions should increment per-post counts. |
+| Save for later | Backend | Per post | If kept, this should be a server-backed bookmark list, not browser-only state. |
+
+#### Important Constraint
+
+These interactions should now be synced to the backend and shared across devices for the same post. That means:
+
+1. A visitor should see the same counts and comments when they return, on any device.
+2. Other visitors should see the same public counts and published comments.
+3. Analytics tracking remains separate from the social API and can continue for reporting.
+
+#### Backend API Contract
+
+The frontend expects these endpoints under `/api/content/blogs/:slug`:
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `GET` | `/social` | Return the current social state for a post. |
+| `POST` | `/like` | Toggle the current visitor's like state and return updated counts/state. |
+| `POST` | `/comments` | Create a new comment and return updated state. |
+| `POST` | `/share` | Increment share count and return updated state. |
+
+The backend should use a stable visitor identifier mechanism for likes, such as a signed anonymous cookie, so the `viewerLiked` state can be restored without local browser storage.
+
+### Admin Blog Comment Moderation
+
+Admins can now moderate blog comments directly from `/admin/dashboard` under the Blog tab.
+
+#### Workflow
+
+1. Open an existing post in Blog tab and click `Manage Comments`.
+2. The panel loads comments for that post from admin moderation API.
+3. Review comment author, timestamp, and message content.
+4. Use status filters (`All`, `Visible`, `Hidden`, `Deleted`) to focus the moderation queue.
+5. Apply action per comment:
+   - `Hide` (visible -> hidden)
+   - `Unhide` (hidden -> visible)
+   - `Soft Delete` (visible/hidden -> deleted)
+   - `Restore` (deleted -> visible)
+6. UI refreshes list and counts after each successful moderation action.
+
+#### Required Admin Endpoints
+
+| Method | Path | Purpose |
+| ------ | ---- | ------- |
+| `GET` | `/api/admin/blog/:slug/comments?status=all|visible|hidden|deleted` | List comments for moderation with status counts. |
+| `PATCH` | `/api/admin/blog/:slug/comments/:commentId/moderation` | Apply moderation action (`hide`, `unhide`, `delete`, `restore`). |
+| `DELETE` | `/api/admin/blog/:slug/comments/:commentId` | Backward-compatible soft delete route (maps to moderation delete). |
+
+#### Moderation API Request
+
+`PATCH /api/admin/blog/:slug/comments/:commentId/moderation`
+
+```json
+{
+  "action": "hide|unhide|delete|restore",
+  "reason": "optional moderation note"
+}
+```
+
+#### Moderation API Response Shape
+
+```json
+{
+  "success": true,
+  "data": {
+    "comments": [
+      {
+        "id": "c_123",
+        "slug": "my-post",
+        "authorName": "Visitor",
+        "content": "Great article",
+        "createdAt": "2026-06-30T11:05:00.000Z",
+        "moderationStatus": "visible",
+        "moderationReason": null,
+        "moderatedBy": null,
+        "moderatedAt": null,
+        "hiddenAt": null,
+        "deletedAt": null
+      }
+    ],
+    "counts": {
+      "all": 1,
+      "visible": 1,
+      "hidden": 0,
+      "deleted": 0
+    }
+  }
+}
+```
+
+#### Moderation States
+
+| State | Behavior |
+| ----- | -------- |
+| Loading comments | Shows `Loading comments...` while fetching moderation list. |
+| Empty filtered result | Shows `No comments found for this filter.` when selected moderation bucket is empty. |
+| Updating moderation action | Disables action controls and shows `Updating...` while a moderation transition is running. |
+| Visible comment | Offers `Hide` and `Soft Delete` actions. |
+| Hidden comment | Offers `Unhide` and `Soft Delete` actions. |
+| Deleted comment | Offers `Restore` action. |
+
+### Series Support Rules
+
+Series navigation is automatically enabled when both of these are present in post tags:
+
+1. `series:<series-name>` (or `series-<series-name>`)
+2. `part:<number>` (or `episode:<number>`, `ep:<number>`)
+
+When matched, the article page shows previous/next links within that series.
+
+### SEO and Metadata Behavior
+
+| Area | Enhancement |
+| ---- | ----------- |
+| Canonical URL | Article route now updates/creates `link[rel="canonical"]` dynamically. |
+| Open Graph | Adds `og:url`, strengthened `og:image` handling, and article metadata alignment with route URL. |
+| Twitter card | Includes title/description/image consistency via `twitter:title`, `twitter:description`, `twitter:image`. |
+| Structured data | Injects `application/ld+json` `BlogPosting` schema with headline, author, publish date, keywords, and word-count. |
+
+### Blog Performance Notes
+
+| Surface | Optimization |
+| ------- | ------------ |
+| Featured blog card image | Uses eager loading with high fetch priority for above-the-fold content. |
+| Standard blog card images | Uses lazy loading + async decoding to defer non-critical media. |
+| Article loading | Uses skeleton placeholder blocks for perceived speed and layout stability during content fetch. |
+
+### Blog Discovery UX
+
+The `/blog` page is designed for quick content scanning before deep reading.
+
+#### What Visitors See
+
+| Section | Purpose |
+| ------- | ------- |
+| Hero panel | Introduces writing focus and provides quick stats like total posts, topics, read-time sum, and tracked reads. |
+| Search + sort toolbar | Supports intent-based discovery by keyword (`title`, `excerpt`, `tags`, content preview) and sorting by newest/popular. |
+| Tag chips | Lets users narrow by topic while preserving URL-based navigation (`/blog/tag/:tag`). |
+| Featured story card | Highlights the top result from the current filter/sort context to create a stronger first-click candidate. |
+| Post grid | Displays remaining posts in compact, image-forward cards with metadata for rapid comparison. |
+
+#### Blog Browsing Workflow
+
+1. Open `/blog` to view all published posts.
+2. Type keywords in search to narrow results instantly.
+3. Click a tag chip or open `/blog/tag/:tag` directly for topic-focused browsing.
+4. Switch sort between `Newest` and `Popular` to change ranking.
+5. Use `Clear filters` or `Reset filters` to return to the default listing state.
+6. Open any card to navigate to `/blog/:slug`.
+
+#### Filter and State Behavior
+
+| Condition | Page Behavior |
+| --------- | ------------- |
+| Active search/tag/sort | Toolbar displays current result count and active criteria context. |
+| No matching posts | Empty state appears with a reset action to recover quickly. |
+| No backend response | Error state appears with a retry prompt message. |
+| Popularity data unavailable | View-count badges are omitted while the rest of metadata remains visible. |
+
+#### Troubleshooting
+
+| Issue | Check |
+| ----- | ----- |
+| Blog list looks empty unexpectedly | Verify published posts exist in content API and clear active filters/tags from toolbar. |
+| Featured card not visible | Ensure at least one post matches current filter/search combination. |
+| Post images missing | Confirm `coverImage` URLs are valid and reachable from browser network context. |
 
 ---
 

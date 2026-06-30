@@ -1,8 +1,8 @@
+import { HttpClient } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { CanMatchFn, Router, UrlSegment } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { map, catchError, of } from 'rxjs';
 import { environment } from '@env/environment';
+import { catchError, map, of } from 'rxjs';
 
 const VALID_SLUG_PATTERN = /^secure-[a-z0-9-]+$/;
 
@@ -26,8 +26,7 @@ export const secretSlugGuard: CanMatchFn = (_route, url: UrlSegment[]) => {
   const slug = url[0]?.path ?? '';
 
   if (!VALID_SLUG_PATTERN.test(slug)) {
-    router.navigate(['/']);
-    return of(false);
+    return of(router.parseUrl('/'));
   }
 
   return http.get<{ valid: boolean }>(`${environment.api.baseUrl}/admin/verify-slug/${slug}`).pipe(
@@ -38,12 +37,8 @@ export const secretSlugGuard: CanMatchFn = (_route, url: UrlSegment[]) => {
         }
         return true;
       }
-      router.navigate(['/']);
-      return false;
+      return router.parseUrl('/');
     }),
-    catchError(() => {
-      router.navigate(['/']);
-      return of(false);
-    }),
+    catchError(() => of(router.parseUrl('/'))),
   );
 };

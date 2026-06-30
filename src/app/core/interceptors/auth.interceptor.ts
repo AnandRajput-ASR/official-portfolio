@@ -20,7 +20,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
   const token = inject(AuthService).getToken();
-  if (token) {
+  const isApiRequest = req.url.startsWith(environment.api.baseUrl);
+  const isPublicContentRequest = req.url.startsWith(`${environment.api.baseUrl}/content`);
+
+  if (token && isApiRequest && !isPublicContentRequest) {
     req = req.clone({
       setHeaders: { Authorization: `Bearer ${token}` },
     });

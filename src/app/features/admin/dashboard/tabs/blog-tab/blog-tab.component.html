@@ -127,9 +127,105 @@
           </label>
         </div>
         <div class="blog-save-row">
+          <button
+            class="btn btn-outline btn-sm"
+            type="button"
+            (click)="toggleCommentsPanel(post)"
+            [disabled]="!post.slug"
+          >
+            {{ isCommentsPanelOpen(post.slug) ? 'Hide Comments' : 'Manage Comments' }}
+          </button>
           <button class="btn btn-primary btn-sm" (click)="saveBlog()" [disabled]="saving">
             {{ saving ? 'Saving...' : 'Save Post' }}
           </button>
+        </div>
+
+        <div class="blog-comments-admin" *ngIf="isCommentsPanelOpen(post.slug)">
+          <div class="blog-comments-header">
+            <p class="blog-comments-title">Comments Moderation</p>
+            <div class="blog-comments-filters" *ngIf="!commentsLoading(post.slug)">
+              <button
+                type="button"
+                class="blog-filter-chip"
+                [class.active]="selectedCommentsStatus(post.slug) === 'all'"
+                (click)="setCommentsFilter(post, 'all')"
+              >All ({{ commentsCountsFor(post.slug).all }})</button>
+              <button
+                type="button"
+                class="blog-filter-chip"
+                [class.active]="selectedCommentsStatus(post.slug) === 'visible'"
+                (click)="setCommentsFilter(post, 'visible')"
+              >Visible ({{ commentsCountsFor(post.slug).visible }})</button>
+              <button
+                type="button"
+                class="blog-filter-chip"
+                [class.active]="selectedCommentsStatus(post.slug) === 'hidden'"
+                (click)="setCommentsFilter(post, 'hidden')"
+              >Hidden ({{ commentsCountsFor(post.slug).hidden }})</button>
+              <button
+                type="button"
+                class="blog-filter-chip"
+                [class.active]="selectedCommentsStatus(post.slug) === 'deleted'"
+                (click)="setCommentsFilter(post, 'deleted')"
+              >Deleted ({{ commentsCountsFor(post.slug).deleted }})</button>
+            </div>
+          </div>
+
+          <p class="blog-comments-loading" *ngIf="commentsLoading(post.slug)">Loading comments...</p>
+
+          <p class="blog-comments-empty" *ngIf="!commentsLoading(post.slug) && commentsFor(post.slug).length === 0">
+            No comments found for this filter.
+          </p>
+
+          <div class="blog-comments-list" *ngIf="!commentsLoading(post.slug) && commentsFor(post.slug).length > 0">
+            <article
+              class="blog-comment-item"
+              *ngFor="let comment of commentsFor(post.slug); trackBy: trackByCommentId"
+            >
+              <div class="blog-comment-meta">
+                <strong>{{ comment.authorName }}</strong>
+                <span class="muted-text">{{ comment.createdAt | date: 'MMM d, y, h:mm a' }}</span>
+              </div>
+              <div class="blog-comment-status-row">
+                <span class="blog-comment-status" [class]="'blog-comment-status ' + comment.moderationStatus">
+                  {{ moderationStatusLabel(comment.moderationStatus) }}
+                </span>
+                <span class="muted-text" *ngIf="comment.moderationReason">Reason: {{ comment.moderationReason }}</span>
+              </div>
+              <p>{{ comment.content }}</p>
+              <div class="blog-comment-actions">
+                <button
+                  *ngIf="comment.moderationStatus === 'visible'"
+                  type="button"
+                  class="btn btn-outline btn-xs"
+                  (click)="moderateComment(post, comment, 'hide')"
+                  [disabled]="isModeratingComment(post.slug, comment.id)"
+                >Hide</button>
+                <button
+                  *ngIf="comment.moderationStatus === 'visible' || comment.moderationStatus === 'hidden'"
+                  type="button"
+                  class="btn btn-danger btn-xs"
+                  (click)="moderateComment(post, comment, 'delete')"
+                  [disabled]="isModeratingComment(post.slug, comment.id)"
+                >Soft Delete</button>
+                <button
+                  *ngIf="comment.moderationStatus === 'hidden'"
+                  type="button"
+                  class="btn btn-outline btn-xs"
+                  (click)="moderateComment(post, comment, 'unhide')"
+                  [disabled]="isModeratingComment(post.slug, comment.id)"
+                >Unhide</button>
+                <button
+                  *ngIf="comment.moderationStatus === 'deleted'"
+                  type="button"
+                  class="btn btn-outline btn-xs"
+                  (click)="moderateComment(post, comment, 'restore')"
+                  [disabled]="isModeratingComment(post.slug, comment.id)"
+                >Restore</button>
+                <span class="muted-text" *ngIf="isModeratingComment(post.slug, comment.id)">Updating...</span>
+              </div>
+            </article>
+          </div>
         </div>
       </div>
     </div>

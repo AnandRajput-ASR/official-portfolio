@@ -12,9 +12,31 @@ import { timeout } from 'rxjs';
   imports: [CommonModule, RouterLink, FormsModule],
   template: `
     <div class="bl-page">
-      <header class="bl-header">
-        <h1>Blog</h1>
-        <p>Technical writing on Angular, Azure, and shipping software.</p>
+      <header class="bl-hero">
+        <p class="bl-eyebrow">INSIGHTS · ENGINEERING · BUILD LOG</p>
+        <h1>Stories from building real-world products.</h1>
+        <p class="bl-subtitle">
+          Deep dives on Angular architecture, Azure deployment decisions, and practical delivery
+          patterns from production work.
+        </p>
+        <div class="bl-hero-stats" *ngIf="!loading && posts.length > 0">
+          <div class="bl-stat">
+            <span class="bl-stat-value">{{ posts.length }}</span>
+            <span class="bl-stat-label">Published posts</span>
+          </div>
+          <div class="bl-stat">
+            <span class="bl-stat-value">{{ allTags.length }}</span>
+            <span class="bl-stat-label">Topics</span>
+          </div>
+          <div class="bl-stat">
+            <span class="bl-stat-value">{{ totalReadMinutes }}</span>
+            <span class="bl-stat-label">Minutes to read all</span>
+          </div>
+          <div class="bl-stat" *ngIf="totalViews > 0">
+            <span class="bl-stat-value">{{ totalViews }}</span>
+            <span class="bl-stat-label">Tracked reads</span>
+          </div>
+        </div>
       </header>
 
       <section class="bl-toolbar" *ngIf="!loading && posts.length > 0">
@@ -30,6 +52,15 @@ import { timeout } from 'rxjs';
             <option value="newest">Sort: Newest</option>
             <option value="popular">Sort: Popular</option>
           </select>
+        </div>
+
+        <div class="bl-toolbar-meta">
+          <p class="bl-results">
+            Showing {{ filteredPosts.length }} of {{ posts.length }} posts
+            <span *ngIf="activeTag"> · Tag: {{ activeTag }}</span>
+            <span *ngIf="searchTerm.trim()"> · Search: "{{ searchTerm.trim() }}"</span>
+          </p>
+          <button class="bl-clear" *ngIf="hasActiveFilters" (click)="clearFilters()">Clear filters</button>
         </div>
 
         <div class="bl-tags-filter">
@@ -60,15 +91,54 @@ import { timeout } from 'rxjs';
       <div class="bl-empty" *ngIf="!loading && !loadError && filteredPosts.length === 0">
         <span>✍️</span>
         <p>No posts match your current filter.</p>
+        <button class="bl-clear" (click)="clearFilters()">Reset filters</button>
       </div>
 
-      <div class="bl-grid" *ngIf="!loading && filteredPosts.length > 0">
+      <a
+        *ngIf="!loading && featuredPost"
+        class="bl-featured"
+        [routerLink]="['/blog', featuredPost.slug]"
+        [state]="{ from: currentListUrl }"
+      >
+        <div class="bl-featured-media" *ngIf="featuredPost.coverImage; else featuredFallback">
+          <img
+            [src]="featuredPost.coverImage"
+            [alt]="featuredPost.title"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+          />
+        </div>
+        <ng-template #featuredFallback>
+          <div class="bl-featured-fallback">Featured</div>
+        </ng-template>
+        <div class="bl-featured-content">
+          <p class="bl-featured-kicker">Featured Story</p>
+          <h2>{{ featuredPost.title }}</h2>
+          <p>{{ featuredPost.excerpt }}</p>
+          <div class="bl-featured-meta">
+            <span>{{ featuredPost.publishedAt | date: 'MMMM d, y' }}</span>
+            <span class="bl-sep">·</span>
+            <span>{{ featuredPost.readingTime }} min read</span>
+            <span class="bl-sep" *ngIf="popularity(featuredPost.slug) > 0">·</span>
+            <span *ngIf="popularity(featuredPost.slug) > 0">{{ popularity(featuredPost.slug) }} views</span>
+          </div>
+        </div>
+      </a>
+
+      <div class="bl-grid" *ngIf="!loading && listPosts.length > 0">
         <a
-          *ngFor="let post of filteredPosts; trackBy: trackById"
+          *ngFor="let post of listPosts; trackBy: trackById"
           [routerLink]="['/blog', post.slug]"
           [state]="{ from: currentListUrl }"
           class="bl-card"
         >
+          <div class="bl-card-media" *ngIf="post.coverImage; else cardFallback">
+            <img [src]="post.coverImage" [alt]="post.title" loading="lazy" decoding="async" />
+          </div>
+          <ng-template #cardFallback>
+            <div class="bl-card-fallback">Post</div>
+          </ng-template>
           <div class="bl-card-tags">
             <span *ngFor="let tag of post.tags" class="bl-card-tag">{{ tag }}</span>
           </div>
@@ -97,6 +167,8 @@ export class BlogListComponent implements OnInit {
 
   posts: BlogPost[] = [];
   filteredPosts: BlogPost[] = [];
+  listPosts: BlogPost[] = [];
+  featuredPost: BlogPost | null = null;
   allTags: string[] = [];
   popularityMap: Record<string, number> = {};
 
@@ -165,6 +237,9 @@ export class BlogListComponent implements OnInit {
       }
       return (Date.parse(b.publishedAt || '') || 0) - (Date.parse(a.publishedAt || '') || 0);
     });
+
+    this.featuredPost = this.filteredPosts[0] ?? null;
+    this.listPosts = this.filteredPosts.slice(1);
   }
 
   selectTag(tag = ''): void {
@@ -176,6 +251,24 @@ export class BlogListComponent implements OnInit {
       return;
     }
     void this.router.navigate(['/blog']);
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.sortBy = 'newest';
+    this.selectTag('');
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!this.activeTag || !!this.searchTerm.trim() || this.sortBy === 'popular';
+  }
+
+  get totalReadMinutes(): number {
+    return this.posts.reduce((sum, post) => sum + (post.readingTime || 0), 0);
+  }
+
+  get totalViews(): number {
+    return Object.values(this.popularityMap).reduce((sum, views) => sum + (views || 0), 0);
   }
 
   popularity(slug: string): number {

@@ -8,11 +8,15 @@ import {
     inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { BlogPost } from '@core/models';
+import {
+    AdminBlogComment,
+    AdminBlogCommentsPayload,
+    BlogCommentModerationStatus,
+    BlogPost,
+} from '@core/models';
 import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
 import { ConfirmService } from '@core/services/confirm.service';
-import { ContentService } from '@core/services/content.service';
 import { renderMarkdown } from '@core/utils/markdown';
 import { ToastService } from '@shared/components/toast/toast.component';
 
@@ -27,7 +31,6 @@ import { ToastService } from '@shared/components/toast/toast.component';
 export class BlogTabComponent implements OnInit, OnDestroy {
   private store = inject(AdminContentStore);
   private adminService = inject(AdminService);
-  private contentService = inject(ContentService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
@@ -38,6 +41,12 @@ export class BlogTabComponent implements OnInit, OnDestroy {
   newBlog: Partial<BlogPost> = this.emptyBlog();
   previewBlogIds = new Set<string>();
   previewNewBlog = false;
+  commentsPanelOpenBySlug = new Set<string>();
+  commentsLoadingBySlug: Record<string, boolean> = {};
+  commentsBySlug: Record<string, AdminBlogComment[]> = {};
+  commentsCountsBySlug: Record<string, AdminBlogCommentsPayload['counts']> = {};
+  commentsStatusFilterBySlug: Record<string, BlogCommentModerationStatus | 'all'> = {};
+  moderatingCommentKeys = new Set<string>();
 
   get saving(): boolean {
     return this.store.saving();
@@ -239,6 +248,114 @@ export class BlogTabComponent implements OnInit, OnDestroy {
     return item.id;
   }
 
+  trackByCommentId(_: number, item: { id: string }): string {
+    return item.id;
+  }
+
+  isCommentsPanelOpen(slug: string): boolean {
+    return this.commentsPanelOpenBySlug.has(slug);
+  }
+
+  commentsFor(slug: string): AdminBlogComment[] {
+    return this.commentsBySlug[slug] ?? [];
+  }
+
+  commentsCountsFor(slug: string): AdminBlogCommentsPayload['counts'] {
+    return this.commentsCountsBySlug[slug] ?? { all: 0, visible: 0, hidden: 0, deleted: 0 };
+  }
+
+  selectedCommentsStatus(slug: string): BlogCommentModerationStatus | 'all' {
+    return this.commentsStatusFilterBySlug[slug] ?? 'all';
+  }
+
+  commentsLoading(slug: string): boolean {
+    return this.commentsLoadingBySlug[slug] === true;
+  }
+
+  setCommentsFilter(post: BlogPost, status: BlogCommentModerationStatus | 'all'): void {
+    const slug = post.slug?.trim();
+    if (!slug || this.selectedCommentsStatus(slug) === status) {
+      return;
+    }
+    this.commentsStatusFilterBySlug[slug] = status;
+    this.loadComments(slug);
+  }
+
+  toggleCommentsPanel(post: BlogPost): void {
+    const slug = post.slug?.trim();
+    if (!slug) {
+      this.toast.error('Save the post slug first to manage comments.');
+      return;
+    }
+
+    if (this.commentsPanelOpenBySlug.has(slug)) {
+      this.commentsPanelOpenBySlug.delete(slug);
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.commentsPanelOpenBySlug.add(slug);
+    if (!this.commentsBySlug[slug]) {
+      this.loadComments(slug);
+    }
+    this.cdr.markForCheck();
+  }
+
+  async moderateComment(
+    post: BlogPost,
+    comment: AdminBlogComment,
+    action: 'hide' | 'unhide' | 'delete' | 'restore',
+  ): Promise<void> {
+    const slug = post.slug?.trim();
+    if (!slug) {
+      this.toast.error('Missing post slug for comment moderation.');
+      return;
+    }
+
+    const actionText = this.moderationActionLabel(action);
+    const ok = await this.confirm.ask({
+      title: `${actionText} Comment`,
+      message: this.moderationActionMessage(action),
+      confirmText: `${actionText}`,
+      type: action === 'delete' ? 'danger' : 'warning',
+      icon: action === 'restore' ? '♻️' : '🛡️',
+    });
+    if (!ok) return;
+
+    const key = this.commentKey(slug, comment.id);
+    this.moderatingCommentKeys.add(key);
+    this.cdr.markForCheck();
+
+    this.adminService.moderateBlogComment(slug, comment.id, action).subscribe({
+      next: () => {
+        this.moderatingCommentKeys.delete(key);
+        this.toast.success(`Comment ${this.moderationActionPastTense(action)}.`);
+        this.loadComments(slug);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.moderatingCommentKeys.delete(key);
+        this.toast.error(`Failed to ${actionText.toLowerCase()} comment.`);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  isModeratingComment(slug: string, commentId: string): boolean {
+    return this.moderatingCommentKeys.has(this.commentKey(slug, commentId));
+  }
+
+  moderationStatusLabel(status: BlogCommentModerationStatus): string {
+    switch (status) {
+      case 'hidden':
+        return 'Hidden';
+      case 'deleted':
+        return 'Deleted';
+      default:
+        return 'Visible';
+    }
+  }
+
   private emptyBlog(): Partial<BlogPost> {
     const nowLocal = this.toDateTimeLocalInput(new Date().toISOString());
     return {
@@ -285,5 +402,72 @@ export class BlogTabComponent implements OnInit, OnDestroy {
   private assignPost(target: BlogPost, source: BlogPost): void {
     target.publishedAt = source.publishedAt;
     target.unpublishedAt = source.unpublishedAt;
+  }
+
+  private loadComments(slug: string): void {
+    this.commentsLoadingBySlug[slug] = true;
+    const selectedStatus = this.selectedCommentsStatus(slug);
+    this.cdr.markForCheck();
+
+    this.adminService.getBlogComments(slug, selectedStatus).subscribe({
+      next: (payload) => {
+        this.commentsBySlug[slug] = [...(payload.comments ?? [])].sort(
+          (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
+        );
+        this.commentsCountsBySlug[slug] = payload.counts;
+        this.commentsLoadingBySlug[slug] = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.commentsBySlug[slug] = [];
+        this.commentsCountsBySlug[slug] = { all: 0, visible: 0, hidden: 0, deleted: 0 };
+        this.commentsLoadingBySlug[slug] = false;
+        this.toast.error('Could not load comments for this post.');
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  private moderationActionLabel(action: 'hide' | 'unhide' | 'delete' | 'restore'): string {
+    switch (action) {
+      case 'hide':
+        return 'Hide';
+      case 'unhide':
+        return 'Unhide';
+      case 'delete':
+        return 'Delete';
+      default:
+        return 'Restore';
+    }
+  }
+
+  private moderationActionPastTense(action: 'hide' | 'unhide' | 'delete' | 'restore'): string {
+    switch (action) {
+      case 'hide':
+        return 'hidden';
+      case 'unhide':
+        return 'unhidden';
+      case 'delete':
+        return 'soft-deleted';
+      default:
+        return 'restored';
+    }
+  }
+
+  private moderationActionMessage(action: 'hide' | 'unhide' | 'delete' | 'restore'): string {
+    switch (action) {
+      case 'hide':
+        return 'This comment will be hidden from public view, and you can unhide it later.';
+      case 'unhide':
+        return 'This comment will be visible again on the public blog post.';
+      case 'delete':
+        return 'This comment will be soft-deleted and removed from public view. You can restore it later.';
+      default:
+        return 'This soft-deleted comment will be restored to public visibility.';
+    }
+  }
+
+  private commentKey(slug: string, commentId: string): string {
+    return `${slug}::${commentId}`;
   }
 }

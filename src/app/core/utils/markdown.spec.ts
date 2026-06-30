@@ -7,9 +7,9 @@ describe('renderMarkdown', () => {
 
   it('renders headings with the right level', () => {
     const html = renderMarkdown('# H1\n\n## H2\n\n### H3');
-    expect(html).toContain('<h1>H1</h1>');
-    expect(html).toContain('<h2>H2</h2>');
-    expect(html).toContain('<h3>H3</h3>');
+    expect(html).toContain('<h1 id="h1">H1</h1>');
+    expect(html).toContain('<h2 id="h2">H2</h2>');
+    expect(html).toContain('<h3 id="h3">H3</h3>');
   });
 
   it('renders bold and italic', () => {

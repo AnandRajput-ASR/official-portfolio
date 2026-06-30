@@ -1,6 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { ApiResponse, BlogPost, PortfolioContent, SiteSettings, Testimonial } from '@core/models';
+import {
+    ApiResponse,
+    BlogCommentInput,
+    BlogPost,
+    BlogSocialState,
+    PortfolioContent,
+    SiteSettings,
+    Testimonial,
+} from '@core/models';
 import { normalizePortfolioContent, normalizeSettingsSingleton } from '@core/utils/wave2-compat';
 import { environment } from '@env/environment';
 import { map, Observable, shareReplay } from 'rxjs';
@@ -67,7 +75,7 @@ export class ContentService {
   /** Cached page-content stream to prevent repeated heavy payload requests. */
   getAllCached(): Observable<PortfolioContent> {
     if (!this.cachedContent$) {
-      this.cachedContent$ = this.getAll().pipe(shareReplay({ bufferSize: 1, refCount: true }));
+      this.cachedContent$ = this.getAll().pipe(shareReplay({ bufferSize: 1, refCount: false }));
     }
     return this.cachedContent$;
   }
@@ -93,6 +101,36 @@ export class ContentService {
             (p) => p.slug === slug && this.isBlogPostLive(p),
           ) ?? null,
       })),
+    );
+  }
+
+  getBlogSocialState(slug: string): Observable<BlogSocialState> {
+    return this.http.get<BlogSocialState>(this.base + `/blogs/${encodeURIComponent(slug)}/social`, {
+      withCredentials: true,
+    });
+  }
+
+  toggleBlogLike(slug: string): Observable<BlogSocialState> {
+    return this.http.post<BlogSocialState>(
+      this.base + `/blogs/${encodeURIComponent(slug)}/like`,
+      {},
+      { withCredentials: true },
+    );
+  }
+
+  addBlogComment(slug: string, comment: BlogCommentInput): Observable<BlogSocialState> {
+    return this.http.post<BlogSocialState>(
+      this.base + `/blogs/${encodeURIComponent(slug)}/comments`,
+      comment,
+      { withCredentials: true },
+    );
+  }
+
+  trackBlogShare(slug: string): Observable<BlogSocialState> {
+    return this.http.post<BlogSocialState>(
+      this.base + `/blogs/${encodeURIComponent(slug)}/share`,
+      {},
+      { withCredentials: true },
     );
   }
 

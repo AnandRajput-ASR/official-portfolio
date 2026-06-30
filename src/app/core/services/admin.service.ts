@@ -1,31 +1,34 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
-  Analytics,
-  ApiResponse,
-  BlogPost,
-  Certification,
-  Company,
-  CompanyProject,
-  Experience,
-  Hero,
-  PersonalProject,
-  PortfolioContent,
-  SiteSettings,
-  Skill,
-  Stat,
-  Testimonial,
+    AdminBlogComment,
+    AdminBlogCommentsPayload,
+    Analytics,
+    ApiResponse,
+    BlogCommentModerationStatus,
+    BlogPost,
+    Certification,
+    Company,
+    CompanyProject,
+    Experience,
+    Hero,
+    PersonalProject,
+    PortfolioContent,
+    SiteSettings,
+    Skill,
+    Stat,
+    Testimonial,
 } from '@core/models';
 import { AuditLogService } from '@core/services/audit-log.service';
 import {
-  normalizeAnalytics,
-  normalizeCompany,
-  normalizeCompanyProject,
-  normalizeExperience,
-  normalizePersonalProject,
-  normalizePortfolioContent,
-  normalizeTestimonial,
-  normalizeTestimonialsBuckets,
+    normalizeAnalytics,
+    normalizeCompany,
+    normalizeCompanyProject,
+    normalizeExperience,
+    normalizePersonalProject,
+    normalizePortfolioContent,
+    normalizeTestimonial,
+    normalizeTestimonialsBuckets,
 } from '@core/utils/wave2-compat';
 import { environment } from '@env/environment';
 import { map, MonoTypeOperatorFunction, Observable, tap } from 'rxjs';
@@ -273,6 +276,75 @@ export class AdminService {
     return this.http
       .delete<ApiResponse>(this.base + '/blog/' + id)
       .pipe(this.auditOnSuccess('blog', 'delete', 'Deleted blog post'));
+  }
+
+  deleteBlogComment(slug: string, commentId: string): Observable<ApiResponse> {
+    const safeSlug = encodeURIComponent(slug);
+    const safeCommentId = encodeURIComponent(commentId);
+    return this.http
+      .delete<ApiResponse>(`${this.base}/blog/${safeSlug}/comments/${safeCommentId}`)
+      .pipe(this.auditOnSuccess('blog', 'delete', `Deleted comment on ${slug}`));
+  }
+
+  getBlogComments(
+    slug: string,
+    status: BlogCommentModerationStatus | 'all' = 'all',
+  ): Observable<AdminBlogCommentsPayload> {
+    const safeSlug = encodeURIComponent(slug);
+    const safeStatus = encodeURIComponent(status);
+    return this.http
+      .get<ApiResponse<AdminBlogCommentsPayload>>(
+        `${this.base}/blog/${safeSlug}/comments?status=${safeStatus}`,
+      )
+      .pipe(
+        map((res) => {
+          const payload = res?.data ?? { comments: [], counts: { all: 0, visible: 0, hidden: 0, deleted: 0 } };
+          return {
+            comments: (payload.comments ?? []).map((comment) => this.normalizeAdminComment(comment)),
+            counts: {
+              all: payload.counts?.all ?? 0,
+              visible: payload.counts?.visible ?? 0,
+              hidden: payload.counts?.hidden ?? 0,
+              deleted: payload.counts?.deleted ?? 0,
+            },
+          } satisfies AdminBlogCommentsPayload;
+        }),
+      );
+  }
+
+  moderateBlogComment(
+    slug: string,
+    commentId: string,
+    action: 'hide' | 'unhide' | 'delete' | 'restore',
+    reason?: string,
+  ): Observable<AdminBlogComment> {
+    const safeSlug = encodeURIComponent(slug);
+    const safeCommentId = encodeURIComponent(commentId);
+    return this.http
+      .patch<ApiResponse<AdminBlogComment>>(
+        `${this.base}/blog/${safeSlug}/comments/${safeCommentId}/moderation`,
+        reason ? { action, reason } : { action },
+      )
+      .pipe(
+        map((res) => this.normalizeAdminComment(res?.data as AdminBlogComment)),
+        this.auditOnSuccess('blog', 'save', `${action} comment on ${slug}`),
+      );
+  }
+
+  private normalizeAdminComment(comment: Partial<AdminBlogComment> | null | undefined): AdminBlogComment {
+    return {
+      id: comment?.id ?? '',
+      slug: comment?.slug ?? '',
+      authorName: comment?.authorName ?? 'Anonymous',
+      content: comment?.content ?? '',
+      createdAt: comment?.createdAt ?? new Date(0).toISOString(),
+      moderationStatus: comment?.moderationStatus ?? 'visible',
+      moderationReason: comment?.moderationReason ?? null,
+      moderatedBy: comment?.moderatedBy ?? null,
+      moderatedAt: comment?.moderatedAt ?? null,
+      hiddenAt: comment?.hiddenAt ?? null,
+      deletedAt: comment?.deletedAt ?? null,
+    };
   }
 
   getAnalytics(): Observable<Analytics> {

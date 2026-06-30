@@ -11,6 +11,10 @@
 .blog-save-row {
   text-align: right;
   margin-top: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .blog-date-chip {
@@ -196,6 +200,141 @@
   }
 }
 
+.blog-comments-admin {
+  margin-top: 1rem;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  padding: 0.85rem;
+}
+
+.blog-comments-title {
+  margin: 0;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.blog-comments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.blog-comments-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.blog-filter-chip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.45rem;
+  cursor: pointer;
+
+  &.active {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: color-mix(in srgb, var(--amber) 8%, var(--surface));
+  }
+}
+
+.blog-comments-loading,
+.blog-comments-empty {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.blog-comments-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.blog-comment-item {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.65rem;
+  display: grid;
+  gap: 0.5rem;
+
+  p {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.86rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}
+
+.blog-comment-status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.blog-comment-status {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 0.14rem 0.4rem;
+
+  &.visible {
+    border-color: #22c55e40;
+    color: #22c55e;
+    background: #22c55e12;
+  }
+
+  &.hidden {
+    border-color: #f59e0b50;
+    color: #f59e0b;
+    background: #f59e0b12;
+  }
+
+  &.deleted {
+    border-color: #ef444450;
+    color: #ef4444;
+    background: #ef444412;
+  }
+}
+
+.blog-comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.blog-comment-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+
+  strong {
+    font-size: 0.8rem;
+    color: var(--text);
+  }
+
+  .muted-text {
+    font-size: 0.68rem;
+  }
+}
+
 @media (max-width: 900px) {
   .blog-admin-topbar {
     gap: 0.6rem;
@@ -215,5 +354,11 @@
 
   .blog-save-row {
     text-align: left;
+    justify-content: flex-start;
+  }
+
+  .blog-comment-meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
