@@ -12,7 +12,7 @@ import {
 } from '@core/models';
 import { ContentService } from '@core/services/content.service';
 import { renderMarkdown } from '@core/utils/markdown';
-import { timeout } from 'rxjs';
+import { Subject, map, switchMap, takeUntil, timeout } from 'rxjs';
 
 interface TocItem {
   id: string;
@@ -219,6 +219,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   private titleService = inject(Title);
   private metaService = inject(Meta);
   private cdr = inject(ChangeDetectorRef);
+  private destroy$ = new Subject<void>();
 
   post: BlogPost | null = null;
   renderedContent = '';
@@ -249,26 +250,35 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.resolveBackTarget();
 
-    const slug = this.route.snapshot.paramMap.get('slug');
-    this.contentService
-      .getAll()
-      .pipe(timeout(12000))
+    this.route.paramMap
+      .pipe(
+        map((params) => params.get('slug')),
+        switchMap((slug) =>
+          this.contentService.getAll().pipe(
+            timeout(12000),
+            map((content) => ({ slug, content })),
+          ),
+        ),
+        takeUntil(this.destroy$),
+      )
       .subscribe({
-      next: (content) => {
-        const post =
-          (content.blogPosts ?? []).find(
-            (candidate) => candidate.slug === slug && this.contentService.isBlogPostLive(candidate),
-          ) ?? null;
-        this.applyLoadedPost(post, content);
-      },
-      error: () => {
-        this.notFound = true;
-        this.cdr.detectChanges();
-      },
+        next: ({ slug, content }) => {
+          const post =
+            (content.blogPosts ?? []).find(
+              (candidate) => candidate.slug === slug && this.contentService.isBlogPostLive(candidate),
+            ) ?? null;
+          this.applyLoadedPost(post, content);
+        },
+        error: () => {
+          this.notFound = true;
+          this.cdr.detectChanges();
+        },
       });
   }
 
   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.removeJsonLd();
   }
 
@@ -419,6 +429,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
 
   private applyLoadedPost(post: BlogPost | null, content: PortfolioContent): void {
     if (post) {
+      this.notFound = false;
       this.post = post;
       this.renderedContent = renderMarkdown(post.content ?? '');
       this.tocItems = this.extractToc(this.renderedContent);

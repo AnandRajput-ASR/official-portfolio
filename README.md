@@ -6,6 +6,13 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.15 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Related-post in-place navigation fix | Fixed `/blog/:slug` article view to react to slug param changes so clicking Related posts updates both URL and article content immediately without stale content. |
+| Route lifecycle hardening | Added route param subscription cleanup in blog view to avoid stale listeners during repeated in-article navigation. |
+
 ### v1.1.14 (2026-06-30)
 
 | Feature | Details |
@@ -266,6 +273,7 @@ All feature components are **lazy-loaded** via dynamic `import()`.
 | Trust panel | Displays author metadata and tag-derived tech badges to reinforce topic credibility. |
 | Reactions and save action | Readers can mark posts as `Helpful`/`Insightful` and bookmark posts locally for later review. |
 | Related posts | Suggests up to 3 contextually similar posts based on shared tag overlap. |
+| Related-link navigation | Clicking a related post inside an already-open article reliably reloads article body, metadata, social state, and recommendations for the new slug. |
 | Referenced links | Extracts and surfaces external markdown links as a quick source list near article end. |
 
 ### Reader Interaction Model
