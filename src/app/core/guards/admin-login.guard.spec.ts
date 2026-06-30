@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { Router, UrlTree } from '@angular/router';
 import { AuthService } from '@core/services/auth.service';
 import { StorageService } from '@core/services/storage.service';
-import { ADMIN_LOGIN_ENTRY_KEY } from './secret-slug.guard';
 import { adminLoginGuard } from './admin-login.guard';
+import { ADMIN_LOGIN_ENTRY_KEY } from './secret-slug.guard';
 
 describe('adminLoginGuard', () => {
   let router: jasmine.SpyObj<Router>;
