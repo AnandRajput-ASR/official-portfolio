@@ -93,8 +93,8 @@ const JSON_LD_ID = 'blog-article-jsonld';
               </button>
             </div>
             <p class="bv-social-hint" *ngIf="shareCopied">Link copied to clipboard.</p>
-            <p class="bv-social-hint" *ngIf="likeLocked && !socialLoading">Like already recorded.</p>
-            <p class="bv-social-hint" *ngIf="shareLocked && !socialLoading">Share already recorded.</p>
+            <p class="bv-social-hint" *ngIf="likeHintVisible">Like already recorded.</p>
+            <p class="bv-social-hint" *ngIf="shareHintVisible">Share already recorded.</p>
           </section>
 
           <section class="bv-comments" id="bv-comments">
@@ -252,6 +252,8 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   private socialRequestId = 0;
   likeLocked = false;
   shareLocked = false;
+  likeHintVisible = false;
+  shareHintVisible = false;
 
   ngOnInit(): void {
     if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
@@ -326,7 +328,10 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   toggleLike(): void {
     if (!this.post) return;
     const slug = this.post.slug;
-    if (this.likeLocked) return;
+    if (this.likeLocked) {
+      this.showLikeHint();
+      return;
+    }
     if (this.socialLoading || this.socialError) return;
 
     this.socialLoading = true;
@@ -336,6 +341,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
         this.likeLocked = true;
         this.contentService.markLocallyLikedBlog(slug);
         this.socialLoading = false;
+        this.showLikeHint();
         this.cdr.detectChanges();
       },
       error: () => {
@@ -392,6 +398,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
 
       // Allow re-copy/re-share UX without re-counting shares once locked locally.
       if (this.shareLocked) {
+        this.showShareHint();
         return;
       }
 
@@ -402,6 +409,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
           this.shareLocked = true;
           this.contentService.markLocallySharedBlog(slug);
           this.socialLoading = false;
+          this.showShareHint();
           this.cdr.detectChanges();
         },
         error: () => {
@@ -419,6 +427,24 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     const node = this.document.querySelector('.bv-comment-input') as HTMLTextAreaElement | null;
     node?.focus();
     node?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  private showLikeHint(): void {
+    this.likeHintVisible = true;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.likeHintVisible = false;
+      this.cdr.detectChanges();
+    }, 3000);
+  }
+
+  private showShareHint(): void {
+    this.shareHintVisible = true;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.shareHintVisible = false;
+      this.cdr.detectChanges();
+    }, 3000);
   }
 
   get isLiked(): boolean {
