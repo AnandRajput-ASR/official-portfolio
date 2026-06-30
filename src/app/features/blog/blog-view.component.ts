@@ -440,6 +440,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
       this.contentService.trackBlogView(post.slug);
       this.setMetaTags(post, content);
       this.loadSocialState(post.slug);
+      this.resetScrollPosition();
       this.syncArticleMetrics();
       setTimeout(() => this.syncArticleMetrics(), 0);
     } else {
@@ -450,6 +451,11 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     if (content.hero?.title) this.authorTitle = content.hero.title;
 
     this.cdr.detectChanges();
+  }
+
+  private resetScrollPosition(): void {
+    if (typeof window === 'undefined') return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }
 
   private setMetaTags(post: BlogPost, content: { hero?: { name?: string } }): void {
@@ -587,12 +593,12 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     let part = 0;
 
     for (const tag of tags) {
-      const seriesMatch = tag.match(/^series\s*[:\-]\s*(.+)$/i);
+      const seriesMatch = tag.match(/^series\s*[:-]\s*(.+)$/i);
       if (seriesMatch) {
         seriesName = seriesMatch[1].trim();
       }
 
-      const partMatch = tag.match(/(?:part|episode|ep)\s*[:#\-]?\s*(\d+)/i);
+      const partMatch = tag.match(/(?:part|episode|ep)\s*[:#-]?\s*(\d+)/i);
       if (partMatch) {
         part = Number(partMatch[1]) || part;
       }

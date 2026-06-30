@@ -6,6 +6,13 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.16 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Related-post navigation scroll reset | Clicking a Related post now opens the next article from the top of the page instead of keeping the previous scroll position. |
+| Article load UX consistency | Blog article loads now consistently reset viewport position before recalculating reading progress metrics. |
+
 ### v1.1.15 (2026-06-30)
 
 | Feature | Details |
@@ -274,6 +281,7 @@ All feature components are **lazy-loaded** via dynamic `import()`.
 | Reactions and save action | Readers can mark posts as `Helpful`/`Insightful` and bookmark posts locally for later review. |
 | Related posts | Suggests up to 3 contextually similar posts based on shared tag overlap. |
 | Related-link navigation | Clicking a related post inside an already-open article reliably reloads article body, metadata, social state, and recommendations for the new slug. |
+| Related-link scroll behavior | Related-post navigation always resets to the top so readers start each new article from the header/content start. |
 | Referenced links | Extracts and surfaces external markdown links as a quick source list near article end. |
 
 ### Reader Interaction Model
