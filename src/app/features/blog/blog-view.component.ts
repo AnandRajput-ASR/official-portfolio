@@ -2,7 +2,7 @@ import { CommonModule, DOCUMENT } from '@angular/common';
 import { ChangeDetectorRef, Component, DestroyRef, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Meta, Title } from '@angular/platform-browser';
+import { DomSanitizer, Meta, SafeHtml, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   BlogCommentInput,
@@ -222,9 +222,10 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   private metaService = inject(Meta);
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
+  private sanitizer = inject(DomSanitizer);
 
   post: BlogPost | null = null;
-  renderedContent = '';
+  renderedContent: SafeHtml = '';
   tocItems: TocItem[] = [];
   activeTocId = '';
   readingProgress = 0;
@@ -494,8 +495,9 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     if (post) {
       this.notFound = false;
       this.post = post;
-      this.renderedContent = renderMarkdown(post.content ?? '');
-      this.tocItems = this.extractToc(this.renderedContent);
+      const html = renderMarkdown(post.content ?? '');
+      this.renderedContent = this.sanitizer.bypassSecurityTrustHtml(html);
+      this.tocItems = this.extractToc(html);
       this.sourceLinks = this.extractSourceLinks(post.content ?? '');
       this.trustBadges = this.extractTrustBadges(post.tags ?? []);
       this.computeRelated(allPosts, post);
