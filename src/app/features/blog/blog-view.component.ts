@@ -1,5 +1,5 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, HostListener, OnDestroy, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, Meta, SafeHtml, Title } from '@angular/platform-browser';
@@ -212,6 +212,7 @@ const JSON_LD_ID = 'blog-article-jsonld';
     </div>
   `,
   styleUrls: ['./blog-view.component.scss'],
+  encapsulation: ViewEncapsulation.None,
 })
 export class BlogViewComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);

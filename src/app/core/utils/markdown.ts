@@ -29,6 +29,8 @@ const renderer: Partial<Renderer> = {
   },
 };
 
+marked.use({ renderer });
+
 function escapeAttr(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
@@ -48,6 +50,6 @@ function slugify(text: string): string {
 export function renderMarkdown(md: string): string {
   if (!md) return '';
   const normalized = md.replace(/\\n/g, '\n');
-  const raw = marked.use({ renderer }).parse(normalized, { async: false }) as string;
+  const raw = marked.parse(normalized, { async: false }) as string;
   return sanitizeHtml(raw);
 }
