@@ -13,10 +13,7 @@ import { environment } from '@env/environment';
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (environment.cookieAuth) {
-    const isApiRequest =
-      req.url.startsWith(environment.api.baseUrl) ||
-      req.url.startsWith('/api/') ||
-      req.url === '/api';
+    const isApiRequest = req.url.startsWith(environment.api.baseUrl);
     if (isApiRequest && !req.withCredentials) {
       req = req.clone({ withCredentials: true });
     }

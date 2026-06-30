@@ -4,6 +4,18 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ---
 
+## Changelog
+
+### v1.1.0 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Environment-based API URL centralization | Production now targets Render backend via `environment.prod.ts`, while development continues using localhost backend via `environment.ts`. |
+| Hardcoded API endpoint cleanup | Removed hardcoded `/api` fallback checks from runtime interceptor logic and aligned tests with environment-based URL resolution. |
+| Deployment compatibility update | CSP `connect-src` now explicitly allows the Render backend host used in production API calls. |
+
+---
+
 ## Tech Stack
 
 | Layer     | Technology                             |
@@ -88,7 +100,7 @@ official-portfolio-frontend/
 │   │
 │   ├── environments/
 │   │   ├── environment.ts         # Development config (localhost:3000)
-│   │   └── environment.prod.ts    # Production config (relative /api)
+│   │   └── environment.prod.ts    # Production config (Render backend)
 │   │
 │   ├── index.html                 # HTML shell (SEO meta, Open Graph, JSON-LD)
 │   ├── main.ts                    # Bootstrap
@@ -165,10 +177,26 @@ export const environment = {
 ```typescript
 export const environment = {
   production: true,
-  api: { baseUrl: '/api' },
+  api: { baseUrl: 'https://official-portfolio-backend-6f1v.onrender.com/api' },
   assets: { baseUrl: '/assets' },
 };
 ```
+
+### API Base URL Resolution
+
+| Runtime | API base URL | Source of truth |
+| ------- | ------------ | --------------- |
+| Development (`ng serve`) | `http://localhost:3000/api` | `src/environments/environment.ts` |
+| Production build (`ng build --configuration production`) | `https://official-portfolio-backend-6f1v.onrender.com/api` | `src/environments/environment.prod.ts` via Angular file replacement |
+
+### Verification Workflow
+
+1. Run `npm start` and open browser devtools Network tab.
+2. Trigger data-loading pages (home/admin login/dashboard).
+3. Confirm API requests go to `http://localhost:3000/api/*`.
+4. Run `npm run build` (production build).
+5. Deploy the generated build to Vercel.
+6. Open deployed app and verify API requests go to `https://official-portfolio-backend-6f1v.onrender.com/api/*`.
 
 ### 3. Start Development Server
 
@@ -248,7 +276,7 @@ Both repos are designed to work together:
                                    PostgreSQL
 ```
 
-For production, configure a reverse proxy (Nginx, Cloudflare, etc.) so the frontend is served from the same domain as the API — the production environment uses relative `/api` paths.
+For production, this frontend is configured to call the deployed Render API directly using the environment production base URL.
 
 ---
 

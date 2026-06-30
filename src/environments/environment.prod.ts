@@ -2,7 +2,7 @@ export const environment = {
   production: true,
 
   api: {
-    baseUrl: '/api',
+    baseUrl: 'https://official-portfolio-backend-6f1v.onrender.com/api',
   },
 
   assets: {
