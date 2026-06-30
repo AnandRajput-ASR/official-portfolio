@@ -110,6 +110,10 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroyed = false;
   private scrollHandler: (() => void) | null = null;
   private observers: IntersectionObserver[] = [];
+  private revealObserver: IntersectionObserver | null = null;
+  private revealMutationObserver: MutationObserver | null = null;
+  private revealFallbackTimer: ReturnType<typeof setTimeout> | null = null;
+  private observedReveal = new WeakSet<Element>();
 
   // Resume gate modal
   resumeGateOpen = false;
@@ -200,6 +204,13 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private setupScrollReveal(): void {
+    this.revealObserver?.disconnect();
+    this.revealMutationObserver?.disconnect();
+    if (this.revealFallbackTimer) {
+      clearTimeout(this.revealFallbackTimer);
+      this.revealFallbackTimer = null;
+    }
+
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -216,10 +227,46 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
       },
       { threshold: 0.1 },
     );
+    this.revealObserver = io;
     this.observers.push(io);
-    setTimeout(() => {
-      document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
-    }, 100);
+
+    this.observeRevealElements(document);
+
+    const root = document.querySelector('.portfolio') ?? document.body;
+    if (typeof MutationObserver !== 'undefined' && root) {
+      this.revealMutationObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          mutation.addedNodes.forEach((node) => {
+            if (!(node instanceof Element)) return;
+            this.observeRevealElements(node);
+          });
+        });
+      });
+      this.revealMutationObserver.observe(root, { childList: true, subtree: true });
+    }
+
+    // Safety net: if an entry animation never gets observed on first load,
+    // reveal remaining sections so content is never stuck invisible.
+    this.revealFallbackTimer = setTimeout(() => {
+      if (this.destroyed) return;
+      document.querySelectorAll('.reveal:not(.visible)').forEach((el) => {
+        el.classList.add('visible');
+      });
+    }, 2600);
+  }
+
+  private observeRevealElements(root: ParentNode): void {
+    if (!this.revealObserver) return;
+
+    const candidates = root instanceof Element && root.classList.contains('reveal')
+      ? [root]
+      : Array.from(root.querySelectorAll('.reveal'));
+
+    candidates.forEach((el) => {
+      if (this.observedReveal.has(el) || el.classList.contains('visible')) return;
+      this.observedReveal.add(el);
+      this.revealObserver!.observe(el);
+    });
   }
 
   private setupCounters(): void {
@@ -317,6 +364,11 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.destroyed = true;
     if (this.scrollHandler) window.removeEventListener('scroll', this.scrollHandler);
     this.observers.forEach((io) => io.disconnect());
+    this.revealMutationObserver?.disconnect();
+    if (this.revealFallbackTimer) {
+      clearTimeout(this.revealFallbackTimer);
+      this.revealFallbackTimer = null;
+    }
   }
 
   trackById(_: number, item: { id: string }): string {

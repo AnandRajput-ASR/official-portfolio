@@ -6,6 +6,15 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.19 (2026-07-01)
+
+| Feature | Details |
+| ------- | ------- |
+| Home first-load reveal resilience | Hardened Home section reveal orchestration so delayed or late-mounted `.reveal` nodes are still observed and animated correctly. |
+| Mutation-aware reveal binding | Added DOM-mutation-aware reveal registration for dynamically rendered section blocks to avoid missed `IntersectionObserver` attachment windows. |
+| Visibility safety net | Added a fallback unhide pass that forces any still-hidden `.reveal` elements visible after initial load, preventing black/empty first-load screens where only nav/footer appear. |
+| TS config correction follow-up | Removed invalid `ignoreDeprecations: "6.0"` project-level usage and switched to compatible alias config behavior to avoid `TS5103` during Angular compilation. |
+
 ### v1.1.18 (2026-06-30)
 
 | Feature | Details |
@@ -298,6 +307,13 @@ All feature components are **lazy-loaded** via dynamic `import()`.
 2. Opening an article from Blog list/tag pages stores the current blog listing URL as the source.
 3. On article page, Back button returns to the stored source route.
 4. If no source route is available (direct deep-link), Back defaults to `/blog`.
+
+### Home First-Load Reveal Safety
+
+1. All `.reveal` section nodes are registered with `IntersectionObserver` after content load.
+2. Newly inserted section nodes are auto-registered via `MutationObserver`.
+3. If any reveal block is still hidden after initial render window, a fallback pass forces visibility so core content never remains blank.
+4. This keeps visual entry animations while prioritizing guaranteed content visibility on cold/slow first loads.
 
 ### Blog Article Experience (`/blog/:slug`)
 
