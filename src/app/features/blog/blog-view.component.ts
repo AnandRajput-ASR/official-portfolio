@@ -647,17 +647,20 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     this.socialError = false;
     this.socialState = null;
 
-    this.contentService.getBlogSocialState(slug).subscribe({
-      next: (state) => {
-        this.socialState = this.normalizeSocialState(state);
-        this.socialLoading = false;
-      },
-      error: () => {
-        this.socialError = true;
-        this.socialLoading = false;
-        this.socialState = { slug, likes: 0, shares: 0, viewerLiked: false, comments: [] };
-      },
-    });
+    this.contentService
+      .getBlogSocialState(slug)
+      .pipe(timeout(8000))
+      .subscribe({
+        next: (state) => {
+          this.socialState = this.normalizeSocialState(state);
+          this.socialLoading = false;
+        },
+        error: () => {
+          this.socialError = true;
+          this.socialLoading = false;
+          this.socialState = { slug, likes: 0, shares: 0, viewerLiked: false, comments: [] };
+        },
+      });
   }
 
   private normalizeSocialState(state: BlogSocialState): BlogSocialState {

@@ -6,6 +6,14 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.17 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Blog social loading timeout fallback | Added timeout protection for article social-state loading so Like/Comment/Share controls never stay stuck in `Loading interactions...` indefinitely. |
+| Social error-state resilience | When social fetch times out/fails, article now consistently exits loading and shows fallback interaction state instead of a blocked UI. |
+| Dashboard test alignment fix | Updated dashboard unit test to use the new `dirtyTabsLabel` computed signal API, resolving a stale spec assertion that broke build verification. |
+
 ### v1.1.16 (2026-06-30)
 
 | Feature | Details |

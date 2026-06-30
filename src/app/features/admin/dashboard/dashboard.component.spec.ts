@@ -118,7 +118,7 @@ describe('DashboardComponent (shell)', () => {
     it('joins dirty tab labels for display', () => {
       store.markDirty('hero');
       store.markDirty('settings');
-      expect(component.getDirtyTabsLabel()).toBe('Hero Section, Site Settings');
+      expect(component.dirtyTabsLabel()).toBe('Hero Section, Site Settings');
     });
   });
 
