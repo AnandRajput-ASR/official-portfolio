@@ -1,7 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { SiteSettings } from '@core/models';
 import { AdminService } from '@core/services/admin.service';
+import { LanguageService } from '@core/services/language.service';
 import { ToastService } from '@shared/components/toast/toast.component';
+import { of } from 'rxjs';
 import { SettingsTabComponent } from './settings-tab.component';
 
 /**
@@ -17,6 +19,14 @@ describe('SettingsTabComponent (logic)', () => {
       imports: [SettingsTabComponent],
       providers: [
         { provide: AdminService, useValue: {} },
+        {
+          provide: LanguageService,
+          useValue: {
+            getMessagesForLang: () => of({}),
+            saveMessagesForLang: () => {},
+            resetMessagesForLang: () => {},
+          },
+        },
         { provide: ToastService, useValue: { success: () => {}, error: () => {} } },
       ],
     })

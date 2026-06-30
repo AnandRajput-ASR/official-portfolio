@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { adminLoginGuard } from '@core/guards/admin-login.guard';
 import { authGuard } from '@core/guards/auth.guard';
 import { secretSlugGuard } from '@core/guards/secret-slug.guard';
 
@@ -27,6 +28,12 @@ export const routes: Routes = [
     path: 'blog/:slug',
     loadComponent: () =>
       import('@features/blog/blog-view.component').then((m) => m.BlogViewComponent),
+  },
+  {
+    path: 'admin/login',
+    canMatch: [adminLoginGuard],
+    loadComponent: () =>
+      import('@features/admin/login/login.component').then((m) => m.LoginComponent),
   },
   {
     path: 'playground',

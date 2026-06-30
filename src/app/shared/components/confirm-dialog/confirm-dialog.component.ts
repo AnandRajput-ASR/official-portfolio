@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { sanitizeHtml } from '@core/utils/safe-html';
 
 export interface ConfirmConfig {
   title: string;
@@ -20,7 +21,7 @@ export interface ConfirmConfig {
       <div class="cd-box" role="alertdialog">
         <div class="cd-icon" *ngIf="config?.icon">{{ config!.icon }}</div>
         <h3 class="cd-title">{{ config?.title }}</h3>
-        <p class="cd-message" [innerHTML]="config?.message"></p>
+        <p class="cd-message" [innerHTML]="safeMessage"></p>
         <p class="cd-detail" *ngIf="config?.detail">{{ config!.detail }}</p>
         <div class="cd-actions">
           <button class="cd-btn cd-cancel" (click)="cancelled.emit()">
@@ -165,6 +166,11 @@ export class ConfirmDialogComponent {
   @Input() config: ConfirmConfig | null = null;
   @Output() confirmed = new EventEmitter<void>();
   @Output() cancelled = new EventEmitter<void>();
+
+  get safeMessage(): string {
+    return sanitizeHtml(this.config?.message ?? '');
+  }
+
   onOverlay(e: MouseEvent): void {
     if ((e.target as HTMLElement).classList.contains('cd-overlay')) this.cancelled.emit();
   }

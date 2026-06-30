@@ -37,8 +37,8 @@ describe('authInterceptor', () => {
 
     it('attaches a Bearer token when one is available', () => {
       auth.getToken.and.returnValue('jwt-token');
-      httpClient.get(`${environment.api.baseUrl}/content`).subscribe();
-      const req = httpMock.expectOne(`${environment.api.baseUrl}/content`);
+      httpClient.get(`${environment.api.baseUrl}/admin/page-content`).subscribe();
+      const req = httpMock.expectOne(`${environment.api.baseUrl}/admin/page-content`);
       expect(req.request.headers.get('Authorization')).toBe('Bearer jwt-token');
       req.flush({});
     });

@@ -58,15 +58,16 @@ describe('AuthService', () => {
   describe('legacy (token) mode', () => {
     beforeEach(() => {
       environment.cookieAuth = false;
-      create();
     });
 
     it('starts signed out with no stored token', () => {
+      create();
       expect(service.isLoggedInSnapshot()).toBeFalse();
       expect(service.currentUser()).toBeNull();
     });
 
     it('stores the token and user, and marks logged in, on login', () => {
+      create();
       service.login('admin', 'secret').subscribe();
       const req = http.expectOne(`${environment.api.baseUrl}/auth/login`);
       expect(req.request.method).toBe('POST');
@@ -80,6 +81,7 @@ describe('AuthService', () => {
     });
 
     it('clears storage and navigates home on logout', () => {
+      create();
       service.login('admin', 'secret').subscribe();
       http.expectOne(`${environment.api.baseUrl}/auth/login`).flush({
         token: 'jwt-token',
@@ -95,6 +97,7 @@ describe('AuthService', () => {
     });
 
     it('probeSession returns the stored user without an HTTP call', (done) => {
+      create();
       sessionStore['ar-portfolio:user'] = JSON.stringify({ username: 'admin', role: 'admin' });
       service.probeSession().subscribe((user) => {
         expect(user).toEqual({ username: 'admin', role: 'admin' });
@@ -118,14 +121,15 @@ describe('AuthService', () => {
   describe('cookie mode', () => {
     beforeEach(() => {
       environment.cookieAuth = true;
-      create();
     });
 
     it('getToken always returns null (token is HttpOnly)', () => {
+      create();
       expect(service.getToken()).toBeNull();
     });
 
     it('login sends credentials and marks logged in without reading a token', () => {
+      create();
       service.login('admin', 'secret').subscribe();
       const req = http.expectOne(`${environment.api.baseUrl}/auth/login`);
       expect(req.request.withCredentials).toBeTrue();
@@ -137,6 +141,7 @@ describe('AuthService', () => {
     });
 
     it('probeSession marks logged in when /auth/me succeeds', (done) => {
+      create();
       service.probeSession().subscribe(() => {
         expect(service.isLoggedInSnapshot()).toBeTrue();
         expect(service.currentUser()).toEqual({ username: 'admin', role: 'admin' });
@@ -148,6 +153,7 @@ describe('AuthService', () => {
     });
 
     it('probeSession marks logged out when /auth/me fails', (done) => {
+      create();
       service.probeSession().subscribe((user) => {
         expect(user).toBeNull();
         expect(service.isLoggedInSnapshot()).toBeFalse();

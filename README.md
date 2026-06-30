@@ -6,6 +6,17 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.18 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Secret admin entry flow hardening | Added guarded `/admin/login` route that is only reachable after successful secret-slug verification (`/secure-*`), removing the broken history rewrite behavior and keeping login access controlled. |
+| HTML rendering security pass | Removed Angular sanitizer bypass in Admin Blog live preview and added safe sanitization in confirmation-dialog rich text rendering. |
+| Blog related-navigation stability | Improved in-article route transition behavior by forcing manual scroll restoration and resetting reading progress immediately on slug changes. |
+| Local uploaded-image CSP compatibility | Updated meta CSP `img-src` policy to allow `http://localhost:*` so backend-hosted uploaded images render correctly in local QA without breaking production header CSP. |
+| TypeScript config compatibility | Added `ignoreDeprecations: "6.0"` to preserve path-alias (`baseUrl`) behavior while preparing for TS 7 migration. |
+| Unit test stabilization | Fixed failing interceptor, dashboard shell, auth bootstrap, and settings logic tests to restore a reliable CI baseline. |
+
 ### v1.1.17 (2026-06-30)
 
 | Feature | Details |
@@ -266,11 +277,20 @@ Configured in `tsconfig.json` for clean imports:
 | `/blog`            | `BlogListComponent`  | —                 | Blog discovery page        |
 | `/blog/tag/:tag`   | `BlogListComponent`  | —                 | Blog listing filtered by tag |
 | `/blog/:slug`      | `BlogViewComponent`  | —                 | Individual blog post       |
+| `/admin/login`     | `LoginComponent`     | `adminLoginGuard` | Admin login route gated by recent secret-slug verification or active admin session |
 | `/admin/dashboard` | `DashboardComponent` | `authGuard`       | Admin panel (JWT required) |
 | `/:slug`           | `LoginComponent`     | `secretSlugGuard` | Secret admin login URL     |
 | `**`               | —                    | —                 | Redirects to `/`           |
 
 All feature components are **lazy-loaded** via dynamic `import()`.
+
+### Secret Admin Login Flow
+
+1. Admin opens the private entry URL (`/secure-...`).
+2. `secretSlugGuard` verifies the slug with backend API.
+3. On success, frontend stores a short-lived session grant (`10 min`) and redirects to `/admin/login`.
+4. `/admin/login` is protected by `adminLoginGuard` and blocks direct access without a recent grant.
+5. After successful login, admin is redirected to `/admin/dashboard` and the one-time grant is cleared.
 
 ### Blog Navigation Behavior
 

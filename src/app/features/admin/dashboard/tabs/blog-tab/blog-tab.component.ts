@@ -8,7 +8,6 @@ import {
   inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import {
   AdminBlogComment,
   AdminBlogCommentsPayload,
@@ -36,7 +35,6 @@ export class BlogTabComponent implements OnInit, OnDestroy {
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
-  private sanitizer = inject(DomSanitizer);
 
   blogEdit: BlogPost[] = [];
   showAddBlog = false;
@@ -162,10 +160,10 @@ export class BlogTabComponent implements OnInit, OnDestroy {
     reader.readAsDataURL(file);
   }
 
-  getPreviewHtml(content: string): SafeHtml {
+  getPreviewHtml(content: string): string {
     // Normalize literal \n escape sequences (from JSON-encoded data) to real newlines
     const normalized = (content || '').replace(/\\n/g, '\n');
-    return this.sanitizer.bypassSecurityTrustHtml(renderMarkdown(normalized));
+    return renderMarkdown(normalized);
   }
 
   saveBlog(): void {

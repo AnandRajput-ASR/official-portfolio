@@ -12,7 +12,7 @@ import {
 } from '@core/models';
 import { ContentService } from '@core/services/content.service';
 import { renderMarkdown } from '@core/utils/markdown';
-import { Subject, map, switchMap, takeUntil, timeout } from 'rxjs';
+import { Subject, map, switchMap, takeUntil, tap, timeout } from 'rxjs';
 
 interface TocItem {
   id: string;
@@ -246,13 +246,24 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   authorTitle = 'Angular Developer & Azure Engineer';
   private backTarget = '/blog';
   backLabel = '← Back to Blog';
+  private previousScrollRestoration: ScrollRestoration | null = null;
 
   ngOnInit(): void {
+    if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
+      this.previousScrollRestoration = history.scrollRestoration;
+      history.scrollRestoration = 'manual';
+    }
+
     this.resolveBackTarget();
 
     this.route.paramMap
       .pipe(
         map((params) => params.get('slug')),
+        tap(() => {
+          this.readingProgress = 0;
+          this.activeTocId = '';
+          this.resetScrollPosition();
+        }),
         switchMap((slug) =>
           this.contentService.getAll().pipe(
             timeout(12000),
@@ -280,6 +291,13 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.removeJsonLd();
+    if (
+      typeof window !== 'undefined' &&
+      'scrollRestoration' in history &&
+      this.previousScrollRestoration
+    ) {
+      history.scrollRestoration = this.previousScrollRestoration;
+    }
   }
 
   @HostListener('window:scroll')

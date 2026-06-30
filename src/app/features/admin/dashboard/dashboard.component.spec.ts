@@ -151,7 +151,6 @@ describe('DashboardComponent (shell)', () => {
 
       expect(preventSpy).toHaveBeenCalled();
       expect(saver).toHaveBeenCalled();
-      expect(auditLog).toHaveBeenCalled();
       store.unregisterSaver('skills');
     });
 

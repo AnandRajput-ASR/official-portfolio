@@ -2,7 +2,9 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { ADMIN_LOGIN_ENTRY_KEY } from '@core/guards/secret-slug.guard';
 import { AuthService } from '@core/services/auth.service';
+import { StorageService } from '@core/services/storage.service';
 
 @Component({
   selector: 'app-login',
@@ -14,6 +16,7 @@ import { AuthService } from '@core/services/auth.service';
 export class LoginComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private storage = inject(StorageService);
 
   username = '';
   password = '';
@@ -36,6 +39,7 @@ export class LoginComponent {
     this.auth.login(this.username, this.password).subscribe({
       next: () => {
         this.loading = false;
+        this.storage.removeSession(ADMIN_LOGIN_ENTRY_KEY);
         this.router.navigate(['/admin/dashboard']);
       },
       error: (err) => {
