@@ -127,6 +127,40 @@ export class BlogTabComponent implements OnInit, OnDestroy {
     reader.readAsDataURL(file);
   }
 
+  onEditorPasteImage(
+    target: Partial<BlogPost>,
+    event: ClipboardEvent,
+    editor: HTMLTextAreaElement,
+  ): void {
+    const items = Array.from(event.clipboardData?.items ?? []);
+    const imageItem = items.find((item) => item.type.startsWith('image/'));
+    if (!imageItem) {
+      return;
+    }
+
+    const file = imageItem.getAsFile();
+    if (!file) {
+      return;
+    }
+
+    event.preventDefault();
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || '');
+      if (!dataUrl) {
+        this.toast.error('Could not read pasted image.');
+        return;
+      }
+      const snippet = `\n![pasted-screenshot](${dataUrl})\n`;
+      this.insertAtCursor(target, editor, snippet);
+      this.toast.success('Pasted screenshot embedded in markdown.');
+    };
+    reader.onerror = () => {
+      this.toast.error('Failed to read pasted image.');
+    };
+    reader.readAsDataURL(file);
+  }
+
   getPreviewHtml(content: string): SafeHtml {
     // Normalize literal \n escape sequences (from JSON-encoded data) to real newlines
     const normalized = (content || '').replace(/\\n/g, '\n');

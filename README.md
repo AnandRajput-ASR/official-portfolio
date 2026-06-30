@@ -6,6 +6,14 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.13 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Screenshot paste support in markdown editor | Admin Blog markdown editors now support direct clipboard image paste (`Ctrl+V`) and auto-embed pasted screenshots as markdown images. |
+| Code preview clarity improvements | Live markdown preview now uses stronger visual distinction between inline code and fenced code blocks for easier authoring validation. |
+| Authoring guidance in editor | Added contextual tip text to remind admins they can paste screenshots directly into article content. |
+
 ### v1.1.12 (2026-06-30)
 
 | Feature | Details |
@@ -388,6 +396,15 @@ Admins can now write markdown with a live split editor in `/admin/dashboard` und
 | `+ Image URL` | Markdown image syntax using a pasted URL. |
 | `+ Upload Screenshot` | Markdown image syntax using a local uploaded image encoded as safe `data:image/*` URL. |
 
+#### Clipboard Screenshot Paste
+
+You can now paste screenshots directly into the markdown editor without using the upload picker.
+
+1. Copy an image/screenshot to clipboard.
+2. Focus the blog content editor.
+3. Press `Ctrl+V`.
+4. The editor inserts markdown image syntax with embedded image data and updates preview instantly.
+
 #### Authoring Notes
 
 | Topic | Behavior |
@@ -396,6 +413,7 @@ Admins can now write markdown with a live split editor in `/admin/dashboard` und
 | New posts | Live preview works before first save for draft creation flow. |
 | Code snippets | Render in markdown `<pre><code>` blocks with existing article styles. |
 | Images/screenshots | Render directly in preview and article view using markdown image syntax. |
+| Pasted screenshots | Clipboard image paste (`Ctrl+V`) is supported in both existing-post and new-post markdown editors. |
 | Mobile UX | Live editor stacks vertically (editor above preview) on small screens. |
 
 ### Series Support Rules

@@ -110,9 +110,11 @@
               rows="14"
               [(ngModel)]="post.content"
               class="blog-content-editor"
+              (paste)="onEditorPasteImage(post, $event, postEditor)"
             ></textarea>
             <div class="blog-md-preview" [innerHTML]="getPreviewHtml(post.content)"></div>
           </div>
+          <p class="muted-text blog-editor-help">Tip: Paste screenshots directly with Ctrl+V.</p>
         </div>
         <div class="form-group">
           <label>Cover Image URL <small>(optional)</small></label>
@@ -346,9 +348,11 @@
           [(ngModel)]="newBlog.content"
           class="blog-content-editor"
           placeholder="# Your Heading&#10;&#10;Start writing..."
+          (paste)="onEditorPasteImage(newBlog, $event, newPostEditor)"
         ></textarea>
         <div class="blog-md-preview" [innerHTML]="getPreviewHtml(newBlog.content || '')"></div>
       </div>
+      <p class="muted-text blog-editor-help">Tip: Paste screenshots directly with Ctrl+V.</p>
     </div>
     <div class="form-group">
       <label>Tags <small>(press Enter)</small></label>
