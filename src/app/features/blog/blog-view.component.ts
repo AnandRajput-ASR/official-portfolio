@@ -12,6 +12,7 @@ import {
 } from '@core/models';
 import { ContentService } from '@core/services/content.service';
 import { renderMarkdown } from '@core/utils/markdown';
+import { ToastComponent, ToastService } from '@shared/components/toast/toast.component';
 import { map, switchMap, take, tap, timeout } from 'rxjs';
 
 interface TocItem {
@@ -29,8 +30,9 @@ const JSON_LD_ID = 'blog-article-jsonld';
 @Component({
   selector: 'app-blog-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, ToastComponent],
   template: `
+    <app-toast />
     <div class="bv-page" *ngIf="post; else loading">
       <div class="bv-topbar">
         <div class="bv-topbar-left">
@@ -118,7 +120,6 @@ const JSON_LD_ID = 'blog-article-jsonld';
               <button class="bv-comment-submit" (click)="addComment()" [disabled]="!commentText.trim()">
                 Post comment
               </button>
-              <p class="bv-social-hint" *ngIf="commentPosted">Comment posted successfully!</p>
             </div>
 
             <div class="bv-comment-list" *ngIf="comments.length > 0; else noComments">
@@ -225,6 +226,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private destroyRef = inject(DestroyRef);
   private sanitizer = inject(DomSanitizer);
+  private toast = inject(ToastService);
 
   post: BlogPost | null = null;
   renderedContent: SafeHtml = '';
@@ -257,7 +259,6 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   shareLocked = false;
   likeHintVisible = false;
   shareHintVisible = false;
-  commentPosted = false;
 
   ngOnInit(): void {
     if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
@@ -372,16 +373,13 @@ export class BlogViewComponent implements OnInit, OnDestroy {
         this.commentText = '';
         this.commentAuthor = '';
         this.socialLoading = false;
-        this.commentPosted = true;
+        this.toast.success('Comment posted successfully!');
         this.cdr.detectChanges();
-        setTimeout(() => {
-          this.commentPosted = false;
-          this.cdr.detectChanges();
-        }, 5000);
       },
       error: () => {
         this.socialError = true;
         this.socialLoading = false;
+        this.toast.error('Failed to post comment. Please try again.');
       },
     });
   }
