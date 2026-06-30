@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { ContentService } from '@core/services/content.service';
 import { PortfolioContent } from '@core/models';
-import { ResumeData, defaultResumeData, generateLatex } from './resume-latex';
+import { ContentService } from '@core/services/content.service';
 import { ToastComponent, ToastService } from '@shared/components/toast/toast.component';
+import { ResumeData, defaultResumeData, generateLatex } from './resume-latex';
 
 @Component({
   selector: 'app-resume-editor',
@@ -24,10 +24,7 @@ export class ResumeEditorComponent implements OnInit {
   readonly previewMode = signal<'visual' | 'latex'>('visual');
 
   ngOnInit(): void {
-    this.contentService.getAll().subscribe({
-      next: (c) => this.prefillFromContent(c),
-      error: () => {},
-    });
+    this.loadFromPortfolio();
   }
 
   setSection(s: string): void {
@@ -147,8 +144,16 @@ export class ResumeEditorComponent implements OnInit {
   }
 
   resetToDefaults(): void {
+    this.loadFromPortfolio();
+    this.toast.info('Reset to live portfolio data.');
+  }
+
+  private loadFromPortfolio(): void {
     this.data.set(defaultResumeData());
-    this.toast.info('Reset to default resume data.');
+    this.contentService.getAll().subscribe({
+      next: (c) => this.prefillFromContent(c),
+      error: () => {},
+    });
   }
 
   trackByIndex(i: number): number {
