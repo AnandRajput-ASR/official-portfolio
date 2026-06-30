@@ -6,6 +6,14 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.24 (2026-07-01)
+
+| Feature | Details |
+| ------- | ------- |
+| Blog social completion hardening | Added request-id guarding, explicit view refresh, and a failsafe timeout so article social state cannot remain indefinitely stuck in `Loading interactions...` during overlapping or stalled runtime requests. |
+| Social race-condition protection | Ignore stale social responses when navigating rapidly between blog slugs to ensure only the latest article request can update interaction state. |
+| About counter fallback resilience | Counter setup now observes both legacy and current stat markup selectors and applies a final value fallback if animation observers miss first render, preventing `0`-stuck About stats when API values are present. |
+
 ### v1.1.23 (2026-07-01)
 
 | Feature | Details |

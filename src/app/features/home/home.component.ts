@@ -295,7 +295,20 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     );
     this.observers.push(io);
     setTimeout(() => {
-      document.querySelectorAll('.stat-num[data-target]').forEach((el) => io.observe(el));
+      const targets = document.querySelectorAll('.stat-num[data-target], .astat-val[data-target]');
+      targets.forEach((el) => io.observe(el));
+      // Fallback if IntersectionObserver misses initial entries in some builds/layouts.
+      if (!targets.length) return;
+      setTimeout(() => {
+        targets.forEach((el) => {
+          if (el.textContent?.trim() !== '0') return;
+          const target = +(el.getAttribute('data-target') || 0);
+          const suffix = el.getAttribute('data-suffix') || '';
+          if (target > 0) {
+            el.textContent = `${target}${suffix}`;
+          }
+        });
+      }, 1800);
     }, 100);
   }
 

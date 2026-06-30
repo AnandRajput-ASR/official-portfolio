@@ -11,7 +11,7 @@ import {
 } from '@core/models';
 import { ContentService } from '@core/services/content.service';
 import { renderMarkdown } from '@core/utils/markdown';
-import { Subject, map, switchMap, takeUntil, tap, timeout } from 'rxjs';
+import { Subject, map, switchMap, take, takeUntil, tap, timeout } from 'rxjs';
 
 interface TocItem {
   id: string;
@@ -246,6 +246,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   private backTarget = '/blog';
   backLabel = '← Back to Blog';
   private previousScrollRestoration: ScrollRestoration | null = null;
+  private socialRequestId = 0;
 
   ngOnInit(): void {
     if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
@@ -654,22 +655,39 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   }
 
   private loadSocialState(slug: string): void {
+    const requestId = ++this.socialRequestId;
     this.socialLoading = true;
     this.socialError = false;
     this.socialState = null;
+    this.cdr.detectChanges();
+
+    const failSafe = setTimeout(() => {
+      if (requestId !== this.socialRequestId || !this.socialLoading) return;
+      this.socialError = true;
+      this.socialLoading = false;
+      this.socialState = { slug, likes: 0, shares: 0, viewerLiked: false, comments: [] };
+      this.cdr.detectChanges();
+    }, 9000);
 
     this.contentService
       .getBlogSocialState(slug)
-      .pipe(timeout(8000))
+      .pipe(timeout(8000), take(1))
       .subscribe({
         next: (state) => {
+          clearTimeout(failSafe);
+          if (requestId !== this.socialRequestId) return;
           this.socialState = this.normalizeSocialState(state);
           this.socialLoading = false;
+          this.socialError = false;
+          this.cdr.detectChanges();
         },
         error: () => {
+          clearTimeout(failSafe);
+          if (requestId !== this.socialRequestId) return;
           this.socialError = true;
           this.socialLoading = false;
           this.socialState = { slug, likes: 0, shares: 0, viewerLiked: false, comments: [] };
+          this.cdr.detectChanges();
         },
       });
   }
