@@ -1,5 +1,6 @@
 import { CommonModule, DOCUMENT } from '@angular/common';
-import { ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, HostListener, OnDestroy, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -11,7 +12,7 @@ import {
 } from '@core/models';
 import { ContentService } from '@core/services/content.service';
 import { renderMarkdown } from '@core/utils/markdown';
-import { Subject, map, switchMap, take, takeUntil, tap, timeout } from 'rxjs';
+import { map, switchMap, take, tap, timeout } from 'rxjs';
 
 interface TocItem {
   id: string;
@@ -220,7 +221,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   private titleService = inject(Title);
   private metaService = inject(Meta);
   private cdr = inject(ChangeDetectorRef);
-  private destroy$ = new Subject<void>();
+  private destroyRef = inject(DestroyRef);
 
   post: BlogPost | null = null;
   renderedContent = '';
@@ -274,7 +275,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
             map((posts) => ({ slug, posts })),
           ),
         ),
-        takeUntil(this.destroy$),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe({
         next: ({ slug, posts }) => {
@@ -289,8 +290,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+
     this.removeJsonLd();
     if (
       typeof window !== 'undefined' &&

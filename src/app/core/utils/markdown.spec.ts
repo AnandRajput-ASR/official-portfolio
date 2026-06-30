@@ -53,4 +53,11 @@ describe('renderMarkdown', () => {
     expect(html).toContain('<blockquote>');
     expect(html).toContain('quoted');
   });
+
+  it('normalizes escaped \\n literals to real newlines before parsing', () => {
+    const html = renderMarkdown('Hello\\n\\n## Heading\\n\\nParagraph');
+    expect(html).toContain('<h2');
+    expect(html).toContain('Heading');
+    expect(html).toContain('<p>');
+  });
 });

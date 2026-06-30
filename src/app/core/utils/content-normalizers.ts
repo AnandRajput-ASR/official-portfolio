@@ -1,13 +1,13 @@
 import {
-    Analytics,
-    Company,
-    CompanyProject,
-    Experience,
-    Hero,
-    PersonalProject,
-    PortfolioContent,
-    SiteSettings,
-    Testimonial,
+  Analytics,
+  Company,
+  CompanyProject,
+  Experience,
+  Hero,
+  PersonalProject,
+  PortfolioContent,
+  SiteSettings,
+  Testimonial,
 } from '@core/models';
 import { asDict, Dict, list, notDeleted, unwrapData } from './normalizer-helpers';
 

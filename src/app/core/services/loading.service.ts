@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { computed, Injectable, signal } from '@angular/core';
 
 /**
  * Global loading service.
@@ -12,28 +12,23 @@ import { Injectable, signal, computed } from '@angular/core';
  */
 @Injectable({ providedIn: 'root' })
 export class LoadingService {
-  /** Set of active loading keys */
-  private readonly _active = signal<Set<string>>(new Set());
+  private readonly active = signal<Set<string>>(new Set());
 
-  /** True if any key is still active */
-  readonly isLoading = computed(() => this._active().size > 0);
+  readonly isLoading = computed(() => this.active().size > 0);
 
-  /** Start loading for a named key */
   start(key: string): void {
-    this._active.update((s) => new Set(s).add(key));
+    this.active.update((s) => new Set(s).add(key));
   }
 
-  /** Stop loading for a named key */
   stop(key: string): void {
-    this._active.update((s) => {
+    this.active.update((s) => {
       const next = new Set(s);
       next.delete(key);
       return next;
     });
   }
 
-  /** Convenience: stop all active keys at once */
   stopAll(): void {
-    this._active.set(new Set());
+    this.active.set(new Set());
   }
 }

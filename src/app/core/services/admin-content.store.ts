@@ -1,5 +1,6 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { ActiveTab, PortfolioContent, Testimonial } from '@core/models';
+import { ContentService } from '@core/services/content.service';
 
 /**
  * Shared signal-based source of truth for the admin dashboard.
@@ -11,6 +12,8 @@ import { ActiveTab, PortfolioContent, Testimonial } from '@core/models';
  */
 @Injectable({ providedIn: 'root' })
 export class AdminContentStore {
+  private readonly contentService = inject(ContentService);
+
   /** The loaded portfolio content — the saved source of truth. */
   readonly content = signal<PortfolioContent | null>(null);
 
@@ -46,7 +49,10 @@ export class AdminContentStore {
 
   clearDirty(tab: ActiveTab): void {
     const had = this.dirtyTabs.delete(tab);
-    if (had) this.bumpDirty();
+    if (had) {
+      this.bumpDirty();
+      this.contentService.invalidateCache();
+    }
   }
 
   isDirty(tab: ActiveTab): boolean {

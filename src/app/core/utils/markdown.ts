@@ -47,6 +47,7 @@ function slugify(text: string): string {
 /** Renders a markdown string to a sanitised HTML string. */
 export function renderMarkdown(md: string): string {
   if (!md) return '';
-  const raw = marked.use({ renderer }).parse(md, { async: false }) as string;
+  const normalized = md.replace(/\\n/g, '\n');
+  const raw = marked.use({ renderer }).parse(normalized, { async: false }) as string;
   return sanitizeHtml(raw);
 }

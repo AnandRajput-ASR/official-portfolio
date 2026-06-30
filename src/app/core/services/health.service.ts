@@ -1,7 +1,7 @@
-import { Injectable, OnDestroy, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { take } from 'rxjs';
+import { Injectable, OnDestroy, inject, signal } from '@angular/core';
 import { environment } from '@env/environment';
+import { take } from 'rxjs';
 
 export type HealthStatus = 'healthy' | 'degraded' | 'unreachable' | 'unknown';
 
