@@ -1,6 +1,8 @@
+import { EntityMetadata } from './api.model';
+
 export type ProjectStatus = 'completed' | 'in-progress' | 'planned' | 'archived' | null;
 
-export interface CompanyProject {
+export interface CompanyProject extends EntityMetadata {
   id: string;
   number: string;
   title: string;
@@ -9,10 +11,11 @@ export interface CompanyProject {
   link: string;
   displayOrder: number;
   status?: ProjectStatus;
+  status_v2?: ProjectStatus;
   impact?: string;
 }
 
-export interface Company {
+export interface Company extends EntityMetadata {
   id: string;
   name: string;
   role: string;
@@ -28,4 +31,8 @@ export interface Company {
   teamSize?: string;
   startDate?: string;
   endDate?: string;
+  start_date?: string;
+  end_date?: string;
+  start_date_d?: string;
+  end_date_d?: string;
 }

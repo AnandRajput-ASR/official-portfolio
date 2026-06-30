@@ -1,0 +1,66 @@
+<!-- ── HERO TAB ─────────────────────────────────────────────────────────── -->
+<section class="tab-content" (input)="markDirty()" (change)="markDirty()">
+  <div class="tab-header">
+    <div>
+      <h1>Hero Section</h1>
+      <p>Edit your main introduction and contact details</p>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="saveHero()" [disabled]="saving">
+      {{ saving ? 'Saving...' : 'Save Changes' }}
+    </button>
+  </div>
+
+  <div class="form-grid" *ngIf="heroEdit">
+    <div class="form-card">
+      <h3>Personal Info</h3>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" [(ngModel)]="heroEdit.name" name="name" />
+      </div>
+      <div class="form-group">
+        <label>Job Title</label>
+        <input type="text" [(ngModel)]="heroEdit.title" name="title" />
+      </div>
+      <div class="form-group">
+        <label>Subtitle / Tagline</label>
+        <input type="text" [(ngModel)]="heroEdit.subtitle" name="subtitle" />
+      </div>
+      <div class="form-group">
+        <label>Bio</label>
+        <textarea rows="4" [(ngModel)]="heroEdit.bio" name="bio"></textarea>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h3>Contact & Links</h3>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="heroEdit.email" name="email" />
+      </div>
+      <div class="form-group">
+        <label>LinkedIn URL</label>
+        <input type="url" [(ngModel)]="heroEdit.linkedin" name="linkedin" />
+      </div>
+      <div class="form-group">
+        <label>GitHub URL</label>
+        <input type="url" [(ngModel)]="heroEdit.github" name="github" />
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" [(ngModel)]="heroEdit.location" name="location" />
+      </div>
+      <div class="form-group toggle-group">
+        <label>Available for Work</label>
+        <div class="toggle-with-status">
+          <label class="toggle">
+            <input type="checkbox" [(ngModel)]="heroEdit.availableForWork" name="available" />
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-status" [class.on]="heroEdit.availableForWork">
+            {{ heroEdit.availableForWork ? 'Yes' : 'No' }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,782 @@
+<section class="tab-content" (input)="markDirty()" (change)="markDirty()">
+  <div class="tab-header">
+    <div>
+      <h1>Site Settings</h1>
+      <p>
+        Everything configurable — banner, sections, freelance, nav, contact. No redeploy needed.
+      </p>
+      <p class="settings-change-summary" *ngIf="hasUnsavedChanges">Pending: {{ changeSummary }}</p>
+    </div>
+    <div class="settings-header-actions">
+      <button class="btn btn-outline btn-sm" (click)="expandAllGroups()">Expand All</button>
+      <button class="btn btn-outline btn-sm" (click)="collapseSecondaryGroups()">Focus Core</button>
+      <button class="btn btn-primary btn-sm" (click)="saveSettings()" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save All Settings' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="settings-group" [class.collapsed]="!isGroupOpen('core')">
+    <button class="group-toggle" (click)="toggleGroup('core')" type="button">
+      <span class="group-title">Core Controls</span>
+      <span class="group-meta">Banner, Freelance, Visibility, Nav, Language</span>
+      <span class="group-chevron">{{ isGroupOpen('core') ? '▾' : '▸' }}</span>
+    </button>
+    <div class="group-body" *ngIf="isGroupOpen('core')">
+
+  <!-- Open to Work Banner -->
+  <div class="settings-card">
+    <div class="settings-card-header">
+      <div>
+        <h3>🟢 Open to Work Banner</h3>
+        <p>
+          Fixed amber bar at top of portfolio. Supports <code>&lt;b&gt;</code>,
+          <code>&lt;em&gt;</code>, <code>&lt;a&gt;</code> HTML tags.
+        </p>
+      </div>
+      <label class="big-toggle">
+        <input
+          type="checkbox"
+          [(ngModel)]="settingsEdit.openToWork"
+          (ngModelChange)="markDirty()"
+        />
+        <span class="big-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="form-row otw-stack" style="margin-top: 1rem" *ngIf="settingsEdit.openToWork">
+      <div class="form-group">
+        <label>Banner HTML Text</label>
+        <input
+          type="text"
+          [(ngModel)]="settingsEdit.openToWorkText"
+          (ngModelChange)="markDirty()"
+          placeholder="e.g. <b>Open to Freelance</b> · Available Now"
+        />
+      </div>
+      <div class="form-group">
+        <label>Preview</label>
+        <div
+          class="banner-preview"
+          [innerHTML]="settingsEdit.openToWorkText || 'Open to Freelance'"
+        ></div>
+        <small class="preview-help"
+          >Rendered preview. Supported tags: <code>&lt;b&gt;</code>, <code>&lt;em&gt;</code>,
+          <code>&lt;a&gt;</code>, <code>&lt;br&gt;</code>.</small
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Freelance Config -->
+  <div class="settings-card" style="margin-top: 1.25rem">
+    <div class="settings-card-header">
+      <div>
+        <h3>💼 Freelance Mode</h3>
+        <p>
+          Controls all freelance-related content — hero badge, about blurb, CTA section, contact
+          status. One toggle to turn it all on/off.
+        </p>
+      </div>
+      <label class="big-toggle">
+        <input
+          type="checkbox"
+          [(ngModel)]="settingsEdit.freelance.enabled"
+          (ngModelChange)="markDirty()"
+        />
+        <span class="big-toggle-slider"></span>
+      </label>
+    </div>
+    <div *ngIf="settingsEdit.freelance.enabled" style="margin-top: 1.5rem">
+      <div class="form-row">
+        <div class="form-group">
+          <label>CTA Section Heading</label
+          ><input
+            type="text"
+            [(ngModel)]="settingsEdit.freelance.ctaTitle"
+            (ngModelChange)="markDirty()"
+            placeholder="Got a project in mind?"
+          />
+        </div>
+        <div class="form-group">
+          <label>CTA Subtitle</label
+          ><input
+            type="text"
+            [(ngModel)]="settingsEdit.freelance.ctaSubtitle"
+            (ngModelChange)="markDirty()"
+          />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Services List <small>(press Enter to add)</small></label>
+        <div class="tags-editor">
+          <span class="tag-pill" *ngFor="let s of settingsEdit.freelance.services">
+            {{ s }} <button (click)="removeFreelanceService(s)">×</button>
+          </span>
+          <input
+            type="text"
+            [(ngModel)]="newFreelanceService"
+            placeholder="Angular SPA Development"
+            (keydown.enter)="addFreelanceService()"
+          />
+        </div>
+      </div>
+      <div
+        class="section-toggles"
+        style="margin-top: 1rem; border-top: 1px solid var(--border)"
+      >
+        <div class="section-toggle-row">
+          <div class="str-info">
+            <span class="str-icon">🦸</span>
+            <div>
+              <p class="str-name">Show in Hero Badge</p>
+              <p class="str-desc muted-text">
+                The "Available for Freelance" pill in the hero card
+              </p>
+            </div>
+          </div>
+          <label class="big-toggle"
+            ><input
+              type="checkbox"
+              [(ngModel)]="settingsEdit.freelance.showInHero"
+              (ngModelChange)="markDirty()" /><span class="big-toggle-slider"></span
+          ></label>
+        </div>
+        <div class="section-toggle-row">
+          <div class="str-info">
+            <span class="str-icon">👤</span>
+            <div>
+              <p class="str-name">Show in About Section</p>
+              <p class="str-desc muted-text">
+                The "Available for freelance" paragraph in About
+              </p>
+            </div>
+          </div>
+          <label class="big-toggle"
+            ><input
+              type="checkbox"
+              [(ngModel)]="settingsEdit.freelance.showInAbout"
+              (ngModelChange)="markDirty()" /><span class="big-toggle-slider"></span
+          ></label>
+        </div>
+        <div class="section-toggle-row">
+          <div class="str-info">
+            <span class="str-icon">📣</span>
+            <div>
+              <p class="str-name">Show CTA Section</p>
+              <p class="str-desc muted-text">The full "Got a project in mind?" section</p>
+            </div>
+          </div>
+          <label class="big-toggle"
+            ><input
+              type="checkbox"
+              [(ngModel)]="settingsEdit.freelance.showCtaSection"
+              (ngModelChange)="markDirty()" /><span class="big-toggle-slider"></span
+          ></label>
+        </div>
+        <div class="section-toggle-row">
+          <div class="str-info">
+            <span class="str-icon">✉</span>
+            <div>
+              <p class="str-name">Show in Contact Section</p>
+              <p class="str-desc muted-text">The "Available for freelance" status in Contact</p>
+            </div>
+          </div>
+          <label class="big-toggle"
+            ><input
+              type="checkbox"
+              [(ngModel)]="settingsEdit.freelance.showInContact"
+              (ngModelChange)="markDirty()" /><span class="big-toggle-slider"></span
+          ></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section Visibility -->
+  <div class="settings-card mt-card">
+    <h3 class="card-title-sm">📐 Section Visibility</h3>
+    <p class="muted-text card-desc-gap">
+      Toggle entire sections on/off. Changes take effect immediately after saving.
+    </p>
+    <div class="section-toggles">
+      <div class="section-toggle-row" *ngFor="let sec of sectionList">
+        <div class="str-info">
+          <span class="str-icon">{{ sec.icon }}</span>
+          <div>
+            <p class="str-name">{{ sec.label }}</p>
+            <p class="str-desc muted-text">{{ sec.desc }}</p>
+          </div>
+        </div>
+        <label class="big-toggle">
+          <input
+            type="checkbox"
+            [ngModel]="getSectionFlag(sec.key)"
+            (ngModelChange)="setSectionFlag(sec.key, $event)"
+          />
+          <span class="big-toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav / Footer Text -->
+  <div class="settings-card mt-card">
+    <h3 class="card-title-md">🔧 Nav & Footer</h3>
+    <div class="form-row">
+      <div class="form-group xs">
+        <label>Nav Logo Text</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.nav.logoText"
+          (ngModelChange)="markDirty()"
+          placeholder="AR"
+        />
+      </div>
+      <div class="form-group">
+        <label>Show Resume Button in Nav</label>
+        <label class="big-toggle toggle-mt"
+          ><input
+            type="checkbox"
+            [(ngModel)]="settingsEdit.nav.showResume"
+            (ngModelChange)="markDirty()" /><span class="big-toggle-slider"></span
+        ></label>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Footer Tagline</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.footer.text"
+          (ngModelChange)="markDirty()"
+        />
+      </div>
+      <div class="form-group">
+        <label>Footer Copyright</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.footer.copy"
+          (ngModelChange)="markDirty()"
+        />
+      </div>
+    </div>
+    <div class="form-group form-group-gap-sm">
+      <label
+        >🌐 Site URL
+        <small>(used in robots.txt &amp; sitemap.xml — no redeploy needed)</small></label
+      >
+      <input
+        type="url"
+        [(ngModel)]="settingsEdit.siteUrl"
+        (ngModelChange)="markDirty()"
+        placeholder="https://anandrajput.dev"
+      />
+      <small class="hint-text">
+        Changing this updates <code>/robots.txt</code> and <code>/sitemap.xml</code> instantly
+        without redeploying.
+      </small>
+    </div>
+
+    <!-- Resume gate -->
+    <div class="form-group form-group-gap-sm">
+      <label>🔒 Require Email Before Resume Download</label>
+      <label class="big-toggle toggle-mt">
+        <input
+          type="checkbox"
+          [(ngModel)]="settingsEdit.resumeProtected"
+          (ngModelChange)="markDirty()"
+        /><span class="big-toggle-slider"></span>
+      </label>
+      <small class="hint-text">
+        When enabled, visitors must enter their email address before the resume PDF downloads.
+      </small>
+    </div>
+  </div>
+
+  <!-- Language Toggle -->
+  <div class="settings-card mt-card">
+    <h3 class="card-title-xs">🌐 Language Toggle</h3>
+    <p class="lang-intro">
+      Check the languages you want visitors to see. The toggle button is hidden automatically
+      when only one language is enabled.
+    </p>
+    <div class="lang-list">
+      <label class="lang-item">
+        <input
+          type="checkbox"
+          [checked]="settingsEdit.enabledLanguages.includes('en')"
+          (change)="toggleLang('en'); markDirty()"
+        />
+        English (EN)
+      </label>
+      <label class="lang-item">
+        <input
+          type="checkbox"
+          [checked]="settingsEdit.enabledLanguages.includes('hi')"
+          (change)="toggleLang('hi'); markDirty()"
+        />
+        हिन्दी (HI)
+      </label>
+      <label class="lang-item">
+        <input
+          type="checkbox"
+          [checked]="settingsEdit.enabledLanguages.includes('jp')"
+          (change)="toggleLang('jp'); markDirty()"
+        />
+        日本語 (JP)
+      </label>
+    </div>
+    <small class="lang-note"
+      >English cannot be removed — it is the fallback language.</small
+    >
+  </div>
+
+  <div
+    class="settings-card mt-card"
+    (input)="$event.stopPropagation()"
+    (change)="$event.stopPropagation()"
+  >
+    <h3 class="card-title-xs">🎨 Visual Theme Builder</h3>
+    <p class="lang-intro">
+      Configure public color tokens in real time. Changes are saved locally for this browser and
+      apply instantly across the site.
+    </p>
+
+    <div class="form-row">
+      <div class="form-group xs">
+        <label>Theme Mode</label>
+        <select [ngModel]="themeMode" (ngModelChange)="onThemeModeChange($event)">
+          <option *ngFor="let mode of themeModes" [value]="mode">{{ mode | titlecase }}</option>
+        </select>
+      </div>
+      <div class="theme-builder-actions">
+        <button class="btn btn-outline btn-sm" (click)="resetThemeBuilder()">Reset Colors</button>
+      </div>
+    </div>
+
+    <div class="theme-token-grid">
+      <div class="theme-token-row" *ngFor="let token of themeTokenFields">
+        <label>{{ token.label }}</label>
+        <div class="theme-token-inputs">
+          <input
+            type="color"
+            [ngModel]="themeTokensEdit[token.key]"
+            (ngModelChange)="onThemeColorChange(token.key, $event)"
+          />
+          <input
+            type="text"
+            [ngModel]="themeTokensEdit[token.key]"
+            (ngModelChange)="onThemeColorChange(token.key, $event)"
+            placeholder="#000000"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-card mt-card">
+    <h3 class="card-title-xs">🈯 Multi-language Content Editor</h3>
+    <p class="lang-intro">
+      Edit UI translations for each language as JSON. Changes apply immediately and are stored
+      locally in this browser.
+    </p>
+    <div class="form-row">
+      <div class="form-group xs">
+        <label>Language</label>
+        <select
+          [ngModel]="i18nEditorLang"
+          (ngModelChange)="onI18nLangChange($event)"
+        >
+          <option *ngFor="let lang of i18nLangs" [value]="lang">{{ lang.toUpperCase() }}</option>
+        </select>
+      </div>
+      <div class="i18n-editor-actions">
+        <button class="btn btn-outline btn-sm" (click)="reloadI18nEditor()">
+          Reload
+        </button>
+        <button class="btn btn-outline btn-sm" (click)="resetI18nEditor()">Reset</button>
+        <button class="btn btn-primary btn-sm" (click)="saveI18nEditor()">Save Translation</button>
+      </div>
+    </div>
+
+    <div class="form-group" *ngIf="!i18nEditorLoading; else i18nLoadingTpl">
+      <label>Translation JSON</label>
+      <textarea
+        class="i18n-json-editor"
+        [(ngModel)]="i18nEditorText"
+        spellcheck="false"
+      ></textarea>
+      <small class="hint-text"
+        >Expected format: &#123;"key": "value"&#125; flat key/value pairs.</small
+      >
+    </div>
+    <ng-template #i18nLoadingTpl>
+      <p class="muted-text">Loading translations...</p>
+    </ng-template>
+  </div>
+
+  <!-- Currently Learning -->
+  <div class="settings-card" style="margin-top: 1.25rem">
+    <h3 style="margin-bottom: 1.25rem">📖 Currently Learning Widget</h3>
+    <div class="form-group learning-toggle-group">
+      <label>Show Widget on Portfolio</label>
+      <label class="big-toggle" style="margin-top: 0.35rem">
+        <input
+          type="checkbox"
+          [(ngModel)]="settingsEdit.learning.enabled"
+          (ngModelChange)="markDirty()"
+        /><span class="big-toggle-slider"></span>
+      </label>
+    </div>
+    <div *ngIf="settingsEdit.learning.enabled" style="margin-top: 1rem">
+      <p style="font-size: 0.78rem; color: var(--muted); margin-bottom: 0.75rem">
+        Each item shows as a chip near the footer. Type is displayed as a tag (book / course /
+        tech / other).
+      </p>
+      <div
+        *ngFor="let item of settingsEdit.learning.items; let i = index"
+        class="form-row learning-item-row"
+      >
+        <div class="form-group xs">
+          <label>Icon</label
+          ><input
+            type="text"
+            [(ngModel)]="item.icon"
+            (ngModelChange)="markDirty()"
+            placeholder="📚"
+          />
+        </div>
+        <div class="form-group">
+          <label>Label</label
+          ><input
+            type="text"
+            [(ngModel)]="item.label"
+            (ngModelChange)="markDirty()"
+            placeholder="Designing Distributed Systems"
+          />
+        </div>
+        <div class="form-group xs">
+          <label>Type</label>
+          <select [(ngModel)]="item.type" (ngModelChange)="markDirty()">
+            <option value="book">book</option>
+            <option value="course">course</option>
+            <option value="tech">tech</option>
+            <option value="other">other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>URL (opt)</label
+          ><input
+            type="url"
+            [(ngModel)]="item.url"
+            (ngModelChange)="markDirty()"
+            placeholder="https://..."
+          />
+        </div>
+        <button
+          class="btn-icon-danger"
+          (click)="settingsEdit.learning.items.splice(i, 1); markDirty()"
+          title="Remove"
+        >
+          ✕
+        </button>
+      </div>
+      <button
+        class="btn-add"
+        (click)="
+          settingsEdit.learning.items.push({ label: '', icon: '📖', type: 'other' });
+          markDirty()
+        "
+      >
+        + Add Item
+      </button>
+    </div>
+  </div>
+
+  <!-- Visitor Counter Widget -->
+  <div class="settings-card" style="margin-top: 1.25rem">
+    <div class="settings-card-header">
+      <div>
+        <h3>👁 Public Visitor Counter</h3>
+        <p>
+          Show "X visitors this month" in the portfolio footer. Only appears once the threshold
+          is reached.
+        </p>
+      </div>
+      <label class="big-toggle">
+        <input
+          type="checkbox"
+          [(ngModel)]="settingsEdit.visitorCount.show"
+          (ngModelChange)="markDirty()"
+        />
+        <span class="big-toggle-slider"></span>
+      </label>
+    </div>
+    <div class="form-row" style="margin-top: 1rem" *ngIf="settingsEdit.visitorCount.show">
+      <div class="form-group xs">
+        <label>Show after <small>(min visits)</small></label>
+        <input
+          type="number"
+          min="0"
+          [(ngModel)]="settingsEdit.visitorCount.threshold"
+          (ngModelChange)="markDirty()"
+        />
+      </div>
+    </div>
+  </div>
+
+    </div>
+  </div>
+
+  <div class="settings-group" [class.collapsed]="!isGroupOpen('presentation')">
+    <button class="group-toggle" (click)="toggleGroup('presentation')" type="button">
+      <span class="group-title">Presentation Content</span>
+      <span class="group-meta">Hero and About sections</span>
+      <span class="group-chevron">{{ isGroupOpen('presentation') ? '▾' : '▸' }}</span>
+    </button>
+    <div class="group-body" *ngIf="isGroupOpen('presentation')">
+
+  <!-- Hero Content -->
+  <div class="settings-card" style="margin-top: 1.25rem">
+    <h3 style="margin-bottom: 1.25rem">🦸 Hero Content</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Badge Text <small>(top of hero card)</small></label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.hero.badgeText"
+          (ngModelChange)="markDirty()"
+        />
+      </div>
+      <div class="form-group">
+        <label>Card Sub-title <small>(e.g. "&#64; Accenture · Pune")</small></label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.hero.cardTitle"
+          (ngModelChange)="markDirty()"
+        />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Card Status Text</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.hero.cardStatusText"
+          (ngModelChange)="markDirty()"
+          placeholder="Open to work"
+        />
+      </div>
+      <div class="form-group">
+        <label>Primary CTA Button</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.hero.ctaPrimary"
+          (ngModelChange)="markDirty()"
+          placeholder="Hire Me →"
+        />
+      </div>
+      <div class="form-group">
+        <label>Secondary CTA Button</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.hero.ctaSecondary"
+          (ngModelChange)="markDirty()"
+          placeholder="See My Work"
+        />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Hero Pills <small>(tech tags under name — press Enter to add)</small></label>
+      <div class="tags-editor">
+        <span class="tag-pill" *ngFor="let p of settingsEdit.hero.pills">
+          {{ p }} <button (click)="removeHeroPill(p)">×</button>
+        </span>
+        <input type="text" placeholder="Angular 17" (keydown.enter)="addHeroPill($event)" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label
+        >Hero Card Skills
+        <small>(chips inside the floating card — press Enter to add)</small></label
+      >
+      <div class="tags-editor">
+        <span class="tag-pill" *ngFor="let sk of settingsEdit.hero.cardSkills">
+          {{ sk }} <button (click)="removeCardSkill(sk)">×</button>
+        </span>
+        <input type="text" placeholder="TypeScript" (keydown.enter)="addCardSkill($event)" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label
+        >Extra Skills
+        <small>(tools & platforms shown on public page — press Enter to add)</small></label
+      >
+      <div class="tags-editor">
+        <span class="tag-pill" *ngFor="let sk of settingsEdit.hero.extraSkills">
+          {{ sk }} <button (click)="removeExtraSkill(sk)">×</button>
+        </span>
+        <input type="text" placeholder="Postman" (keydown.enter)="addExtraSkill($event)" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Hero Card Stats <small>(the 3 numbers in the card)</small></label>
+      <div class="card-stats-editor">
+        <div class="cse-row" *ngFor="let st of settingsEdit.hero.cardStats">
+          <input
+            type="text"
+            [(ngModel)]="st.value"
+            (ngModelChange)="markDirty()"
+            placeholder="5+"
+            class="cse-val"
+          />
+          <input
+            type="text"
+            [(ngModel)]="st.label"
+            (ngModelChange)="markDirty()"
+            placeholder="Years"
+            class="cse-label"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About Content -->
+  <div class="settings-card" style="margin-top: 1.25rem">
+    <h3 style="margin-bottom: 1.25rem">👤 About Section</h3>
+    <div class="form-group">
+      <label>Heading <small>(supports HTML like &lt;br&gt; and &lt;em&gt;)</small></label>
+      <input
+        type="text"
+        [(ngModel)]="settingsEdit.about.heading"
+        (ngModelChange)="markDirty()"
+        placeholder="I build things that<br><em>enterprises trust.</em>"
+      />
+    </div>
+    <div class="form-group">
+      <label
+        >Paragraphs
+        <small
+          >(each paragraph is shown separately — supports &lt;strong&gt; HTML)</small
+        ></label
+      >
+      <div
+        *ngFor="let para of settingsEdit.about.paragraphs; let i = index"
+        style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem"
+      >
+        <textarea
+          rows="2"
+          [(ngModel)]="settingsEdit.about.paragraphs[i]"
+          (ngModelChange)="markDirty()"
+          style="flex: 1"
+        ></textarea>
+        <button
+          class="btn btn-danger btn-xs"
+          (click)="removeAboutParagraph(i)"
+          style="align-self: flex-start"
+        >
+          ✕
+        </button>
+      </div>
+      <button class="btn btn-outline btn-sm" (click)="addAboutParagraph()">
+        + Add Paragraph
+      </button>
+    </div>
+    <h4 style="margin: 0.75rem 0 0.5rem; font-size: 0.85rem">Company Badge</h4>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Company Name</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.about.companyBadge.company"
+          (ngModelChange)="markDirty()"
+        />
+      </div>
+      <div class="form-group">
+        <label>Your Role</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.about.companyBadge.role"
+          (ngModelChange)="markDirty()"
+        />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Period</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.about.companyBadge.period"
+          (ngModelChange)="markDirty()"
+        />
+      </div>
+      <div class="form-group">
+        <label>Award / Achievement</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.about.companyBadge.award"
+          (ngModelChange)="markDirty()"
+        />
+      </div>
+    </div>
+  </div>
+
+    </div>
+  </div>
+
+  <div class="settings-group" [class.collapsed]="!isGroupOpen('content')">
+    <button class="group-toggle" (click)="toggleGroup('content')" type="button">
+      <span class="group-title">Content Blocks</span>
+      <span class="group-meta">Ticker and Contact content</span>
+      <span class="group-chevron">{{ isGroupOpen('content') ? '▾' : '▸' }}</span>
+    </button>
+    <div class="group-body" *ngIf="isGroupOpen('content')">
+
+  <!-- Ticker -->
+  <div class="settings-card" style="margin-top: 1.25rem">
+    <h3 style="margin-bottom: 0.35rem">📡 Ticker Items</h3>
+    <p class="muted-text" style="margin-bottom: 1rem">
+      The scrolling marquee strip between the hero and about sections.
+    </p>
+    <div class="form-group">
+      <div class="tags-editor">
+        <span class="tag-pill" *ngFor="let item of settingsEdit.ticker.items">
+          {{ item }} <button (click)="removeTickerItem(item)">×</button>
+        </span>
+        <input
+          type="text"
+          placeholder="Add item + Enter"
+          (keydown.enter)="addTickerItem($event)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Config -->
+  <div class="settings-card" style="margin-top: 1.25rem">
+    <h3 style="margin-bottom: 1.25rem">✉ Contact Section</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Heading</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.contact.heading"
+          (ngModelChange)="markDirty()"
+        />
+      </div>
+      <div class="form-group">
+        <label>Success Message (after form submit)</label
+        ><input
+          type="text"
+          [(ngModel)]="settingsEdit.contact.successMessage"
+          (ngModelChange)="markDirty()"
+        />
+      </div>
+    </div>
+  </div>
+
+    </div>
+  </div>
+
+</section>

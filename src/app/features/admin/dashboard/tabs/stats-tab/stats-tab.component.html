@@ -1,0 +1,49 @@
+<!-- ── STATS TAB (About section counters) ─────────────────────────────── -->
+<section class="tab-content" (input)="markDirty()" (change)="markDirty()">
+  <div class="tab-header">
+    <div>
+      <h1>About Stats</h1>
+      <p>The animated counter numbers shown in the About section of your portfolio.</p>
+    </div>
+    <button class="btn btn-primary btn-sm" (click)="saveStats()" [disabled]="saving">
+      {{ saving ? 'Saving...' : 'Save Stats' }}
+    </button>
+  </div>
+
+  <div class="stats-admin-grid">
+    <div class="stat-admin-card" *ngFor="let stat of statsEdit; trackBy: trackById">
+      <div class="stat-admin-preview">
+        <span class="stat-big">{{ stat.value }}{{ stat.suffix }}</span>
+        <span class="stat-lab-preview">{{ stat.label }}</span>
+        <button
+          class="btn btn-danger btn-xs stats-delete-btn"
+          (click)="deleteStat(stat.id)"
+        >
+          ✕
+        </button>
+      </div>
+      <div class="stat-admin-fields">
+        <div class="form-row">
+          <div class="form-group xs">
+            <label>Value <small>(number)</small></label>
+            <input type="number" [(ngModel)]="stat.value" min="0" />
+          </div>
+          <div class="form-group xs">
+            <label>Suffix <small>(+, ×, %…)</small></label>
+            <input type="text" [(ngModel)]="stat.suffix" maxlength="4" placeholder="+" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Label</label>
+          <input type="text" [(ngModel)]="stat.label" placeholder="Years Experience" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="stats-footer-actions">
+    <button class="btn btn-outline btn-sm" (click)="addStat()">+ Add Counter</button>
+    <p class="muted-text stats-footer-note">
+      💡 These counters animate on scroll. Add, edit, or remove any stat.
+    </p>
+  </div>
+</section>

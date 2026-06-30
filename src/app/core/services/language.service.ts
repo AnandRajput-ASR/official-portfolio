@@ -1,5 +1,7 @@
-﻿import { Injectable, signal, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+﻿import { HttpClient } from '@angular/common/http';
+import { inject, Injectable, signal } from '@angular/core';
+import { map, Observable, of, tap } from 'rxjs';
+import { StorageService } from './storage.service';
 
 // Supported languages â€” to add a new one:
 //  1. Create src/assets/i18n/<code>.json with all translation keys
@@ -16,11 +18,12 @@ export const LANG_LABELS: Record<Lang, string> = {
 
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
-  private readonly STORAGE_KEY = 'portfolio_lang';
-  private readonly http = inject(HttpClient);
-
+  private static readonly STORAGE_KEY = 'lang';
+  private static readonly OVERRIDES_KEY = 'i18n-overrides';
+  private readonly http: HttpClient = inject(HttpClient);
+  private readonly storage: StorageService = inject(StorageService);
   /** Currently active language code */
-  lang = signal<Lang>(this.getSavedLang());
+  private lang = signal<Lang>(this.getSavedLang());
 
   /** Languages currently enabled via admin settings (subset of SUPPORTED_LANGS) */
   activeLangs = signal<Lang[]>(SUPPORTED_LANGS);
@@ -30,6 +33,9 @@ export class LanguageService {
 
   /** Per-language cache so we don't re-fetch on every toggle */
   private cache: Partial<Record<Lang, Record<string, string>>> = {};
+  private overrides: Partial<Record<Lang, Record<string, string>>> =
+    this.storage.get<Partial<Record<Lang, Record<string, string>>>>(LanguageService.OVERRIDES_KEY) ??
+    {};
 
   constructor() {
     this.loadLang(this.lang());
@@ -60,8 +66,10 @@ export class LanguageService {
   /** Switch to a specific language directly */
   setLang(lang: Lang): void {
     this.lang.set(lang);
-    localStorage.setItem(this.STORAGE_KEY, lang);
-    document.documentElement.setAttribute('lang', lang);
+    this.storage.set(LanguageService.STORAGE_KEY, lang);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('lang', lang);
+    }
     this.loadLang(lang);
   }
 
@@ -75,20 +83,53 @@ export class LanguageService {
     return this.translations()[key] ?? key;
   }
 
+  getMessagesForLang(lang: Lang): Observable<Record<string, string>> {
+    if (this.cache[lang]) {
+      return of(this.applyOverrides(lang, this.cache[lang]!));
+    }
+
+    return this.http.get<Record<string, string>>(`/assets/i18n/${lang}.json`).pipe(
+      tap((data) => {
+        this.cache[lang] = data;
+      }),
+      map((data) => this.applyOverrides(lang, data)),
+    );
+  }
+
+  saveMessagesForLang(lang: Lang, messages: Record<string, string>): void {
+    this.overrides[lang] = { ...messages };
+    this.storage.set(LanguageService.OVERRIDES_KEY, this.overrides);
+
+    if (this.lang() === lang) {
+      this.loadLang(lang);
+    }
+  }
+
+  resetMessagesForLang(lang: Lang): void {
+    if (this.overrides[lang]) {
+      delete this.overrides[lang];
+      this.storage.set(LanguageService.OVERRIDES_KEY, this.overrides);
+    }
+
+    if (this.lang() === lang) {
+      this.loadLang(lang);
+    }
+  }
+
   isHindi(): boolean {
     return this.lang() === 'hi';
   }
 
   private loadLang(lang: Lang): void {
     if (this.cache[lang]) {
-      this.translations.set(this.cache[lang]!);
+      this.translations.set(this.applyOverrides(lang, this.cache[lang]!));
       return;
     }
     this.http.get<Record<string, string>>(`/assets/i18n/${lang}.json`).subscribe({
       next: (data) => {
         this.cache[lang] = data;
         // Only apply if this lang is still active (user didn't toggle away)
-        if (this.lang() === lang) this.translations.set(data);
+        if (this.lang() === lang) this.translations.set(this.applyOverrides(lang, data));
       },
       error: () => {
         // Fallback: if the JSON fails to load, try English
@@ -105,13 +146,18 @@ export class LanguageService {
     this.http.get<Record<string, string>>('/assets/i18n/en.json').subscribe({
       next: (data) => {
         this.cache['en'] = data;
-        this.translations.set(data);
+        this.translations.set(this.applyOverrides('en', data));
       },
     });
   }
 
+  private applyOverrides(lang: Lang, base: Record<string, string>): Record<string, string> {
+    const override = this.overrides[lang] ?? {};
+    return { ...base, ...override };
+  }
+
   private getSavedLang(): Lang {
-    const saved = localStorage.getItem(this.STORAGE_KEY) as Lang;
-    return SUPPORTED_LANGS.includes(saved) ? saved : 'en';
+    const saved = this.storage.get<Lang>(LanguageService.STORAGE_KEY);
+    return saved && SUPPORTED_LANGS.includes(saved) ? saved : 'en';
   }
 }

@@ -1,0 +1,48 @@
+<!-- ═══ SKILLS ═══════════════════════════════════════════════════════════════ -->
+<section id="skills" class="skills-section">
+  <div class="section-head reveal">
+    <p class="section-label">// Core Skills</p>
+    <h2 class="section-title">What I Bring to<br />Your Project</h2>
+  </div>
+  <div class="skills-grid">
+    <div
+      class="skill-card reveal"
+      *ngFor="let skill of content.skills; trackBy: trackBySkill"
+      [style.--accent]="skill.accentColor"
+    >
+      <div class="sk-top">
+        <span class="sk-icon">{{ skill.icon }}</span>
+        <span class="sk-level" [ngClass]="skillLevelClass(skill.proficiency)">
+          {{ skillLevel(skill.proficiency) }}
+        </span>
+      </div>
+      <h3 class="sk-name">{{ skill.name }}</h3>
+      <div class="sk-stats">
+        <span class="sk-years">{{ formatSkillExperience(skill.yearsExp) }}</span>
+        <span class="sk-pct">{{ normalizedSkillProficiency(skill.proficiency) }}%</span>
+      </div>
+      <div class="sk-prof-wrap">
+        <div class="sk-prof-track">
+          <div
+            class="sk-prof-fill"
+            [attr.data-width]="normalizedSkillProficiency(skill.proficiency) + '%'"
+            [style.background]="skill.accentColor"
+          ></div>
+        </div>
+      </div>
+      <p class="sk-desc">{{ skill.description }}</p>
+      <div class="sk-tags">
+        <span *ngFor="let tag of getDisplayTags(skill.tags)">{{ tag }}</span>
+        <span class="sk-tags-more" *ngIf="getExtraTagCount(skill.tags) > 0">
+          +{{ getExtraTagCount(skill.tags) }}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="skills-extra reveal">
+    <p class="se-label">Also comfortable with</p>
+    <div class="se-pills">
+      <span *ngFor="let item of extraSkills()">{{ item }}</span>
+    </div>
+  </div>
+</section>

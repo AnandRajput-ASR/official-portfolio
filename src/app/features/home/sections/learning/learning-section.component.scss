@@ -1,0 +1,63 @@
+// ─── CURRENTLY LEARNING WIDGET ───────────────────────────────────────────────
+.learning-section {
+  padding: 2rem 4rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  .learning-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+  }
+  .learning-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .learning-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .learning-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 0.35rem 0.75rem;
+    font-size: 0.82rem;
+    color: var(--text);
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: default;
+    &.learning-chip-link {
+      cursor: pointer;
+      &:hover {
+        border-color: var(--amber);
+        color: var(--amber);
+      }
+    }
+    .learning-icon {
+      font-size: 1rem;
+    }
+    .learning-type {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-left: 0.15rem;
+    }
+  }
+  @media (max-width: 640px) {
+    padding: 1.5rem 1.25rem;
+  }
+}

@@ -1,4 +1,6 @@
-export interface Testimonial {
+import { EntityMetadata } from './api.model';
+
+export interface Testimonial extends EntityMetadata {
   id: string;
   name: string;
   role: string;
@@ -9,5 +11,6 @@ export interface Testimonial {
   visible: boolean;
   displayOrder: number;
   status: 'approved' | 'pending' | 'rejected';
+  status_v2?: Testimonial['status'];
   submittedAt?: string;
 }

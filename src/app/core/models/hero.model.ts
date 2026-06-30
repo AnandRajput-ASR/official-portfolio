@@ -1,4 +1,6 @@
-export interface Hero {
+import { EntityMetadata } from './api.model';
+
+export interface Hero extends EntityMetadata {
   name: string;
   title: string;
   subtitle: string;

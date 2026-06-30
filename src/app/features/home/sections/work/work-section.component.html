@@ -1,0 +1,97 @@
+<!-- ═══ WORK EXPERIENCE by COMPANY ═══════════════════════════════════════════ -->
+<section id="projects" class="companies-section">
+  <div class="section-head reveal">
+    <p class="section-label">// Professional Work</p>
+    <h2 class="section-title">Work Experience</h2>
+    <p class="section-sub">
+      Enterprise projects delivered across companies — click a company to explore its projects.
+    </p>
+  </div>
+
+  <div class="companies-list">
+    <div
+      class="company-block reveal"
+      *ngFor="let company of visibleCompanies(); trackBy: trackById"
+    >
+      <!-- Company header (accordion toggle) -->
+      <div
+        class="company-header"
+        (click)="toggleCompany.emit(company.id)"
+        [class.open]="isCompanyOpen(company.id)"
+      >
+        <div class="co-header-left">
+          <span class="co-logo" [style.color]="company.accentColor">{{ company.logo }}</span>
+          <div class="co-info">
+            <div class="co-name-row">
+              <h3 class="co-name">{{ company.name }}</h3>
+              <span class="co-current" *ngIf="company.current">● Current</span>
+            </div>
+            <p class="co-role">{{ company.role }}</p>
+            <p class="co-meta">
+              {{ company.period }}
+              <span class="co-tenure-tag" *ngIf="calcTenure(company)"
+                >· {{ calcTenure(company) }}</span
+              >
+              · {{ company.location }}
+              <a
+                *ngIf="company.website"
+                [href]="externalUrl(company.website)"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="co-website-link"
+                (click)="$event.stopPropagation()"
+                >↗ website</a
+              >
+            </p>
+          </div>
+        </div>
+        <div class="co-header-right">
+          <span class="co-proj-count"
+            >{{ visibleProjects(company.id).length }} project{{
+              visibleProjects(company.id).length !== 1 ? 's' : ''
+            }}</span
+          >
+          <span class="co-chevron" [class.rotated]="isCompanyOpen(company.id)">›</span>
+        </div>
+      </div>
+
+      <!-- Company description + projects (collapsible) -->
+      <div class="company-body" [class.open]="isCompanyOpen(company.id)">
+        <p class="co-description">{{ company.description }}</p>
+        <div class="co-projects-grid">
+          <div
+            class="co-proj-card"
+            *ngFor="let project of visibleProjects(company.id); trackBy: trackById"
+          >
+            <div class="co-proj-num" [style.color]="company.accentColor">
+              {{ project.number }}
+            </div>
+            <div class="co-proj-body">
+              <h4 class="co-proj-title">
+                {{ project.title }}
+                <span
+                  *ngIf="project.status"
+                  class="co-proj-status"
+                  [attr.data-status]="project.status"
+                  >{{ project.status }}</span
+                >
+              </h4>
+              <p class="co-proj-desc">{{ project.description }}</p>
+              <p class="co-proj-impact" *ngIf="project.impact">⚡ {{ project.impact }}</p>
+              <div class="co-proj-tech">
+                <span *ngFor="let t of project.tech">{{ t }}</span>
+              </div>
+              <a
+                *ngIf="project.link && project.link !== '#'"
+                [href]="externalUrl(project.link)"
+                target="_blank"
+                class="co-proj-link"
+                >View Project →</a
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

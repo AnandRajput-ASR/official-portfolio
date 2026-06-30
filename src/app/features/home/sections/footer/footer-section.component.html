@@ -1,0 +1,24 @@
+<!-- ═══ FOOTER ═══════════════════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-logo">
+      {{ content.siteSettings.nav.logoText || 'AR' }}<span class="dot">.</span>
+    </div>
+    <p class="footer-name">{{ content.siteSettings.footer.text }}</p>
+    <p class="footer-copy">{{ content.siteSettings.footer.copy }}</p>
+    <div class="footer-links">
+      <a [href]="'mailto:' + content.hero.email">Email</a>
+      <a [href]="content.hero.linkedin" target="_blank" (click)="socialClick.emit()">LinkedIn</a>
+      <a
+        *ngIf="content.hero.github"
+        [href]="content.hero.github"
+        target="_blank"
+        (click)="socialClick.emit()"
+        >GitHub</a
+      >
+    </div>
+    <span class="footer-visitor-count" *ngIf="visitorCount !== null">
+      👁 {{ visitorCount }} visitors this month
+    </span>
+  </div>
+</footer>

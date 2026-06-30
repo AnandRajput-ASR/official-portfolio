@@ -1,0 +1,33 @@
+<!-- ═══ FREELANCE CTA ════════════════════════════════════════════════════════ -->
+<section class="freelance-cta">
+  <div class="fcta-inner reveal">
+    <p class="fcta-label">// Open to Freelance</p>
+    <h2 class="fcta-heading">
+      {{ content.siteSettings.freelance.ctaTitle || 'Got a project in mind?' }}
+    </h2>
+    <p class="fcta-sub">
+      {{
+        content.siteSettings.freelance.ctaSubtitle ||
+          'I take on Angular development, cloud integrations, and DevOps consulting projects.'
+      }}
+    </p>
+    <div class="fcta-actions">
+      <a
+        [href]="'mailto:' + content.hero.email + '?subject=Freelance Inquiry'"
+        class="btn-hero-primary"
+        >Start a Conversation →</a
+      >
+      <a
+        *ngIf="resumeInfo?.available"
+        [href]="resumeService.getDownloadUrl()"
+        class="btn-hero-resume"
+        download
+        (click)="resumeClick.emit($event)"
+        >↓ Download Resume</a
+      >
+    </div>
+    <div class="fcta-services">
+      <span *ngFor="let s of content.siteSettings.freelance.services">✦ {{ s }}</span>
+    </div>
+  </div>
+</section>

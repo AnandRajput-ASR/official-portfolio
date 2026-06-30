@@ -1,0 +1,321 @@
+<section class="tab-content" (input)="markDirty()" (change)="markDirty()">
+  <div class="tab-header">
+    <div>
+      <h1>Skills</h1>
+      <p>Manage your core technology cards</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline btn-sm" (click)="showAddSkill = true">+ Add Skill</button>
+      <button class="btn btn-primary btn-sm" (click)="saveSkills()" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save All' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="cards-list drag-list" appDragList (reordered)="onReorder($event)">
+    <div
+      class="edit-card skill-admin-card"
+      [style.--skill-accent]="skill.accentColor"
+      draggable="true"
+      [attr.data-drag-id]="skill.id"
+      *ngFor="let skill of skillsEdit; trackBy: trackById"
+    >
+      <div class="edit-card-header">
+        <div class="card-accent-dot" [style.background]="skill.accentColor"></div>
+        <span class="card-emoji">{{ skill.icon }}</span>
+        <div class="skill-title-stack">
+          <strong>{{ skill.name || 'Untitled Skill' }}</strong>
+          <span
+            >{{ skillLevel(skill.proficiency) }} ·
+            {{ skillExperienceLabel(skill.yearsExp) }}</span
+          >
+        </div>
+        <button
+          type="button"
+          class="delete-row-btn ml-auto"
+          (click)="deleteSkill(skill.id)"
+          title="Delete skill"
+          aria-label="Delete skill"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            width="14"
+            height="14"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              d="M6.5 1h3a1 1 0 0 1 1 1V3h3a.5.5 0 0 1 0 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a.5.5 0 0 1 0-1H5V2a1 1 0 0 1 1-1Zm3 2V2h-3v1h3ZM4 4v9a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4H4Zm2 2.5a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-1 0V7a.5.5 0 0 1 .5-.5Zm4 .5v4a.5.5 0 0 1-1 0V7a.5.5 0 0 1 1 0Z"
+            />
+          </svg>
+        </button>
+      </div>
+      <div class="form-row skill-top-row">
+        <div class="form-group">
+          <label>Icon (Emoji)</label>
+          <input type="text" [(ngModel)]="skill.icon" [name]="'icon_' + skill.id" />
+        </div>
+        <div class="form-group">
+          <label>Accent Color</label>
+          <div class="color-input">
+            <input type="color" [(ngModel)]="skill.accentColor" [name]="'color_' + skill.id" />
+            <input
+              type="text"
+              [(ngModel)]="skill.accentColor"
+              [name]="'colortext_' + skill.id"
+              placeholder="#f5a623"
+              pattern="^#[0-9a-fA-F]{6}$"
+              title="Use full hex color like #f5a623"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="form-group skill-name-group">
+        <label>Name</label>
+        <input type="text" [(ngModel)]="skill.name" [name]="'name_' + skill.id" />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea
+          rows="3"
+          [(ngModel)]="skill.description"
+          [name]="'desc_' + skill.id"
+          placeholder="Summarize what this skill lets you deliver in real projects."
+        ></textarea>
+      </div>
+      <div class="form-row skill-metrics-row">
+        <div class="form-group">
+          <label>Proficiency % <small>(shown as progress bar)</small></label>
+          <div class="prof-slider-wrap">
+            <app-custom-slider
+              [min]="10"
+              [max]="100"
+              [step]="5"
+              [value]="skill.proficiency || 80"
+              [accentColor]="skill.accentColor"
+              [showMarkers]="true"
+              (valueChange)="skill.proficiency = $event"
+            ></app-custom-slider>
+            <span class="prof-val" [style.color]="skill.accentColor"
+              >{{ skill.proficiency || 80 }}%</span
+            >
+          </div>
+          <div class="skill-meta-row">
+            <span class="skill-level-pill" [ngClass]="skillLevelClass(skill.proficiency)">
+              {{ skillLevel(skill.proficiency) }}
+            </span>
+            <span class="skill-meta-copy">{{ skillExperienceLabel(skill.yearsExp) }}</span>
+          </div>
+        </div>
+        <div class="form-group xs">
+          <label>Experience</label>
+          <input
+            type="text"
+            [(ngModel)]="skill.yearsExp"
+            [name]="'yrs_' + skill.id"
+            placeholder="5+"
+            title="Examples: 5+, 3, 1-2"
+            pattern="^\d{1,2}(\+)?$|^\d{1,2}-\d{1,2}$"
+          />
+        </div>
+      </div>
+      <div class="skill-admin-note" *ngIf="!skill.description || !skill.tags.length">
+        Add a concise description and at least one tag so the public card reads clearly.
+      </div>
+      <div class="form-group">
+        <label>Tags (press Enter to add)</label>
+        <div class="tags-editor">
+          <span class="tag-pill" *ngFor="let tag of skill.tags">
+            {{ tag }}
+            <button
+              type="button"
+              (click)="removeSkillTag(skill, tag)"
+              [attr.aria-label]="'Remove tag ' + tag"
+            >
+              ×
+            </button>
+          </span>
+          <input
+            type="text"
+            placeholder="Add tag..."
+            (keydown.enter)="addSkillTag(skill, $event)"
+          />
+        </div>
+      </div>
+      <div class="skill-preview-card">
+        <div class="skill-preview-head">
+          <span class="skill-preview-icon">{{ skill.icon || '⚡' }}</span>
+          <span class="skill-level-pill" [ngClass]="skillLevelClass(skill.proficiency)">
+            {{ skillLevel(skill.proficiency) }}
+          </span>
+        </div>
+        <h4>{{ skill.name || 'Untitled skill' }}</h4>
+        <div class="skill-preview-stats">
+          <span>{{ skillExperienceLabel(skill.yearsExp) }}</span>
+          <span>{{ skill.proficiency || 80 }}%</span>
+        </div>
+        <div class="skill-preview-track">
+          <span
+            class="skill-preview-fill"
+            [style.width.%]="skill.proficiency || 80"
+            [style.background]="skill.accentColor"
+          ></span>
+        </div>
+        <p>
+          {{
+            skill.description || 'Add a short delivery-focused description for this skill card.'
+          }}
+        </p>
+        <div class="skill-preview-tags" *ngIf="skill.tags.length">
+          <span *ngFor="let tag of skill.tags | slice: 0 : 4">{{ tag }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Add Skill Modal -->
+<div class="modal-overlay" *ngIf="showAddSkill" (click)="showAddSkill = false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add New Skill</h2>
+      <button (click)="showAddSkill = false" title="Close">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
+          />
+        </svg>
+      </button>
+    </div>
+    <div class="form-group">
+      <label>Name</label><input type="text" [(ngModel)]="newSkill.name" name="ns_name" />
+    </div>
+    <div class="form-row skill-top-row">
+      <div class="form-group">
+        <label>Icon (Emoji)</label><input type="text" [(ngModel)]="newSkill.icon" name="ns_icon" />
+      </div>
+      <div class="form-group">
+        <label>Accent Color</label>
+        <div class="color-input">
+          <input type="color" [(ngModel)]="newSkill.accentColor" name="ns_color" />
+          <input
+            type="text"
+            [(ngModel)]="newSkill.accentColor"
+            placeholder="#f5a623"
+            pattern="^#[0-9a-fA-F]{6}$"
+            title="Use full hex color like #f5a623"
+          />
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description</label
+      ><textarea
+        rows="3"
+        [(ngModel)]="newSkill.description"
+        name="ns_desc"
+        placeholder="Summarize the value this skill brings to a project."
+      ></textarea>
+    </div>
+    <div class="form-row skill-metrics-row">
+      <div class="form-group">
+        <label>Proficiency %</label>
+        <div class="prof-slider-wrap">
+          <app-custom-slider
+            [min]="10"
+            [max]="100"
+            [step]="5"
+            [value]="newSkill.proficiency || 80"
+            [accentColor]="newSkill.accentColor || '#f5a623'"
+            [showMarkers]="true"
+            (valueChange)="newSkill.proficiency = $event"
+          ></app-custom-slider>
+          <span class="prof-val">{{ newSkill.proficiency || 80 }}%</span>
+        </div>
+        <div class="skill-meta-row">
+          <span class="skill-level-pill" [ngClass]="skillLevelClass(newSkill.proficiency || 80)">
+            {{ skillLevel(newSkill.proficiency || 80) }}
+          </span>
+          <span class="skill-meta-copy">{{ skillExperienceLabel(newSkill.yearsExp) }}</span>
+        </div>
+      </div>
+      <div class="form-group xs">
+        <label>Experience</label
+        ><input
+          type="text"
+          [(ngModel)]="newSkill.yearsExp"
+          name="ns_yrs"
+          placeholder="5+"
+          title="Examples: 5+, 3, 1-2"
+          pattern="^\d{1,2}(\+)?$|^\d{1,2}-\d{1,2}$"
+        />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Tags (press Enter)</label>
+      <div class="tags-editor">
+        <span class="tag-pill" *ngFor="let t of newSkill.tags"
+          >{{ t }}
+          <button
+            type="button"
+            (click)="removeTagFromNew(newSkill.tags!, t)"
+            [attr.aria-label]="'Remove tag ' + t"
+          >
+            ×
+          </button></span
+        >
+        <input
+          type="text"
+          placeholder="Add tag..."
+          (keydown.enter)="addTagToNew(newSkill.tags!, $event)"
+        />
+      </div>
+    </div>
+    <div class="skill-admin-note" *ngIf="!newSkill.description || !newSkill.tags?.length">
+      Add a description and at least one tag before saving so the skill card looks complete.
+    </div>
+    <div
+      class="skill-preview-card skill-preview-card-modal"
+      [style.--skill-accent]="newSkill.accentColor || '#f5a623'"
+    >
+      <div class="skill-preview-head">
+        <span class="skill-preview-icon">{{ newSkill.icon || '⚡' }}</span>
+        <span class="skill-level-pill" [ngClass]="skillLevelClass(newSkill.proficiency || 80)">
+          {{ skillLevel(newSkill.proficiency || 80) }}
+        </span>
+      </div>
+      <h4>{{ newSkill.name || 'Untitled skill' }}</h4>
+      <div class="skill-preview-stats">
+        <span>{{ skillExperienceLabel(newSkill.yearsExp) }}</span>
+        <span>{{ newSkill.proficiency || 80 }}%</span>
+      </div>
+      <div class="skill-preview-track">
+        <span
+          class="skill-preview-fill"
+          [style.width.%]="newSkill.proficiency || 80"
+          [style.background]="newSkill.accentColor || '#f5a623'"
+        ></span>
+      </div>
+      <p>
+        {{
+          newSkill.description || 'Preview how this skill card will read on the public portfolio.'
+        }}
+      </p>
+      <div class="skill-preview-tags" *ngIf="newSkill.tags?.length">
+        <span *ngFor="let tag of newSkill.tags | slice: 0 : 4">{{ tag }}</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" (click)="showAddSkill = false">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="submitAddSkill()">Add Skill</button>
+    </div>
+  </div>
+</div>

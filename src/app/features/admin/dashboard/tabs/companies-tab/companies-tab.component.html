@@ -1,0 +1,685 @@
+<section class="tab-content" (input)="markDirty()" (change)="markDirty()">
+  <div class="tab-header">
+    <div>
+      <h1>Work / Companies</h1>
+      <p>
+        Each company you have worked for, with its projects. Future-proof — add more companies
+        any time.
+      </p>
+    </div>
+    <div class="header-actions">
+      <span class="autosave-label" *ngIf="autoSavedLabel()">{{ autoSavedLabel() }}</span>
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="companyShortcutsVisible = !companyShortcutsVisible"
+        title="Keyboard shortcuts"
+      >
+        ⌨ Shortcuts
+      </button>
+      <button class="btn btn-primary btn-sm" (click)="showAddCompany = true">
+        + Add Company
+      </button>
+    </div>
+  </div>
+
+  <div class="shortcuts-panel" *ngIf="companyShortcutsVisible">
+    <div class="shortcuts-header">
+      <strong>⌨ Keyboard Shortcuts</strong>
+      <button class="close-btn" (click)="companyShortcutsVisible = false">✕</button>
+    </div>
+    <div class="shortcuts-grid">
+      <span class="key">E</span><span>Toggle first company</span> <span class="key">A</span
+      ><span>Add project to expanded company</span> <span class="key">Shift + ?</span
+      ><span>Show / hide this panel</span>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="companiesEdit.length === 0">
+    <span>🏢</span>
+    <p>No companies yet — add your first one!</p>
+  </div>
+
+  <div
+    class="companies-admin-list drag-list"
+    appDragList
+    [dragHandleSelector]="'.drag-handle-co'"
+    (reordered)="onReorder('companies', $event)"
+  >
+    <div
+      class="co-admin-block"
+      [class.open]="expandedCompany === co.id"
+      draggable="true"
+      [attr.data-drag-id]="co.id"
+      *ngFor="let co of companiesEdit; trackBy: trackById"
+    >
+      <div
+        class="co-admin-header"
+        (click)="toggleExpandCompany(co.id)"
+        [class.open]="expandedCompany === co.id"
+        [class.invalid]="!canSaveCompany(co)"
+      >
+        <span
+          class="drag-handle drag-handle-co"
+          title="Drag to reorder"
+          (click)="$event.stopPropagation()"
+        ></span>
+        <div class="co-admin-left">
+          <div class="co-logo-edit" (click)="$event.stopPropagation()">
+            <input
+              type="text"
+              [(ngModel)]="co.logo"
+              class="co-logo-input"
+              maxlength="4"
+              title="Emoji logo"
+            />
+            <span
+              class="co-color-swatch"
+              [style.background]="co.accentColor"
+              title="Brand color"
+            ></span>
+          </div>
+          <div class="co-name-edit" (click)="$event.stopPropagation()">
+            <input
+              type="text"
+              [(ngModel)]="co.name"
+              class="co-name-input"
+              placeholder="Company Name"
+            />
+            <input
+              type="text"
+              [(ngModel)]="co.role"
+              class="co-role-input"
+              placeholder="Your Role"
+            />
+          </div>
+        </div>
+        <div class="co-admin-right">
+          <span class="co-current-pill" *ngIf="co.current">Current</span>
+          <span class="co-tenure-pill" *ngIf="calcTenure(co)">{{ calcTenure(co) }}</span>
+          <span class="co-proj-pill">{{ co.projects.length }} proj</span>
+          <span class="co-chevron" [class.open]="expandedCompany === co.id">›</span>
+        </div>
+      </div>
+
+      <div class="co-admin-body" [class.open]="expandedCompany === co.id">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Period</label>
+            <input
+              type="text"
+              [(ngModel)]="co.period"
+              placeholder="Jan 2021 — Present"
+              (ngModelChange)="scheduleAutoSave()"
+            />
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input
+              type="text"
+              [(ngModel)]="co.location"
+              placeholder="Pune, India"
+              (ngModelChange)="scheduleAutoSave()"
+            />
+          </div>
+          <div class="form-group">
+            <label>Brand Color</label>
+            <input
+              type="color"
+              [(ngModel)]="co.accentColor"
+              (ngModelChange)="scheduleAutoSave()"
+            />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Start Date <small>(YYYY-MM, for tenure calc)</small></label>
+            <input
+              type="month"
+              draggable="false"
+              [(ngModel)]="co.startDate"
+              (click)="openMonthPicker($event)"
+              (focus)="openMonthPicker($event)"
+              (ngModelChange)="onCompanyStartDateChange(co)"
+            />
+          </div>
+          <div class="form-group">
+            <label>End Date <small>(leave blank if current)</small></label>
+            <input
+              type="month"
+              draggable="false"
+              [(ngModel)]="co.endDate"
+              [attr.disabled]="co.current ? '' : null"
+              (click)="openMonthPicker($event)"
+              (focus)="openMonthPicker($event)"
+              (ngModelChange)="onCompanyEndDateChange(co)"
+            />
+          </div>
+        </div>
+        <div class="date-warning-inline" *ngIf="hasInvalidDateRange(co)">
+          ⚠ End date cannot be earlier than start date.
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>🌐 Website <small>(optional)</small></label>
+            <input
+              type="url"
+              [(ngModel)]="co.website"
+              placeholder="https://company.com"
+              (ngModelChange)="scheduleAutoSave()"
+            />
+          </div>
+          <div class="form-group">
+            <label>👥 Team Size <small>(optional)</small></label>
+            <input
+              type="text"
+              [(ngModel)]="co.teamSize"
+              placeholder="e.g. 5-10 engineers"
+              (ngModelChange)="scheduleAutoSave()"
+            />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [(ngModel)]="co.current"
+              (ngModelChange)="onCompanyCurrentToggle(co)"
+            />
+            Currently working here
+          </label>
+        </div>
+
+        <div
+          class="co-validation-warnings"
+          *ngIf="
+            !canSaveCompany(co) ||
+            !isCompanyValid(co) ||
+            hasInvalidDateRange(co) ||
+            (co.website && !isValidWebsite(co.website)) ||
+            getDuplicateProjectTitles(co).length > 0 ||
+            getProjectsMissingDetailsCount(co) > 0
+          "
+        >
+          <div class="warning-item" *ngIf="!co.name || !co.name.trim()">
+            ⚠️ Company name is required
+          </div>
+          <div class="warning-item" *ngIf="co.projects.length === 0">
+            ℹ️ Add at least one project to make this company complete
+          </div>
+          <div class="warning-item" *ngIf="hasInvalidDateRange(co)">
+            ⚠ Date range is invalid. Update start/end dates.
+          </div>
+          <div class="warning-item" *ngIf="co.website && !isValidWebsite(co.website)">
+            ⚠ Website URL should start with http:// or https://
+          </div>
+          <div class="warning-item" *ngIf="getDuplicateProjectTitles(co).length > 0">
+            ⚠ Duplicate project titles found. Make titles unique.
+          </div>
+          <div class="warning-item" *ngIf="getProjectsMissingDetailsCount(co) > 0">
+            ℹ️ {{ getProjectsMissingDetailsCount(co) }} project(s) are missing description or
+            tech tags.
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Company Overview</label>
+          <textarea
+            rows="3"
+            [(ngModel)]="co.description"
+            (ngModelChange)="scheduleAutoSave()"
+          ></textarea>
+        </div>
+
+        <div class="co-tech-stack-panel" *ngIf="getUniqueTechStack(co).length > 0">
+          <div class="co-tech-stack-header">
+            <span class="label-sm"
+              >🛠 Tech Stack across all projects ({{
+                getUniqueTechStack(co).length
+              }}
+              unique)</span
+            >
+            <button
+              class="btn btn-outline btn-xs"
+              (click)="copyTechStack(co)"
+              title="Copy all tech as comma-separated list"
+            >
+              📋 Copy
+            </button>
+          </div>
+          <div class="co-tech-chips">
+            <span
+              class="co-tech-chip"
+              *ngFor="let tech of getUniqueTechStack(co)"
+              [title]="'Used in ' + getTechProjectCount(co, tech) + ' project(s)'"
+            >
+              {{ tech }}
+              <span class="co-tech-count" *ngIf="getTechProjectCount(co, tech) > 1"
+                >×{{ getTechProjectCount(co, tech) }}</span
+              >
+            </span>
+          </div>
+        </div>
+
+        <div class="co-metrics-row" *ngIf="co.projects.length > 0">
+          <div class="co-metric">
+            <strong>{{ getCompletedCount(co) }}</strong>
+            <span>Completed</span>
+          </div>
+          <div class="co-metric">
+            <strong>{{ getInProgressCount(co) }}</strong>
+            <span>In Progress</span>
+          </div>
+          <div class="co-metric">
+            <strong>{{ getCompletionRate(co) }}%</strong>
+            <span>Completion</span>
+          </div>
+          <div class="co-metric" *ngIf="calcTenure(co)">
+            <strong>{{ calcTenure(co) }}</strong>
+            <span>Tenure</span>
+          </div>
+          <div class="co-metric" *ngIf="getUniqueTechStack(co).length">
+            <strong>{{ getUniqueTechStack(co).length }}</strong>
+            <span>Technologies</span>
+          </div>
+        </div>
+
+        <div class="co-preview-card" [style.borderLeftColor]="co.accentColor">
+          <div class="co-prev-head">
+            <span class="co-prev-logo">{{ co.logo }}</span>
+            <div class="co-prev-links">
+              <a *ngIf="co.website" [href]="co.website" target="_blank" class="co-prev-link"
+                >↗ website</a
+              >
+            </div>
+          </div>
+          <h4>{{ co.name || 'Untitled Company' }}</h4>
+          <p class="co-prev-role">
+            {{ co.role || 'Your Role' }}<span *ngIf="co.teamSize"> · 👥 {{ co.teamSize }}</span>
+          </p>
+          <p class="co-prev-meta">
+            {{ co.period || 'Period' }} · {{ co.location || 'Location' }}
+            <span *ngIf="co.current" class="co-current-badge">● Current</span>
+            <span *ngIf="calcTenure(co)" class="co-tenure-badge">{{ calcTenure(co) }}</span>
+          </p>
+          <p class="co-prev-desc">{{ co.description || 'Add a company overview...' }}</p>
+          <div class="co-prev-projects" *ngIf="co.projects.length; else noPreviewProjects">
+            <div class="co-prev-proj-card" *ngFor="let proj of co.projects | slice: 0 : 3">
+              <div class="co-prev-proj-num" [style.color]="co.accentColor">
+                {{ proj.number }}
+              </div>
+              <div class="co-prev-proj-body">
+                <p class="co-prev-proj-title">
+                  {{ proj.title || 'Untitled Project' }}
+                  <span
+                    *ngIf="proj.status"
+                    class="co-prev-proj-status"
+                    [attr.data-status]="proj.status"
+                    >{{ proj.status }}</span
+                  >
+                </p>
+                <p class="co-prev-proj-desc" *ngIf="proj.description">{{ proj.description }}</p>
+                <p class="co-prev-proj-impact" *ngIf="proj.impact">⚡ {{ proj.impact }}</p>
+                <div class="co-prev-proj-tech" *ngIf="proj.tech?.length">
+                  <span *ngFor="let tech of proj.tech | slice: 0 : 4">{{ tech }}</span>
+                </div>
+              </div>
+            </div>
+            <p class="co-prev-more" *ngIf="co.projects.length > 3">
+              +{{ co.projects.length - 3 }} more project{{
+                co.projects.length - 3 === 1 ? '' : 's'
+              }}
+            </p>
+          </div>
+          <ng-template #noPreviewProjects>
+            <p class="co-prev-empty">No projects added yet.</p>
+          </ng-template>
+        </div>
+
+        <div class="co-quick-actions">
+          <button
+            class="btn btn-outline btn-xs"
+            (click)="duplicateCompany(co)"
+            title="Duplicate this company with all projects"
+          >
+            📋 Duplicate
+          </button>
+          <button
+            class="btn btn-outline btn-xs"
+            (click)="exportCompanyJson(co)"
+            title="Export company as JSON"
+          >
+            ⬇ Export JSON
+          </button>
+          <button
+            class="btn btn-outline btn-xs"
+            (click)="copyResumeSection(co)"
+            title="Copy formatted resume section"
+          >
+            📄 Copy Resume
+          </button>
+          <button
+            class="btn btn-outline btn-xs"
+            (click)="expandedCompany = co.id; showAddCompanyProject = co.id"
+            title="Add a new project"
+          >
+            ➕ Add Project
+          </button>
+        </div>
+
+        <div class="co-projects-admin">
+          <div class="co-projects-admin-header">
+            <p class="label-sm">Projects ({{ co.projects.length }})</p>
+            <button class="btn btn-outline btn-xs" (click)="showAddCompanyProject = co.id">
+              + Add Project
+            </button>
+          </div>
+
+          <div class="inline-form" *ngIf="showAddCompanyProject === co.id">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Title</label><input type="text" [(ngModel)]="newCompanyProject.title" />
+              </div>
+              <div class="form-group xs">
+                <label>Status</label>
+                <select
+                  class="proj-status-select"
+                  [(ngModel)]="newCompanyProject.status"
+                  [attr.data-status]="newCompanyProject.status || 'none'"
+                >
+                  <option *ngFor="let s of projectStatuses" [ngValue]="s.value">
+                    {{ s.icon }} {{ s.label }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea rows="3" [(ngModel)]="newCompanyProject.description"></textarea>
+            </div>
+            <div class="form-group">
+              <label
+                >📈 Impact <small>(optional — e.g. "Reduced load time by 40%")</small></label
+              >
+              <input
+                type="text"
+                [(ngModel)]="newCompanyProject.impact"
+                placeholder="Key outcome or measurable result"
+              />
+              <div class="impact-score-row" *ngIf="newCompanyProject.impact">
+                <span
+                  class="impact-strength"
+                  [attr.data-strength]="impactStrengthClass(newCompanyProject.impact)"
+                >
+                  {{ impactStrengthLabel(newCompanyProject.impact) }} impact
+                </span>
+                <span class="impact-score"
+                  >{{ impactScore(newCompanyProject.impact) }}/100</span
+                >
+                <span
+                  class="impact-tip"
+                  *ngIf="impactStrengthClass(newCompanyProject.impact) === 'weak'"
+                  >Tip: add numeric outcomes like %, users, or revenue.</span
+                >
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Link (optional)</label>
+              <input
+                type="url"
+                [(ngModel)]="newCompanyProject.link"
+                placeholder="https://..."
+              />
+            </div>
+            <div class="form-group">
+              <label>Technologies <small>(Enter to add)</small></label>
+              <div class="tags-editor small">
+                <span class="tag-pill" *ngFor="let t of newCompanyProject.tech"
+                  >{{ t
+                  }}<button (click)="removeTagFromNew(newCompanyProject.tech!, t)">
+                    ×
+                  </button></span
+                >
+                <input
+                  type="text"
+                  placeholder="Angular..."
+                  (keydown.enter)="addTagToNew(newCompanyProject.tech!, $event)"
+                />
+              </div>
+            </div>
+            <div class="inline-form-actions">
+              <button
+                class="btn btn-outline btn-xs"
+                (click)="
+                  showAddCompanyProject = null; newCompanyProject = emptyCompanyProject()
+                "
+              >
+                Cancel
+              </button>
+              <button class="btn btn-primary btn-xs" (click)="submitAddCompanyProject(co.id)">
+                Save Project
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="co-proj-rows drag-list"
+            appDragList
+            [dragHandleSelector]="'.drag-handle'"
+            (reordered)="onReorder('company-projects-' + co.id, $event)"
+          >
+            <div
+              class="co-proj-row"
+              draggable="true"
+              [attr.data-drag-id]="proj.id"
+              *ngFor="let proj of co.projects; trackBy: trackById"
+              [attr.data-status]="proj.status || 'none'"
+              [class.collapsed]="isProjectCollapsed(co.id, proj.id)"
+              [class.proj-row-invalid]="
+                isDuplicateProjectTitle(co, proj) || isProjectDetailsMissing(proj)
+              "
+            >
+              <span class="drag-handle" title="Drag to reorder"></span>
+              <span class="proj-num-badge" [style.color]="co.accentColor">{{
+                proj.number
+              }}</span>
+              <div class="proj-row-body">
+                <div class="proj-title-row">
+                  <input
+                    type="text"
+                    [(ngModel)]="proj.title"
+                    class="proj-title-input"
+                    placeholder="Project title"
+                    (ngModelChange)="scheduleAutoSave()"
+                  />
+                  <select
+                    class="proj-status-select"
+                    [(ngModel)]="proj.status"
+                    [attr.data-status]="proj.status || 'none'"
+                    (ngModelChange)="scheduleAutoSave()"
+                  >
+                    <option *ngFor="let s of projectStatuses" [ngValue]="s.value">
+                      {{ s.icon }} {{ s.label }}
+                    </option>
+                  </select>
+                  <button
+                    class="btn btn-outline btn-xs proj-collapse-btn"
+                    (click)="toggleProjectCollapsed(co.id, proj.id)"
+                    [title]="
+                      isProjectCollapsed(co.id, proj.id) ? 'Expand project' : 'Collapse project'
+                    "
+                  >
+                    {{ isProjectCollapsed(co.id, proj.id) ? 'Expand' : 'Collapse' }}
+                  </button>
+                </div>
+                <div class="proj-inline-warning" *ngIf="isDuplicateProjectTitle(co, proj)">
+                  ⚠ Duplicate title in this company
+                </div>
+                <div class="proj-inline-warning" *ngIf="isProjectDetailsMissing(proj)">
+                  ℹ️ Add description and at least one tech tag
+                </div>
+
+                <div class="proj-collapsed-meta" *ngIf="isProjectCollapsed(co.id, proj.id)">
+                  <span>{{ proj.tech.length }} tech</span>
+                  <span *ngIf="proj.impact"
+                    >Impact: {{ impactStrengthLabel(proj.impact) }}</span
+                  >
+                </div>
+
+                <div class="proj-details" *ngIf="!isProjectCollapsed(co.id, proj.id)">
+                  <textarea
+                    rows="2"
+                    [(ngModel)]="proj.description"
+                    class="proj-desc-input"
+                    (ngModelChange)="scheduleAutoSave()"
+                  ></textarea>
+                  <input
+                    type="text"
+                    [(ngModel)]="proj.impact"
+                    class="proj-impact-input"
+                    placeholder="📈 Impact — e.g. Reduced load time by 40%"
+                    (ngModelChange)="scheduleAutoSave()"
+                  />
+                  <div class="impact-score-row" *ngIf="proj.impact">
+                    <span
+                      class="impact-strength"
+                      [attr.data-strength]="impactStrengthClass(proj.impact)"
+                    >
+                      {{ impactStrengthLabel(proj.impact) }} impact
+                    </span>
+                    <span class="impact-score">{{ impactScore(proj.impact) }}/100</span>
+                    <span
+                      class="impact-tip"
+                      *ngIf="impactStrengthClass(proj.impact) === 'weak'"
+                      >Tip: add numeric outcomes like %, users, or revenue.</span
+                    >
+                  </div>
+                  <div class="tags-editor small">
+                    <span class="tag-pill" *ngFor="let t of proj.tech"
+                      >{{ t
+                      }}<button (click)="removeCompanyProjectTech(proj, t)">×</button></span
+                    >
+                    <input
+                      type="text"
+                      placeholder="Tech..."
+                      (keydown.enter)="addCompanyProjectTech(proj, $event)"
+                    />
+                  </div>
+                  <div class="form-group" style="margin-top: 0.5rem">
+                    <label>Link</label
+                    ><input
+                      type="url"
+                      [(ngModel)]="proj.link"
+                      placeholder="#"
+                      (ngModelChange)="scheduleAutoSave()"
+                    />
+                  </div>
+                </div>
+              </div>
+              <button
+                class="delete-row-btn"
+                (click)="deleteCompanyProject(co.id, proj.id)"
+                title="Delete project"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  width="13"
+                  height="13"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"
+                  />
+                  <path
+                    d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="co-admin-footer-actions">
+          <button class="btn btn-danger btn-sm" (click)="deleteCompany(co.id)">
+            Delete Company
+          </button>
+          <button class="btn btn-primary btn-sm" (click)="saveCompanies()" [disabled]="saving">
+            {{ saving ? 'Saving...' : 'Save All Changes' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Add Company Modal -->
+<div class="modal-overlay" *ngIf="showAddCompany" (click)="showAddCompany = false">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add Company</h2>
+      <button (click)="showAddCompany = false" title="Close">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
+          />
+        </svg>
+      </button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Company Name</label
+        ><input type="text" [(ngModel)]="newCompany.name" placeholder="Accenture" />
+      </div>
+      <div class="form-group">
+        <label>Logo Emoji</label
+        ><input type="text" [(ngModel)]="newCompany.logo" placeholder="🏢" maxlength="4" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Your Role</label
+        ><input type="text" [(ngModel)]="newCompany.role" placeholder="Senior Developer" />
+      </div>
+      <div class="form-group">
+        <label>Brand Color</label><input type="color" [(ngModel)]="newCompany.accentColor" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Period</label
+        ><input type="text" [(ngModel)]="newCompany.period" placeholder="Jan 2024 — Present" />
+      </div>
+      <div class="form-group">
+        <label>Location</label
+        ><input type="text" [(ngModel)]="newCompany.location" placeholder="Pune, India" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Overview</label
+      ><textarea
+        rows="3"
+        [(ngModel)]="newCompany.description"
+        placeholder="Brief description of your role and impact..."
+      ></textarea>
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label"
+        ><input type="checkbox" [(ngModel)]="newCompany.current" /> Currently working here</label
+      >
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" (click)="showAddCompany = false">Cancel</button>
+      <button class="btn btn-primary btn-sm" (click)="submitAddCompany()">Add Company</button>
+    </div>
+  </div>
+</div>

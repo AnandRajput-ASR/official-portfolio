@@ -1,0 +1,53 @@
+<!-- ═══ RESUME GATE MODAL ═══════════════════════════════════════════════════ -->
+<div class="resume-gate-overlay" *ngIf="open" (click)="closeResumeGate()">
+  <div
+    class="resume-gate-modal"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="rg-title"
+  >
+    <!-- Close -->
+    <button class="rg-close" (click)="closeResumeGate()" aria-label="Close">&times;</button>
+
+    <!-- Icon + heading -->
+    <div class="rg-header">
+      <div class="rg-icon">&#x2193;&nbsp;PDF</div>
+      <h2 class="rg-title" id="rg-title">{{ langService.t('resume.gateTitle') }}</h2>
+      <p class="rg-sub">{{ langService.t('resume.gateSub') }}</p>
+    </div>
+
+    <!-- Input -->
+    <div class="rg-field">
+      <label class="rg-label" for="rg-email">{{ langService.t('resume.gateEmail') }}</label>
+      <div class="rg-input-wrap">
+        <span class="rg-input-icon">&#x2709;</span>
+        <input
+          id="rg-email"
+          type="email"
+          class="rg-input"
+          [(ngModel)]="resumeGateEmail"
+          [placeholder]="langService.t('resume.gatePlaceholder')"
+          (keydown.enter)="submitResumeGate()"
+          autofocus
+          autocomplete="email"
+        />
+      </div>
+      <div class="rg-error" *ngIf="resumeGateError">
+        <span class="rg-error-icon">&#x26A0;</span> {{ resumeGateError }}
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="rg-actions">
+      <button class="rg-submit" (click)="submitResumeGate()">
+        {{ langService.t('resume.gateBtn') }}
+      </button>
+      <button class="rg-cancel" (click)="closeResumeGate()">
+        {{ langService.t('resume.gateCancel') }}
+      </button>
+    </div>
+
+    <p class="rg-privacy">&#x1F512; Your email is only used to follow up — never shared.</p>
+  </div>
+</div>

@@ -1,0 +1,260 @@
+<section class="tab-content">
+  <div class="tab-header">
+    <div>
+      <h1>Analytics</h1>
+      <p>Portfolio performance metrics — tracked server-side, no third-party tools required.</p>
+    </div>
+    <div class="analytics-header-actions">
+      <span class="muted-text analytics-reset-meta" *ngIf="analytics && analytics.lastReset"
+        >Reset: {{ analytics.lastReset | date: 'MMM d, y' }}</span
+      >
+      <button class="btn btn-outline btn-sm" (click)="loadAnalytics()">⟳ Refresh</button>
+      <button class="btn btn-danger btn-sm" (click)="resetAnalytics()">Reset Counters</button>
+    </div>
+  </div>
+
+  <div class="analytics-loading" *ngIf="analyticsLoading">
+    <div class="loader-ring"></div>
+    <p>Loading analytics...</p>
+  </div>
+
+  <div *ngIf="!analyticsLoading && analytics">
+    <!-- Stat cards row -->
+    <div class="analytics-cards">
+      <div class="analytics-card">
+        <span class="ac-icon">👁</span>
+        <div class="ac-val">{{ analytics.pageViews }}</div>
+        <div class="ac-label">Page Views</div>
+        <div class="ac-sublabel" *ngIf="analytics.thisMonth !== undefined">
+          {{ analytics.thisMonth }} this month
+          <span
+            *ngIf="analytics.lastMonth !== undefined && analytics.lastMonth > 0"
+            [style.color]="analytics.thisMonth >= analytics.lastMonth ? 'var(--green)' : '#ef4444'"
+          >
+            &nbsp;{{ monthDelta() }}
+          </span>
+        </div>
+      </div>
+      <div class="analytics-card ac-highlight">
+        <span class="ac-icon">📄</span>
+        <div class="ac-val">{{ analytics.resumeDownloads }}</div>
+        <div class="ac-label">Resume Downloads</div>
+      </div>
+      <div class="analytics-card">
+        <span class="ac-icon">✉</span>
+        <div class="ac-val">{{ analytics.contactFormViews }}</div>
+        <div class="ac-label">Contact Form Views</div>
+      </div>
+      <div class="analytics-card ac-highlight">
+        <span class="ac-icon">📨</span>
+        <div class="ac-val">{{ analytics.contactFormSubmissions }}</div>
+        <div class="ac-label">Form Submissions</div>
+      </div>
+      <div class="analytics-card" title="Contact Conversion = Form Submissions ÷ Form Views. Shows what % of people who saw the contact form actually submitted it.">
+        <span class="ac-icon">📈</span>
+        <div class="ac-val">{{ conversionRate() }}</div>
+        <div class="ac-label">Contact Conversion <span class="ac-info-icon">?</span></div>
+        <div class="ac-conversion-bar" *ngIf="analytics.contactFormViews > 0">
+          <div class="acb-fill" [style.width.%]="conversionRatePercent()"></div>
+        </div>
+      </div>
+      <div class="analytics-card">
+        <span class="ac-icon">📝</span>
+        <div class="ac-val">{{ analytics.blogPostViews }}</div>
+        <div class="ac-label">Blog Views</div>
+      </div>
+      <div class="analytics-card">
+        <span class="ac-icon">🔗</span>
+        <div class="ac-val">{{ analytics.projectLinkClicks }}</div>
+        <div class="ac-label">Project Link Clicks</div>
+      </div>
+      <div class="analytics-card">
+        <span class="ac-icon">🌐</span>
+        <div class="ac-val">{{ analytics.socialLinkClicks }}</div>
+        <div class="ac-label">Social Link Clicks</div>
+      </div>
+    </div>
+
+    <!-- 30-day visits chart -->
+    <div class="analytics-section analytics-chart-section">
+      <div class="analytics-chart-head">
+        <h3 class="analytics-section-title">Page Visits — Last {{ chartDays }} Days</h3>
+        <div class="analytics-chart-range">
+          <button
+            class="btn btn-outline btn-xs"
+            [class.is-active]="chartDays === 7"
+            (click)="setChartDays(7)"
+          >
+            Last 7d
+          </button>
+          <button
+            class="btn btn-outline btn-xs"
+            [class.is-active]="chartDays === 30"
+            (click)="setChartDays(30)"
+          >
+            Last 30d
+          </button>
+          <button
+            class="btn btn-outline btn-xs"
+            [class.is-active]="chartDays === 90"
+            (click)="setChartDays(90)"
+          >
+            Last 90d
+          </button>
+        </div>
+      </div>
+      <div class="visit-chart" *ngIf="visitChartBars().length > 0; else noVisits">
+        <div class="vc-chart-body">
+          <div class="vc-y-axis">
+            <span class="vc-y-label">{{ visitChartMax() }}</span>
+            <span class="vc-y-label">{{ visitChartMid() }}</span>
+            <span class="vc-y-label">0</span>
+          </div>
+          <div class="vc-bars-wrap">
+            <div class="vc-bars">
+              <div
+                class="vc-bar-col"
+                *ngFor="let b of visitChartBars()"
+              >
+                <div
+                  class="vc-bar-fill"
+                  [style.height.%]="(b.count / visitChartMax()) * 100"
+                  [class.vc-bar-today]="b.date === today()"
+                >
+                  <span class="vc-tooltip">{{ b.label }}: {{ b.count }} visits</span>
+                </div>
+                <span class="vc-bar-val" *ngIf="b.count > 0">{{ b.count }}</span>
+              </div>
+            </div>
+            <div class="vc-axis">
+              <span>{{ visitChartBars()[0]?.label }}</span>
+              <span>{{ chartBarsMidpoint()?.label }}</span>
+              <span>Today</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ng-template #noVisits>
+        <p class="muted-text analytics-empty-note">
+          No visit data yet — visits will appear here as people view the portfolio.
+        </p>
+      </ng-template>
+    </div>
+
+    <div class="analytics-section">
+      <div class="analytics-funnel-head">
+        <h3 class="analytics-section-title">Resume Funnel</h3>
+        <div class="analytics-funnel-range">
+          <button
+            class="btn btn-outline btn-xs"
+            [class.is-active]="resumeFunnelDays === 7"
+            (click)="setResumeFunnelDays(7)"
+          >
+            Last 7d
+          </button>
+          <button
+            class="btn btn-outline btn-xs"
+            [class.is-active]="resumeFunnelDays === 30"
+            (click)="setResumeFunnelDays(30)"
+          >
+            Last 30d
+          </button>
+        </div>
+      </div>
+
+      <div class="analytics-funnel-cards">
+        <div class="analytics-card">
+          <span class="ac-icon">👀</span>
+          <div class="ac-val">{{ resumeFunnel.totals.views }}</div>
+          <div class="ac-label">Resume Views</div>
+        </div>
+        <div class="analytics-card">
+          <span class="ac-icon">🖱</span>
+          <div class="ac-val">{{ resumeFunnel.totals.clicks }}</div>
+          <div class="ac-label">Resume Clicks</div>
+          <div class="ac-sublabel" *ngIf="resumeFunnel.totals.views > 0">
+            {{ resumeClickThroughRate() }} CTR
+          </div>
+        </div>
+        <div class="analytics-card ac-highlight">
+          <span class="ac-icon">⬇</span>
+          <div class="ac-val">{{ resumeFunnel.totals.downloads }}</div>
+          <div class="ac-label">Resume Downloads</div>
+          <div class="ac-sublabel" *ngIf="resumeFunnel.totals.clicks > 0">
+            {{ resumeDownloadRate() }} from clicks
+          </div>
+        </div>
+      </div>
+
+      <!-- Funnel visualization -->
+      <div class="resume-funnel-viz" *ngIf="resumeFunnel.totals.views > 0">
+        <div class="rfv-step">
+          <div class="rfv-label">Views</div>
+          <div class="rfv-bar" [style.width.%]="100">
+            <span class="rfv-count">{{ resumeFunnel.totals.views }}</span>
+          </div>
+        </div>
+        <div class="rfv-arrow">↓</div>
+        <div class="rfv-step">
+          <div class="rfv-label">Clicks</div>
+          <div class="rfv-bar" [style.width.%]="resumeClickThroughRatePercent()">
+            <span class="rfv-count" *ngIf="resumeFunnel.totals.clicks > 0">{{ resumeFunnel.totals.clicks }}</span>
+          </div>
+          <span class="rfv-rate">{{ resumeClickThroughRate() }}</span>
+        </div>
+        <div class="rfv-arrow">↓</div>
+        <div class="rfv-step">
+          <div class="rfv-label">Downloads</div>
+          <div class="rfv-bar" [style.width.%]="overallResumeCTRPercent()">
+            <span class="rfv-count" *ngIf="resumeFunnel.totals.downloads > 0">{{ resumeFunnel.totals.downloads }}</span>
+          </div>
+          <span class="rfv-rate">{{ overallResumeCTR() }}</span>
+        </div>
+      </div>
+
+      <div class="analytics-table" *ngIf="resumeFunnel.bySource.length > 0; else noFunnelData">
+        <div class="at-row at-header at-row-funnel">
+          <span>Source</span><span>Views</span><span>Clicks</span><span>Downloads</span><span>Click->Download</span>
+        </div>
+        <div class="at-row at-row-funnel" *ngFor="let source of resumeFunnel.bySource">
+          <span class="at-name">{{ source.source }}</span>
+          <span class="at-count">{{ source.views }}</span>
+          <span class="at-count">{{ source.clicks }}</span>
+          <span class="at-count">{{ source.downloads }}</span>
+          <span>{{ source.clickToDownloadRate | number: '1.0-1' }}%</span>
+        </div>
+      </div>
+      <ng-template #noFunnelData>
+        <p class="muted-text analytics-empty-note">
+          No resume funnel data tracked yet for this range.
+        </p>
+      </ng-template>
+    </div>
+
+    <!-- Project clicks table -->
+    <div class="analytics-section" *ngIf="topProjectClicks().length > 0">
+      <h3 class="analytics-section-title">Project Clicks</h3>
+      <div class="analytics-table">
+        <div class="at-row at-header">
+          <span>Project</span><span>Clicks</span><span>Bar</span>
+        </div>
+        <div class="at-row" *ngFor="let p of topProjectClicks()">
+          <span class="at-name">{{ p.name }}</span>
+          <span class="at-count">{{ p.clicks }}</span>
+          <div class="at-bar-wrap">
+            <div
+              class="at-bar-fill"
+              [style.width]="(p.clicks / (topProjectClicks()[0]?.clicks || 1)) * 100 + '%'"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="empty-state analytics-empty-state" *ngIf="topProjectClicks().length === 0">
+      <span>🖱</span>
+      <p>
+        No project clicks tracked yet — they'll appear as visitors interact with the portfolio.
+      </p>
+    </div>
+  </div>
+</section>

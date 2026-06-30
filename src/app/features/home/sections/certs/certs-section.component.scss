@@ -1,0 +1,212 @@
+.certs-section {
+  padding: 8rem 4rem;
+  background: var(--surface);
+  .section-head {
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+  }
+
+  .certs-grid {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5px;
+    background: var(--border);
+  }
+
+  .cert-card {
+    background: var(--surface);
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    position: relative;
+    transition:
+      background 0.2s,
+      transform 0.2s,
+      box-shadow 0.2s;
+    border-top: 3px solid transparent;
+    border-top-color: var(--cert-accent, var(--amber));
+
+    &:hover {
+      background: var(--surface2);
+      transform: translateY(-3px);
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.18);
+    }
+    &.cert-highlight {
+      background: rgba(245, 166, 35, 0.06);
+      box-shadow: inset 0 0 0 1px rgba(245, 166, 35, 0.2);
+    }
+
+    .cert-badge-wrap {
+      display: flex;
+      justify-content: center;
+    }
+
+    .cert-badge {
+      width: 76px;
+      height: 76px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      border-radius: 4px;
+      background: var(--surface2);
+
+      &.cert-badge-auto {
+        border: 2px solid;
+        border-color: var(--cert-accent, var(--amber));
+      }
+
+      &.cert-badge-default {
+        border: 2px solid;
+        border-color: var(--cert-accent, var(--amber));
+      }
+
+      &.cert-badge-uploaded img {
+        width: 76px;
+        height: 76px;
+        object-fit: contain;
+      }
+    }
+
+    .cert-code-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .cert-badge-code,
+    .cert-default-code {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-align: center;
+      line-height: 1.1;
+    }
+
+    .cert-default-icon {
+      font-size: 1.4rem;
+    }
+
+    .cert-info {
+      .cert-code {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.65rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+      }
+      .cert-name {
+        font-size: 1rem;
+        font-weight: 800;
+        margin-bottom: 0.3rem;
+        line-height: 1.3;
+      }
+      .cert-issuer {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+      .cert-year {
+        color: var(--muted);
+        font-family: 'Space Mono', monospace;
+        font-size: 0.62rem;
+        letter-spacing: 0.1em;
+        margin-top: 0.25rem;
+      }
+      .cert-status {
+        margin-top: 0.45rem;
+        display: inline-flex;
+        align-items: center;
+        width: fit-content;
+        padding: 0.18rem 0.5rem;
+        border-radius: 999px;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.58rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border: 1px solid var(--border);
+        &.active {
+          color: #2ea66f;
+          background: rgba(46, 166, 111, 0.12);
+          border-color: rgba(46, 166, 111, 0.35);
+        }
+        &.expired {
+          color: #d45858;
+          background: rgba(212, 88, 88, 0.12);
+          border-color: rgba(212, 88, 88, 0.35);
+        }
+        &.no-expiry {
+          color: var(--muted);
+          background: rgba(255, 255, 255, 0.03);
+        }
+      }
+    }
+
+    .cert-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: auto;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--border);
+
+      .cert-level {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.6rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 0.22rem 0.6rem;
+        border: 1px solid;
+      }
+
+      .cert-credly-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+        font-family: 'Space Mono', monospace;
+        font-size: 0.6rem;
+        letter-spacing: 0.08em;
+        color: var(--amber);
+        text-decoration: none;
+        border: 1px solid rgba(245, 166, 35, 0.3);
+        padding: 0.22rem 0.5rem;
+        transition: all 0.2s;
+        &:hover {
+          background: rgba(245, 166, 35, 0.1);
+          border-color: var(--amber);
+          transform: translateY(-1px);
+        }
+        svg {
+          opacity: 0.95;
+        }
+        .cert-verified-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #2ea66f;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 5rem 1.5rem;
+    .certs-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  @media (max-width: 480px) {
+    .certs-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}

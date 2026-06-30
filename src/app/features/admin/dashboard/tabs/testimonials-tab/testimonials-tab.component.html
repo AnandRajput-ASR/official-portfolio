@@ -1,0 +1,293 @@
+<section class="tab-content" (input)="markDirty()" (change)="markDirty()">
+  <div class="tab-header">
+    <div>
+      <h1>Testimonials</h1>
+      <p>
+        Manage quotes from colleagues, managers, and clients. Toggle visibility to show/hide on
+        portfolio.
+      </p>
+    </div>
+    <div class="testi-header-actions">
+      <button class="btn btn-primary btn-sm" (click)="showAddTestimonial = true">
+        + Add Testimonial
+      </button>
+      <button class="btn btn-outline btn-sm" (click)="saveTestimonials()" [disabled]="saving">
+        {{ saving ? 'Saving...' : 'Save Order' }}
+      </button>
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="testimonialsEdit.length === 0">
+    <span>💬</span>
+    <p>No testimonials yet — add a quote from a colleague or client!</p>
+  </div>
+
+  <div
+    class="testi-admin-list drag-list"
+    appDragList
+    (reordered)="onReorder($event)"
+  >
+    <div
+      class="testi-admin-card"
+      draggable="true"
+      [attr.data-drag-id]="t.id"
+      *ngFor="let t of testimonialsEdit; trackBy: trackById"
+      [class.hidden]="!t.visible"
+    >
+      <div class="testi-admin-topbar">
+        <span class="drag-handle"></span>
+        <div class="testi-avatar-sm" *ngIf="!t.avatar">{{ t.name.charAt(0) }}</div>
+        <img
+          class="testi-avatar-sm-img"
+          *ngIf="t.avatar"
+          [src]="contentService.getImageUrl(t.avatar)"
+          [alt]="t.name"
+          decoding="async"
+          width="36"
+          height="36"
+        />
+        <div class="testi-admin-name">
+          <strong>{{ t.name }}</strong>
+          <span class="muted-text">{{ t.role }} · {{ t.company }}</span>
+        </div>
+        <label
+          class="visibility-toggle"
+          [title]="
+            t.visible ? 'Visible on portfolio — click to hide' : 'Hidden — click to show'
+          "
+        >
+          <input type="checkbox" [checked]="t.visible" (change)="toggleTestimonialVisible(t)" />
+          <span class="vis-slider"></span>
+          <span class="vis-label">{{ t.visible ? 'Visible' : 'Hidden' }}</span>
+        </label>
+        <div class="testi-stars-sm">
+          <span *ngFor="let s of ratingStars(t.rating)">★</span>
+        </div>
+        <button
+          class="delete-row-btn"
+          (click)="deleteTestimonial(t.id)"
+          title="Delete testimonial"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 16 16"
+            width="13"
+            height="13"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"
+            />
+            <path
+              d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <div class="testi-admin-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Name</label><input type="text" [(ngModel)]="t.name" />
+          </div>
+          <div class="form-group">
+            <label>Role / Title</label><input type="text" [(ngModel)]="t.role" />
+          </div>
+          <div class="form-group">
+            <label>Company</label><input type="text" [(ngModel)]="t.company" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Quote</label><textarea rows="4" [(ngModel)]="t.quote"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group xs">
+            <label>Rating (1–5)</label>
+            <input type="number" min="1" max="5" [(ngModel)]="t.rating" />
+          </div>
+          <div class="form-group">
+            <label>Avatar Photo <small>(optional)</small></label>
+            <div class="avatar-upload-row">
+              <div class="testi-avatar-preview" *ngIf="t.avatar">
+                <img [src]="contentService.getImageUrl(t.avatar)" alt="avatar" decoding="async" width="64" height="64" />
+              </div>
+              <label class="btn btn-outline btn-xs">
+                {{ t.avatar ? 'Replace Photo' : 'Upload Photo' }}
+                <input
+                  type="file"
+                  accept="image/*"
+                  class="hidden-file-input"
+                  (change)="onAvatarUpload(t, $event)"
+                />
+              </label>
+              <button class="btn btn-danger btn-xs" *ngIf="t.avatar" (click)="t.avatar = ''">
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending Submissions — always visible at top -->
+  <div class="pending-inbox" [class.has-pending]="pendingTestimonials.length > 0">
+    <div class="pending-inbox-header">
+      <div>
+        <h3>
+          ⏳ Pending Submissions
+          <span class="unread-count" *ngIf="pendingTestimonials.length > 0"
+            >{{ pendingTestimonials.length }} new</span
+          >
+          <span class="pending-empty-note" *ngIf="pendingTestimonials.length === 0"
+            >— none right now</span
+          >
+        </h3>
+        <p class="muted-text">
+          When visitors submit a testimonial on your portfolio, it appears here for review.
+        </p>
+      </div>
+    </div>
+    <div class="pending-list" *ngIf="pendingTestimonials.length > 0">
+      <div class="pending-card" *ngFor="let p of pendingTestimonials; trackBy: trackById">
+        <div class="pending-header">
+          <div class="testi-avatar-sm" *ngIf="!p.avatar">{{ p.name.charAt(0) }}</div>
+          <img
+            class="testi-avatar-sm-img"
+            *ngIf="p.avatar"
+            [src]="contentService.getImageUrl(p.avatar)"
+            [alt]="p.name"
+            decoding="async"
+            width="36"
+            height="36"
+          />
+          <div>
+            <strong>{{ p.name }}</strong>
+            <span class="muted-text" *ngIf="p.role || p.company">
+              · {{ p.role }}<span *ngIf="p.company">, {{ p.company }}</span></span
+            >
+          </div>
+          <div class="pending-stars">
+            <span *ngFor="let s of ratingStars(p.rating)">★</span>
+          </div>
+          <span class="muted-text pending-date">{{
+            p.submittedAt | date: 'MMM d, y'
+          }}</span>
+        </div>
+        <p class="pending-quote">"{{ p.quote }}"</p>
+        <div class="pending-actions">
+          <button class="btn btn-primary btn-xs" (click)="approveTestimonial(p)">
+            ✓ Approve & Publish
+          </button>
+          <button class="btn btn-outline btn-xs" (click)="rejectTestimonial(p)">
+            ✗ Reject
+          </button>
+          <button class="btn btn-danger btn-xs" (click)="deletePendingTestimonial(p.id)">
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="empty-state testi-empty-spaced"
+    *ngIf="pendingTestimonials.length === 0 && testimonialsEdit.length === 0"
+  >
+    <span>💬</span>
+    <p>No testimonials yet. Add one manually or share your portfolio for public submissions.</p>
+  </div>
+</section>
+
+<!-- Add Testimonial Modal -->
+<div class="modal-overlay" *ngIf="showAddTestimonial" (click)="showAddTestimonial = false">
+  <div class="modal modal-wide" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Add Testimonial</h2>
+      <button (click)="showAddTestimonial = false" title="Close">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <div class="form-row form-row-3">
+      <div class="form-group">
+        <label>Full Name</label
+        ><input type="text" [(ngModel)]="newTestimonial.name" placeholder="Priya Sharma" />
+      </div>
+      <div class="form-group">
+        <label>Role / Title</label
+        ><input type="text" [(ngModel)]="newTestimonial.role" placeholder="Senior Manager" />
+      </div>
+      <div class="form-group">
+        <label>Company</label
+        ><input type="text" [(ngModel)]="newTestimonial.company" placeholder="Accenture" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Quote / Testimonial</label
+      ><textarea
+        rows="5"
+        [(ngModel)]="newTestimonial.quote"
+        placeholder="Write what they said about working with you..."
+      ></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Star Rating</label>
+        <div class="testi-rating-row">
+          <button
+            *ngFor="let n of [1, 2, 3, 4, 5]"
+            [class.active]="(newTestimonial.rating || 5) >= n"
+            (click)="newTestimonial.rating = n"
+          >
+            ★
+          </button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Profile Photo <small>(optional)</small></label>
+        <div class="avatar-upload-row">
+          <div class="testi-avatar-preview" *ngIf="testimonialAvatarPreview">
+            <img [src]="testimonialAvatarPreview" alt="preview" decoding="async" width="64" height="64" />
+          </div>
+          <label class="btn btn-outline btn-xs">
+            {{ testimonialAvatarPreview ? 'Replace' : 'Upload Photo' }}
+            <input
+              type="file"
+              accept="image/*"
+              class="hidden-file-input"
+              (change)="onAvatarUpload(newTestimonial, $event)"
+            />
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="showAddTestimonial = false; testimonialAvatarPreview = ''"
+      >
+        Cancel
+      </button>
+      <button
+        class="btn btn-primary btn-sm"
+        (click)="submitAddTestimonial()"
+        [disabled]="!newTestimonial.name || !newTestimonial.quote"
+      >
+        Add Testimonial
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,4 +1,6 @@
-export interface Certification {
+import { EntityMetadata } from './api.model';
+
+export interface Certification extends EntityMetadata {
   id: string;
   name: string;
   code: string;

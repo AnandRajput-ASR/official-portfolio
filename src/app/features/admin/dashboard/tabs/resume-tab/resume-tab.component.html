@@ -1,0 +1,136 @@
+<section class="tab-content">
+  <div class="tab-header">
+    <div>
+      <h1>Resume</h1>
+      <p>Upload your PDF — a download button appears on your portfolio automatically</p>
+    </div>
+    <a
+      *ngIf="resumeInfo?.available"
+      [href]="resumeService.getDownloadUrl()"
+      target="_blank"
+      class="btn btn-outline btn-sm"
+      download
+      >↓ Preview Download</a
+    >
+  </div>
+
+  <!-- Current file status -->
+  <div class="resume-current" *ngIf="resumeInfo?.available; else noResume">
+    <div class="resume-current-icon">📄</div>
+    <div class="resume-current-info">
+      <p class="resume-filename">{{ resumeInfo?.fileName }}</p>
+      <p class="resume-meta">
+        {{ resumeService.formatSize(resumeInfo?.size || 0) }} &nbsp;·&nbsp; Uploaded
+        {{ formatDate(resumeInfo?.uploadedAt || '') }}
+      </p>
+      <p class="resume-live-note">✓ Live — visible to all portfolio visitors</p>
+    </div>
+    <div class="resume-current-actions">
+      <label class="btn btn-outline btn-sm" style="cursor: pointer">
+        Replace PDF
+        <input
+          type="file"
+          accept=".pdf"
+          class="hidden-file-input"
+          (change)="onResumeFileSelected($event)"
+        />
+      </label>
+      <button class="btn btn-danger btn-sm" (click)="deleteResume()">Remove</button>
+    </div>
+  </div>
+  <ng-template #noResume>
+    <div class="resume-no-file">
+      <span class="no-file-icon">📭</span>
+      <p>No resume uploaded yet</p>
+      <p class="muted-text">
+        Upload a PDF and a download button will appear on your portfolio automatically.
+      </p>
+    </div>
+  </ng-template>
+
+  <!-- Previous upload note (shown after a replacement) -->
+  <div class="resume-prev-note" *ngIf="previousUpload">
+    <span class="resume-prev-icon">🔄</span>
+    <span>Previously: <strong>{{ previousUpload.fileName }}</strong>
+      <span *ngIf="previousUpload.uploadedAt"> · {{ formatDate(previousUpload.uploadedAt) }}</span>
+    </span>
+  </div>
+
+  <!-- Upload dropzone -->
+  <div
+    class="resume-dropzone"
+    [class.drag-over]="resumeDragOver"
+    [class.is-uploading]="uploadState === 'uploading' || uploadState === 'reading'"
+    [class.is-done]="uploadState === 'done'"
+    [class.is-error]="uploadState === 'error'"
+    (dragover)="$event.preventDefault(); resumeDragOver = true"
+    (dragleave)="resumeDragOver = false"
+    (drop)="onResumeDrop($event)"
+  >
+    <!-- Idle state -->
+    <div class="dropzone-inner" *ngIf="uploadState === 'idle'">
+      <span class="dropzone-icon">☁</span>
+      <p class="dropzone-title">Drag &amp; drop your PDF here</p>
+      <p class="dropzone-sub">or</p>
+      <label class="btn btn-primary btn-sm" style="cursor: pointer">
+        Browse File
+        <input
+          type="file"
+          accept=".pdf"
+          class="hidden-file-input"
+          (change)="onResumeFileSelected($event)"
+        />
+      </label>
+      <p class="dropzone-hint">PDF only · Max 10MB</p>
+    </div>
+
+    <!-- Reading file -->
+    <div class="dropzone-uploading" *ngIf="uploadState === 'reading'">
+      <div class="upload-ring"></div>
+      <p>Reading file...</p>
+    </div>
+
+    <!-- Uploading with real progress bar -->
+    <div class="dropzone-uploading" *ngIf="uploadState === 'uploading'">
+      <div class="progress-wrap">
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" [style.width.%]="uploadProgress"></div>
+        </div>
+        <span class="progress-pct">{{ uploadProgress }}%</span>
+      </div>
+      <p class="progress-label">Uploading resume... {{ uploadProgress }}%</p>
+    </div>
+
+    <!-- Done -->
+    <div class="dropzone-done" *ngIf="uploadState === 'done'">
+      <span class="done-icon">✓</span>
+      <p>Upload complete!</p>
+    </div>
+
+    <!-- Error -->
+    <div class="dropzone-error-state" *ngIf="uploadState === 'error'">
+      <span class="error-icon">✕</span>
+      <p>{{ uploadErrorMsg }}</p>
+      <button class="btn btn-outline btn-sm" (click)="uploadState = 'idle'">Try Again</button>
+    </div>
+  </div>
+
+  <!-- Info cards -->
+  <div class="resume-info-grid">
+    <div class="resume-info-card">
+      <span class="info-icon">🔓</span>
+      <h4>Public Download</h4>
+      <p>Anyone can download — no login required. Perfect for recruiters.</p>
+    </div>
+    <div class="resume-info-card">
+      <span class="info-icon">🔄</span>
+      <h4>Instant Replacement</h4>
+      <p>Upload a new PDF anytime to instantly update what recruiters download.</p>
+    </div>
+    <div class="resume-info-card">
+      <span class="info-icon">📊</span>
+      <h4>Real Progress Bar</h4>
+      <p>See exact upload % — no more guessing if the upload is stuck.</p>
+    </div>
+  </div>
+</section>

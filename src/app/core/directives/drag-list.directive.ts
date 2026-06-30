@@ -120,4 +120,88 @@ export class DragListDirective {
     this.lastPointerDownTarget = null;
     this.getItems().forEach((el) => this.renderer.removeClass(el, 'drag-over'));
   }
+
+  // ── Touch support (mobile drag-reorder) ────────────────────────────────────
+  private touchSrcEl: HTMLElement | null = null;
+  private touchMoved = false;
+
+  @HostListener('touchstart', ['$event'])
+  onTouchStart(e: TouchEvent) {
+    const origin = e.target as HTMLElement;
+    const isInteractive = !!origin.closest(
+      'input, textarea, select, button, a, label, [contenteditable="true"]',
+    );
+    if (isInteractive) return;
+
+    const target = origin.closest('[data-drag-id]') as HTMLElement;
+    if (!target) return;
+
+    if (this.dragHandleSelector) {
+      const handle = origin.closest(this.dragHandleSelector);
+      if (!handle || !target.contains(handle)) return;
+    }
+
+    this.touchSrcEl = target;
+    this.touchMoved = false;
+    this.dragSrcId = target.dataset['dragId'] || null;
+  }
+
+  @HostListener('touchmove', ['$event'])
+  onTouchMove(e: TouchEvent) {
+    if (!this.touchSrcEl || !this.dragSrcId) return;
+    // Suppress page scroll only once an actual reorder drag is underway.
+    if (e.cancelable) e.preventDefault();
+    if (!this.touchMoved) {
+      this.touchMoved = true;
+      this.renderer.addClass(this.touchSrcEl, 'dragging');
+    }
+
+    const touch = e.touches[0];
+    const over = (
+      document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement | null
+    )?.closest('[data-drag-id]') as HTMLElement | null;
+
+    this.getItems().forEach((el) => this.renderer.removeClass(el, 'drag-over'));
+    if (over && over.dataset['dragId'] !== this.dragSrcId) {
+      this.renderer.addClass(over, 'drag-over');
+    }
+  }
+
+  @HostListener('touchend', ['$event'])
+  onTouchEnd(e: TouchEvent) {
+    const srcEl = this.touchSrcEl;
+    const srcId = this.dragSrcId;
+    this.touchSrcEl = null;
+    this.dragSrcId = null;
+
+    const cleanup = () => {
+      this.getItems().forEach((el) => {
+        this.renderer.removeClass(el, 'dragging');
+        this.renderer.removeClass(el, 'drag-over');
+      });
+    };
+
+    if (!srcEl || !srcId || !this.touchMoved) {
+      cleanup();
+      return;
+    }
+
+    const touch = e.changedTouches[0];
+    const destEl = (
+      document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement | null
+    )?.closest('[data-drag-id]') as HTMLElement | null;
+    const destId = destEl?.dataset['dragId'];
+
+    if (destId && destId !== srcId) {
+      const ids = this.getItems().map((el) => el.dataset['dragId'] as string);
+      const srcIdx = ids.indexOf(srcId);
+      const dstIdx = ids.indexOf(destId);
+      if (srcIdx >= 0 && dstIdx >= 0) {
+        ids.splice(srcIdx, 1);
+        ids.splice(dstIdx, 0, srcId);
+        this.reordered.emit(ids);
+      }
+    }
+    cleanup();
+  }
 }

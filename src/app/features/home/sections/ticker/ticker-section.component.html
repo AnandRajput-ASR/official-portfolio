@@ -1,0 +1,12 @@
+<!-- ═══ TICKER ═══════════════════════════════════════════════════════════════ -->
+<div class="ticker-wrap">
+  <div class="ticker">
+    <!-- Doubled for seamless loop -->
+    <div class="ticker-item" *ngFor="let item of items">
+      <span class="tdot"></span>{{ item }}
+    </div>
+    <div class="ticker-item" *ngFor="let item of items">
+      <span class="tdot"></span>{{ item }}
+    </div>
+  </div>
+</div>

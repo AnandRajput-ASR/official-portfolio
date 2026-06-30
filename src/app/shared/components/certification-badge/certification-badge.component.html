@@ -9,7 +9,7 @@
   [style.background]="resolvedBadgeType === 'default' ? accentColor + '18' : null"
 >
   <ng-container *ngIf="resolvedBadgeType === 'upload'; else nonUploadBadge">
-    <img [src]="uploadSrc" [alt]="altText" loading="lazy" />
+    <img [src]="uploadSrc" [alt]="altText" loading="lazy" decoding="async" fetchpriority="low" />
   </ng-container>
 
   <ng-template #nonUploadBadge>

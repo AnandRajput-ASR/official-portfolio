@@ -1,0 +1,71 @@
+<!-- ═══ ABOUT ════════════════════════════════════════════════════════════════ -->
+<section id="about" class="about-section">
+  <div class="about-grid">
+    <div class="about-left reveal">
+      <p class="section-label">// About Me</p>
+      <h2
+        class="about-heading"
+        [innerHTML]="
+          content.siteSettings.about.heading ||
+          'I build things that<br><em>enterprises trust.</em>'
+        "
+      ></h2>
+      <p
+        class="about-text"
+        *ngFor="let para of content.siteSettings.about.paragraphs"
+        [innerHTML]="para"
+      ></p>
+      <p
+        class="about-text about-freelance"
+        *ngIf="
+          content.siteSettings.freelance.enabled &&
+          content.siteSettings.freelance.showInAbout !== false
+        "
+      >
+        💼 <strong>Available for freelance.</strong> Angular SPA, cloud integrations, CI/CD setup,
+        Node.js APIs — let's talk.
+      </p>
+      <div class="about-links">
+        <a [href]="'mailto:' + content.hero.email" class="alink">✉ {{ content.hero.email }}</a>
+        <a
+          [href]="content.hero.linkedin"
+          target="_blank"
+          class="alink"
+          (click)="socialClick.emit()"
+          >🔗 LinkedIn Profile</a
+        >
+        <a href="#contact" class="btn-hero-primary" style="margin-top: 0.5rem"
+          >Let's Work Together →</a
+        >
+      </div>
+    </div>
+    <div class="about-right reveal">
+      <div class="about-stats-grid">
+        <div class="astat" *ngFor="let stat of content.stats; trackBy: trackByStat">
+          <span
+            class="astat-val stat-num"
+            [attr.data-target]="stat.value"
+            [attr.data-suffix]="stat.suffix"
+            >0</span
+          >
+          <span class="astat-lab">{{ stat.label }}</span>
+        </div>
+      </div>
+      <div
+        class="about-company-badge"
+        *ngIf="content.siteSettings.about.companyBadge.company"
+      >
+        <span class="acc-logo">⬡</span>
+        <div>
+          <p class="acc-company">{{ content.siteSettings.about.companyBadge.company }}</p>
+          <p class="acc-role">{{ content.siteSettings.about.companyBadge.role }}</p>
+          <p class="acc-period">{{ content.siteSettings.about.companyBadge.period }}</p>
+        </div>
+        <div
+          class="acc-award"
+          [innerHTML]="content.siteSettings.about.companyBadge.award"
+        ></div>
+      </div>
+    </div>
+  </div>
+</section>

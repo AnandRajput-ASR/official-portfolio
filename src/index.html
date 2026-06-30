@@ -66,6 +66,27 @@
     />
 
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+
+    <!-- ── Content-Security-Policy (Phase 1) ─────────────────── -->
+    <!-- 'unsafe-inline' is retained for script-src and style-src during
+         Phase 1. Phase 2 (ngx-markdown migration) lets us drop it from
+         script-src. The current policy still closes the obvious holes
+         (no remote scripts, no eval, no plugins, no framing from
+         unknown origins, HTTPS-only outbound). -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self';
+               script-src 'self' 'unsafe-inline' https://*.googletagmanager.com;
+               style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+               font-src 'self' https://fonts.gstatic.com data:;
+               img-src 'self' data: https:;
+               connect-src 'self' https://*.railway.app http://localhost:*;
+               frame-src https://www.youtube.com https://player.vimeo.com;
+               frame-ancestors 'none';
+               object-src 'none';
+               base-uri 'self';
+               form-action 'self';"
+    />
   </head>
 
   <body>

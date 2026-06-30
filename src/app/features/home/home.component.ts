@@ -1,108 +1,137 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit, inject } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  OnDestroy,
+  OnInit,
+  ViewEncapsulation,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import { Certification, PortfolioContent } from '@core/models';
+import { RouterModule } from '@angular/router';
+import { ReducedMotionDirective } from '@core/directives/reduced-motion.directive';
+import { PortfolioContent } from '@core/models';
 import { ContentService } from '@core/services/content.service';
 import { LanguageService } from '@core/services/language.service';
 import { LoadingService } from '@core/services/loading.service';
-import { MessagesService } from '@core/services/messages.service';
+import { ObservabilityService } from '@core/services/observability.service';
 import { ResumeInfo, ResumeService } from '@core/services/resume.service';
+import { StorageService } from '@core/services/storage.service';
 import { ThemeService } from '@core/services/theme.service';
-import { CertificationBadgeComponent } from '@shared/components/certification-badge/certification-badge.component';
+import { catchError, finalize, map, of, switchMap, tap } from 'rxjs';
+import { AboutSectionComponent } from './sections/about/about-section.component';
+import { BlogSectionComponent } from './sections/blog/blog-section.component';
+import { CertsSectionComponent } from './sections/certs/certs-section.component';
+import { ContactSectionComponent } from './sections/contact/contact-section.component';
+import { ExperienceSectionComponent } from './sections/experience/experience-section.component';
+import { FooterSectionComponent } from './sections/footer/footer-section.component';
+import { FreelanceCtaSectionComponent } from './sections/freelance-cta/freelance-cta-section.component';
+import { HeaderSectionComponent } from './sections/header/header-section.component';
+import { HeroSectionComponent } from './sections/hero/hero-section.component';
+import { LearningSectionComponent } from './sections/learning/learning-section.component';
+import { PersonalProjectsSectionComponent } from './sections/personal-projects/personal-projects-section.component';
+import { ResumeBannerComponent } from './sections/resume-banner/resume-banner.component';
+import { ResumeGateComponent } from './sections/resume-gate/resume-gate.component';
+import { SkillsSectionComponent } from './sections/skills/skills-section.component';
+import { TestimonialsSectionComponent } from './sections/testimonials/testimonials-section.component';
+import { TickerSectionComponent } from './sections/ticker/ticker-section.component';
+import { WorkSectionComponent } from './sections/work/work-section.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, CertificationBadgeComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule,
+    ReducedMotionDirective,
+    HeaderSectionComponent,
+    HeroSectionComponent,
+    TickerSectionComponent,
+    AboutSectionComponent,
+    SkillsSectionComponent,
+    WorkSectionComponent,
+    PersonalProjectsSectionComponent,
+    CertsSectionComponent,
+    ExperienceSectionComponent,
+    TestimonialsSectionComponent,
+    BlogSectionComponent,
+    LearningSectionComponent,
+    FreelanceCtaSectionComponent,
+    ContactSectionComponent,
+    ResumeBannerComponent,
+    FooterSectionComponent,
+    ResumeGateComponent,
+  ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
+  encapsulation: ViewEncapsulation.None,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   contentService = inject(ContentService);
-  private messagesService = inject(MessagesService);
-  private router = inject(Router);
   resumeService = inject(ResumeService);
   themeService = inject(ThemeService);
   langService = inject(LanguageService);
   private loadingService = inject(LoadingService);
+  private observability = inject(ObservabilityService);
+  private storage = inject(StorageService);
+  private destroyRef = inject(DestroyRef);
 
-  content: PortfolioContent | null = null;
-  loading = true;
-  apiError = false;
-  resumeInfo: ResumeInfo | null = null;
-  mobileMenuOpen = false;
+  readonly content = signal<PortfolioContent | null>(null);
+  readonly loading = signal(true);
+  readonly apiError = signal(false);
+  readonly resumeInfo = signal<ResumeInfo | null>(null);
+  /** Visitor counter (public footer widget). */
+  readonly visitorCount = signal<number | null>(null);
+
+  /** Visible (non-deleted) testimonials, derived from loaded content. */
+  readonly visibleTestimonials = computed(() =>
+    (this.content()?.testimonials ?? []).filter((t) => t.visible && t.is_deleted !== true),
+  );
+
+  /** Published (non-deleted) blog posts, derived from loaded content. */
+  readonly publishedPosts = computed(() =>
+    (this.content()?.blogPosts ?? []).filter((p) => this.contentService.isBlogPostLive(p)),
+  );
+
+  /** Ticker items from settings, falling back to a default tech list. */
+  readonly tickerItems = computed(
+    () => this.content()?.siteSettings?.ticker?.items ?? HomeComponent.DEFAULT_TICKER,
+  );
+
   openCompanies = new Set<string>();
-  activeBlogPost: string | null = null;
-  otwDismissed = false;
+  otwDismissed = this.storage.getWithExpiry<boolean>('otw-dismissed') === true;
   private destroyed = false;
   private scrollHandler: (() => void) | null = null;
   private observers: IntersectionObserver[] = [];
 
-  // Contact form
-  contactForm = { name: '', email: '', message: '', _hp: '' };
-  contactSending = false;
-  contactSuccess = false;
-  contactError = '';
-  emailCopied = false;
-
-  // Visitor counter (public footer widget)
-  visitorCount: number | null = null;
-
-  // Testimonial submission form
-  testiSubmitForm = { name: '', role: '', company: '', quote: '', rating: 5, email: '' };
-  testiSubmitAvatar: string | null = null;
-  testiSubmitting = false;
-  testiSubmitSuccess = false;
-  testiSubmitError = '';
-  showTestiSubmitForm = false;
-
   // Resume gate modal
   resumeGateOpen = false;
-  resumeGateEmail = '';
-  resumeGateError = '';
+  resumeGateSource = 'unknown';
+
+  private static readonly DEFAULT_TICKER = [
+    'Angular',
+    'TypeScript',
+    'Azure DevOps',
+    'Node.js',
+    'AWS Lambda',
+    'RxJS',
+    'NgRx',
+    'PostgreSQL',
+    'Cosmos DB',
+    'AZ-400 Expert',
+    'CI/CD Pipelines',
+  ];
 
   ngOnInit(): void {
-    this.loadingService.start('home-content');
-    this.contentService.getAll().subscribe({
-      next: (data) => {
-        this.content = data;
-        this.loading = false;
-        this.refreshCaches();
-        // Propagate admin-configured enabled languages to LanguageService
-        if (data.siteSettings?.enabledLanguages?.length) {
-          this.langService.setEnabledLangs(data.siteSettings.enabledLanguages);
-        }
-        // run reveal AFTER DOM renders
-        setTimeout(() => {
-          this.setupScrollReveal();
-          this.setupCounters();
-        }, 0);
-
-        this.loadingService.stop('home-content');
-        // Track page view
-        this.contentService.trackEvent('pageView');
-        // Load visitor count for public footer widget
-        const threshold = data.siteSettings?.visitorCount?.threshold ?? 100;
-        if (data.siteSettings?.visitorCount?.show) {
-          this.contentService.getVisitorCount().subscribe({
-            next: (c) => {
-              if (c.thisMonth >= threshold) this.visitorCount = c.thisMonth;
-            },
-            error: () => {},
-          });
-        }
-      },
-      error: () => {
-        this.loading = false;
-        this.apiError = true;
-        this.loadingService.stop('home-content');
-      },
-    });
-    this.resumeService.getInfo().subscribe({
-      next: (info) => (this.resumeInfo = info),
-      error: () => {},
-    });
+    this.loadContent();
+    this.loadResumeInfo();
   }
 
   ngAfterViewInit(): void {
@@ -131,71 +160,8 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   dismissOtw(): void {
     this.otwDismissed = true;
-  }
-
-  navigateToBlog(slug: string): void {
-    this.router.navigate(['/blog', slug]);
-  }
-
-  submitPublicTestimonial(): void {
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!this.testiSubmitForm.name || !this.testiSubmitForm.quote) {
-      this.testiSubmitError = 'Name and your testimonial are required.';
-      return;
-    }
-    if (!this.testiSubmitForm.email || !emailPattern.test(this.testiSubmitForm.email)) {
-      this.testiSubmitError = 'A valid email address is required.';
-      return;
-    }
-    this.testiSubmitting = true;
-    this.testiSubmitError = '';
-    const payload = { ...this.testiSubmitForm, avatar: this.testiSubmitAvatar || undefined };
-    this.contentService.submitTestimonial(payload).subscribe({
-      next: () => {
-        this.testiSubmitting = false;
-        this.testiSubmitSuccess = true;
-        this.testiSubmitForm = { name: '', role: '', company: '', quote: '', rating: 5, email: '' };
-        this.testiSubmitAvatar = null;
-        setTimeout(() => {
-          this.testiSubmitSuccess = false;
-          this.showTestiSubmitForm = false;
-        }, 5000);
-      },
-      error: (err) => {
-        this.testiSubmitting = false;
-        this.testiSubmitError = err.error?.message || 'Submission failed. Please try again.';
-      },
-    });
-  }
-
-  onTestiAvatarSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (!input.files?.length) return;
-    const file = input.files[0];
-    if (file.size > 2 * 1024 * 1024) {
-      this.testiSubmitError = 'Photo must be under 2 MB.';
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.testiSubmitAvatar = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  removeTestiAvatar(): void {
-    this.testiSubmitAvatar = null;
-  }
-
-  setTestiRating(n: number): void {
-    this.testiSubmitForm.rating = n;
-  }
-
-  toggleMobileMenu(): void {
-    this.mobileMenuOpen = !this.mobileMenuOpen;
-  }
-  closeMobileMenu(): void {
-    this.mobileMenuOpen = false;
+    // Persist 7 days; the banner re-shows after a week of absence.
+    this.storage.setWithExpiry('otw-dismissed', true, 7 * 24 * 60 * 60 * 1000);
   }
 
   toggleCompany(id: string): void {
@@ -221,107 +187,16 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   trackProjectClick(projectId: string): void {
-    this.contentService.trackEvent('projectClick', projectId);
+    this.contentService.trackEvent('projectClick', { projectId });
   }
 
-  trackResumeDownload(): void {
-    this.contentService.trackEvent('resumeDownload');
+  trackResumeDownload(source = 'unknown'): void {
+    this.contentService.trackEvent('resumeDownload', { source });
+    this.contentService.trackResumeFunnel('download', source);
   }
 
   trackSocialClick(): void {
     this.contentService.trackEvent('socialClick');
-  }
-
-  toggleBlogPost(id: string): void {
-    this.activeBlogPost = this.activeBlogPost === id ? null : id;
-  }
-
-  private _visibleTestis: any[] = [];
-  private _publishedPosts: any[] = [];
-
-  visibleTestimonials() {
-    return this._visibleTestis;
-  }
-  publishedPosts() {
-    return this._publishedPosts;
-  }
-
-  private refreshCaches(): void {
-    this._visibleTestis = (this.content?.testimonials || []).filter((t) => t.visible);
-    this._publishedPosts = (this.content?.blogPosts || []).filter((p) => p.published);
-  }
-
-  tickerItems(): string[] {
-    return (
-      this.content?.siteSettings?.ticker?.items || [
-        'Angular',
-        'TypeScript',
-        'Azure DevOps',
-        'Node.js',
-        'AWS Lambda',
-        'RxJS',
-        'NgRx',
-        'PostgreSQL',
-        'Cosmos DB',
-        'AZ-400 Expert',
-        'CI/CD Pipelines',
-      ]
-    );
-  }
-
-  stars(n: number): number[] {
-    return Array(n).fill(0);
-  }
-
-  normalizedSkillProficiency(value: number | null | undefined): number {
-    const numericValue = Number(value);
-    if (!Number.isFinite(numericValue)) return 80;
-    return Math.min(100, Math.max(10, Math.round(numericValue)));
-  }
-
-  skillLevel(proficiency: number | null | undefined): string {
-    const value = this.normalizedSkillProficiency(proficiency);
-    if (value >= 90) return 'Expert';
-    if (value >= 75) return 'Advanced';
-    if (value >= 60) return 'Strong';
-    return 'Growing';
-  }
-
-  skillLevelClass(proficiency: number | null | undefined): string {
-    const value = this.normalizedSkillProficiency(proficiency);
-    if (value >= 90) return 'elite';
-    if (value >= 75) return 'advanced';
-    if (value >= 60) return 'strong';
-    return 'growing';
-  }
-
-  formatSkillExperience(value: string | null | undefined): string {
-    const normalized = String(value || '')
-      .replace(/\s*(years?|yrs?)\.?$/i, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (!normalized) return 'Flexible experience';
-    if (/^1$/.test(normalized)) return '1 year';
-    if (/^\d+$/.test(normalized)) return `${normalized} years`;
-    if (/^\d+\+$/.test(normalized)) return `${normalized} years`;
-    return /years?|yrs?/i.test(normalized) ? normalized : `${normalized} years`;
-  }
-
-  extraSkills(): string[] {
-    const fromSettings = this.content?.siteSettings?.hero?.extraSkills || [];
-    const cleaned = fromSettings
-      .map((item) => String(item || '').trim())
-      .filter((item) => item.length > 0);
-    if (cleaned.length) return Array.from(new Set(cleaned));
-    return [];
-  }
-
-  getDisplayTags(tags: string[]): string[] {
-    return tags.slice(0, 4);
-  }
-
-  getExtraTagCount(tags: string[]): number {
-    return Math.max(0, tags.length - 4);
   }
 
   private setupScrollReveal(): void {
@@ -377,57 +252,65 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 100);
   }
 
-  sendMessage(): void {
-    const { name, email, message } = this.contactForm;
-    if (!name || !email || !message) {
-      this.contactError = 'Please fill in all fields.';
-      return;
-    }
-    this.contactSending = true;
-    this.contactError = '';
-    this.messagesService.sendMessage(this.contactForm).subscribe({
-      next: () => {
-        this.contactSending = false;
-        this.contactSuccess = true;
-        this.contactForm = { name: '', email: '', message: '', _hp: '' };
-        this.contentService.trackEvent('contactSubmit');
-        setTimeout(() => (this.contactSuccess = false), 6000);
-      },
-      error: (err) => {
-        this.contactSending = false;
-        this.contactError = err.error?.message || 'Failed to send. Please try again.';
-      },
-    });
+  retryLoad(): void {
+    this.apiError.set(false);
+    this.loading.set(true);
+    this.loadContent();
   }
 
-  retryLoad(): void {
-    this.apiError = false;
-    this.loading = true;
+  private loadContent(): void {
     this.loadingService.start('home-content');
-    this.contentService.getAll().subscribe({
-      next: (data) => {
-        this.content = data;
-        this.loading = false;
-        this.apiError = false;
-        this.refreshCaches();
-        if (data.siteSettings?.enabledLanguages?.length) {
-          this.langService.setEnabledLangs(data.siteSettings.enabledLanguages);
-        }
-        // run reveal AFTER DOM renders
-        setTimeout(() => {
-          this.setupScrollReveal();
-          this.setupCounters();
-        }, 0);
+    this.contentService
+      .getAllCached()
+      .pipe(
+        tap((data) => {
+          this.content.set(data);
+          if (data.siteSettings?.enabledLanguages?.length) {
+            this.langService.setEnabledLangs(data.siteSettings.enabledLanguages);
+          }
+          setTimeout(() => {
+            this.setupScrollReveal();
+            this.setupCounters();
+          }, 0);
+        }),
+        switchMap((data) => {
+          const threshold = data.siteSettings?.visitorCount?.threshold ?? 100;
+          if (!data.siteSettings?.visitorCount?.show) {
+            return of<number | null>(null);
+          }
+          return this.contentService.getVisitorCount().pipe(
+            map((count) => (count.thisMonth >= threshold ? count.thisMonth : null)),
+            catchError((err) => {
+              this.observability.captureError(err, { source: 'home.visitorCount' });
+              return of<number | null>(null);
+            }),
+          );
+        }),
+        finalize(() => this.loadingService.stop('home-content')),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (count) => {
+          this.visitorCount.set(count);
+          this.loading.set(false);
+          this.apiError.set(false);
+          this.contentService.trackResumeFunnel('view', 'resume-cta');
+        },
+        error: () => {
+          this.loading.set(false);
+          this.apiError.set(true);
+        },
+      });
+  }
 
-        this.loadingService.stop('home-content');
-        this.contentService.trackEvent('pageView');
-      },
-      error: () => {
-        this.loading = false;
-        this.apiError = true;
-        this.loadingService.stop('home-content');
-      },
-    });
+  private loadResumeInfo(): void {
+    this.resumeService
+      .getInfo()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (info) => this.resumeInfo.set(info),
+        error: (err) => this.observability.captureError(err, { source: 'home.resumeInfo' }),
+      });
   }
 
   ngOnDestroy(): void {
@@ -440,72 +323,28 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
     return item.id;
   }
 
-  get currentYear(): number {
-    return new Date().getFullYear();
-  }
-
-  certificationStatus(cert: Partial<Certification>): 'active' | 'expired' | 'no-expiry' {
-    const expiration = String(cert.expirationYear ?? '').trim();
-    const expires = Number(expiration);
-    if (!expiration || Number.isNaN(expires)) return 'no-expiry';
-    return expires < this.currentYear ? 'expired' : 'active';
-  }
-
-  verificationLabel(url: string | null | undefined): string {
-    const safeUrl = this.externalUrl(url).toLowerCase();
-    if (safeUrl.includes('credly.com')) return 'Verify on Credly';
-    if (safeUrl.includes('microsoft.')) return 'Verify on Microsoft';
-    return 'Verify Certificate';
-  }
-
-  /** Ensures external links always have a protocol so the browser doesn't
-   *  treat bare URLs like "www.google.com" as relative paths. */
-  externalUrl(url: string | null | undefined): string {
-    if (!url || url === '#') return '#';
-    return /^https?:\/\//i.test(url) ? url : 'https://' + url;
-  }
-
-  /** Copies email address to clipboard; shows confirmation for 2 s. */
-  copyEmail(): void {
-    navigator.clipboard.writeText(this.content!.hero.email).then(() => {
-      this.emailCopied = true;
-      setTimeout(() => (this.emailCopied = false), 2000);
-    });
-  }
-
   /** Opens the resume-gate modal if protection is on, otherwise downloads directly. */
   handleResumeClick(event: Event): void {
-    if (this.content?.siteSettings?.resumeProtected) {
+    const source = this.resolveResumeSource(event);
+    this.contentService.trackResumeFunnel('click', source);
+
+    if (this.content()?.siteSettings?.resumeProtected) {
       event.preventDefault();
+      this.resumeGateSource = source;
       this.resumeGateOpen = true;
-      this.resumeGateEmail = '';
-      this.resumeGateError = '';
-      // Tracking fires only after the gate is submitted (see submitResumeGate)
+      // Tracking fires only after the gate is submitted (see ResumeGateComponent)
     } else {
       // Direct download — track immediately
-      this.trackResumeDownload();
+      this.trackResumeDownload(source);
     }
   }
 
-  closeResumeGate(): void {
-    this.resumeGateOpen = false;
-  }
-
-  submitResumeGate(): void {
-    const email = this.resumeGateEmail.trim().toLowerCase();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      this.resumeGateError = 'Please enter a valid email address.';
-      return;
-    }
-    // Send the email to the backend (stored in resume_leads + email notification)
-    this.contentService.trackResumeLead(email);
-    // Track it as a resumeDownload analytics event
-    this.contentService.trackEvent('resumeDownload');
-    this.resumeGateOpen = false;
-    // Trigger download programmatically
-    const a = document.createElement('a');
-    a.href = this.resumeService.getDownloadUrl();
-    a.download = '';
-    a.click();
+  private resolveResumeSource(event: Event): string {
+    const target = event.target as HTMLElement | null;
+    if (!target) return 'unknown';
+    if (target.closest('.btn-nav-resume')) return 'nav';
+    if (target.closest('.btn-hero-resume')) return 'hero';
+    if (target.closest('.btn-resume-dl')) return 'banner';
+    return 'resume-cta';
   }
 }

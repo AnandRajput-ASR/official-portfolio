@@ -1,0 +1,163 @@
+<section class="tab-content">
+  <div class="tab-header">
+    <div>
+      <h1>Account &amp; Security</h1>
+      <p>Change your admin username, password, or reset access via email.</p>
+    </div>
+  </div>
+
+  <!-- Change credentials -->
+  <div class="settings-card">
+    <h3 class="account-section-title">🔑 Change Credentials</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>New Username <small>(leave blank to keep current)</small></label>
+        <input
+          type="text"
+          [(ngModel)]="accountForm.newUsername"
+          placeholder="{{ auth.getUsername() }}"
+        />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Current Password *</label>
+        <input
+          type="password"
+          [(ngModel)]="accountForm.currentPassword"
+          placeholder="Required to make changes"
+        />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>New Password</label>
+        <input
+          type="password"
+          [(ngModel)]="accountForm.newPassword"
+          placeholder="Minimum 8 characters"
+        />
+      </div>
+      <div class="form-group">
+        <label>Confirm New Password</label>
+        <input
+          type="password"
+          [(ngModel)]="accountForm.confirmPassword"
+          placeholder="Repeat new password"
+        />
+      </div>
+    </div>
+    <div class="pass-strength" *ngIf="accountForm.newPassword">
+      <div class="ps-bars">
+        <span [class.active]="accountForm.newPassword.length >= 8"></span>
+        <span [class.active]="accountForm.newPassword.length >= 12"></span>
+        <span
+          [class.active]="
+            accountForm.newPassword.length >= 16 || hasSpecialChars(accountForm.newPassword)
+          "
+        ></span>
+      </div>
+      <span class="ps-label">{{
+        accountForm.newPassword.length < 8
+          ? 'Too short'
+          : accountForm.newPassword.length < 12
+            ? 'Fair'
+            : 'Strong'
+      }}</span>
+    </div>
+    <div class="modal-actions account-save-row">
+      <button
+        class="btn btn-primary btn-sm"
+        (click)="changeCredentials()"
+        [disabled]="accountSaving || !accountForm.currentPassword"
+      >
+        <span class="lb-spinner" *ngIf="accountSaving"></span>
+        {{ accountSaving ? 'Updating...' : 'Update Credentials' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Forgot / Reset Password -->
+  <div class="settings-card account-reset-card">
+    <h3 class="account-section-title">🔒 Forgot Password / Reset</h3>
+    <p class="muted-text account-reset-intro">
+      Generate a reset token (sent to <strong>{{ auth.getUsername() }}</strong
+      >'s registered email when email is configured).
+    </p>
+
+    <div *ngIf="!showResetForm">
+      <button
+        class="btn btn-outline btn-sm"
+        (click)="sendForgotPassword()"
+        [disabled]="accountSaving"
+      >
+        <span class="lb-spinner" *ngIf="accountSaving"></span>
+        {{ accountSaving ? 'Generating...' : 'Generate Reset Token' }}
+      </button>
+      <div class="reset-token-result" *ngIf="forgotTokenResult">
+        <p class="muted-text" style="margin-bottom: 0.5rem">Token generated (valid 1 hour):</p>
+        <code class="token-code">{{ forgotTokenResult }}</code>
+        <button
+          class="btn btn-outline btn-xs account-use-token-btn"
+          (click)="showResetForm = true"
+        >
+          Use This Token →
+        </button>
+      </div>
+    </div>
+
+    <div class="reset-form" *ngIf="showResetForm">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Reset Token</label
+          ><input type="text" [(ngModel)]="resetForm.token" placeholder="Paste token here" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>New Password</label
+          ><input
+            type="password"
+            [(ngModel)]="resetForm.newPassword"
+            placeholder="Min 8 characters"
+          />
+        </div>
+        <div class="form-group">
+          <label>Confirm</label
+          ><input
+            type="password"
+            [(ngModel)]="resetForm.confirm"
+            placeholder="Repeat password"
+          />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline btn-sm" (click)="showResetForm = false">Cancel</button>
+        <button
+          class="btn btn-primary btn-sm"
+          (click)="resetPasswordWithToken()"
+          [disabled]="accountSaving || !resetForm.token || !resetForm.newPassword"
+        >
+          {{ accountSaving ? 'Resetting...' : 'Reset Password' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session Info -->
+  <div class="settings-card account-session-card">
+    <h3 class="account-section-title">📋 Current Session</h3>
+    <div class="session-info">
+      <div class="si-row">
+        <span class="si-label">Logged in as</span
+        ><span class="si-val">{{ auth.getUsername() }}</span>
+      </div>
+      <div class="si-row">
+        <span class="si-label">Role</span><span class="si-val amber-text">admin</span>
+      </div>
+    </div>
+    <button class="btn btn-danger btn-sm account-logout-btn" (click)="auth.logout()">
+      Logout →
+    </button>
+  </div>
+</section>

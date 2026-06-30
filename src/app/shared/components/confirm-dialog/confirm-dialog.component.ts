@@ -1,5 +1,5 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 
 export interface ConfirmConfig {
   title: string;
@@ -23,13 +23,13 @@ export interface ConfirmConfig {
         <p class="cd-message" [innerHTML]="config?.message"></p>
         <p class="cd-detail" *ngIf="config?.detail">{{ config!.detail }}</p>
         <div class="cd-actions">
-          <button class="cd-btn cd-cancel" (click)="cancel.emit()">
+          <button class="cd-btn cd-cancel" (click)="cancelled.emit()">
             {{ config?.cancelText || 'Cancel' }}
           </button>
           <button
             class="cd-btn"
             [ngClass]="'cd-' + (config?.type || 'danger')"
-            (click)="confirm.emit()"
+            (click)="confirmed.emit()"
           >
             {{ config?.confirmText || 'Confirm' }}
           </button>
@@ -163,9 +163,9 @@ export interface ConfirmConfig {
 export class ConfirmDialogComponent {
   @Input() visible = false;
   @Input() config: ConfirmConfig | null = null;
-  @Output() confirm = new EventEmitter<void>();
-  @Output() cancel = new EventEmitter<void>();
+  @Output() confirmed = new EventEmitter<void>();
+  @Output() cancelled = new EventEmitter<void>();
   onOverlay(e: MouseEvent): void {
-    if ((e.target as HTMLElement).classList.contains('cd-overlay')) this.cancel.emit();
+    if ((e.target as HTMLElement).classList.contains('cd-overlay')) this.cancelled.emit();
   }
 }

@@ -1,0 +1,89 @@
+<!-- ═══ HERO ═════════════════════════════════════════════════════════════════ -->
+<section class="hero" id="home">
+  <div class="hero-bg">
+    <div class="hero-blob blob1"></div>
+    <div class="hero-blob blob2"></div>
+    <div class="hero-grid"></div>
+  </div>
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-badge anim-1" *ngIf="
+                content.siteSettings.freelance.enabled &&
+                content.siteSettings.freelance.showInHero !== false
+              ">
+        <span class="badge-dot"></span>
+        {{ content.siteSettings.hero.badgeText || 'Available for Freelance · Pune, India' }}
+      </div>
+      <!-- Heading Name -->
+      <h1 class="hero-name anim-2">
+        {{ content.hero.name.split(' ')[0] }}<br /><span class="name-accent">{{
+          content.hero.name.split(' ').slice(1).join(' ')
+        }}</span>
+      </h1>
+      <!-- Role / Designation -->
+      <div class="hero-role anim-3">
+        <span class="role-line"></span>
+        {{ content.hero.title }}
+      </div>
+      <!-- Bio from Hero Section -->
+      <p class="hero-bio anim-4">{{ content.hero.bio }}</p>
+      <!-- Technology List -->
+      <div class="hero-pills anim-5">
+        <span class="pill" *ngFor="let pill of content.siteSettings.hero.pills">{{ pill }}</span>
+      </div>
+      <div class="hero-actions anim-6">
+        <a href="#contact" class="btn-hero-primary">{{
+          content.siteSettings.hero.ctaPrimary || 'Hire Me →'
+        }}</a>
+        <a href="#projects" class="btn-hero-secondary">{{
+          content.siteSettings.hero.ctaSecondary || 'See My Work'
+        }}</a>
+        <a
+          *ngIf="resumeInfo?.available"
+          [href]="resumeService.getDownloadUrl()"
+          class="btn-hero-resume"
+          download
+          (click)="resumeClick.emit($event)"
+          >↓ Resume</a
+        >
+      </div>
+    </div>
+
+    <div class="hero-right anim-7">
+      <div class="hero-card-stack">
+        <div class="hero-card card-back"></div>
+        <div class="hero-card card-mid"></div>
+        <div class="hero-card card-front">
+          <div class="card-header">
+            <div class="card-avatar">AR</div>
+            <div>
+              <p class="card-name">{{ content.hero.name }}</p>
+              <p class="card-title">
+                {{ content.siteSettings.hero.cardTitle || '&#64; Accenture · Pune' }}
+              </p>
+            </div>
+            <span class="card-status"
+              >● {{ content.siteSettings.hero.cardStatusText || 'Open to work' }}</span
+            >
+          </div>
+          <div class="card-stats" *ngIf="content.siteSettings.sections.stats !== false">
+            <ng-container *ngFor="let st of content.siteSettings.hero.cardStats; let i = index">
+              <div class="cs-div" *ngIf="i > 0"></div>
+              <div class="cs">
+                <span class="cs-val">{{ st.value }}</span
+                ><span class="cs-lab">{{ st.label }}</span>
+              </div>
+            </ng-container>
+          </div>
+          <div class="card-skills">
+            <span *ngFor="let sk of content.siteSettings.hero.cardSkills">{{ sk }}</span>
+          </div>
+          <div class="card-cta">
+            <a [href]="'mailto:' + content.hero.email" class="card-btn">Get In Touch →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="hero-scroll-hint"><span></span>scroll</div>
+</section>
