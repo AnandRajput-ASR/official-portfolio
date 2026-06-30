@@ -92,8 +92,10 @@
 
 .cd-info-empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 0.4rem;
 }
 
 .cd-hint {
@@ -102,9 +104,31 @@
   font-style: italic;
 }
 
+.cd-hint-sub {
+  color: var(--muted);
+  font-size: 0.72rem;
+  opacity: 0.7;
+  text-align: center;
+}
+
+.cd-info-cat {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.68rem !important;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--amber) !important;
+}
+
+.cd-info-desc {
+  line-height: 1.6;
+  margin-top: 0.6rem !important;
+}
+
 .cd-cert {
   color: var(--amber) !important;
   font-family: 'Space Mono', monospace;
   font-size: 0.78rem !important;
-  margin-top: 0.5rem;
+  margin-top: 0.8rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
 }
