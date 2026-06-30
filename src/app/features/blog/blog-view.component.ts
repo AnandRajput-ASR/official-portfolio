@@ -7,8 +7,7 @@ import {
   BlogCommentInput,
   BlogPost,
   BlogSocialComment,
-  BlogSocialState,
-  PortfolioContent
+  BlogSocialState
 } from '@core/models';
 import { ContentService } from '@core/services/content.service';
 import { renderMarkdown } from '@core/utils/markdown';
@@ -265,20 +264,17 @@ export class BlogViewComponent implements OnInit, OnDestroy {
           this.resetScrollPosition();
         }),
         switchMap((slug) =>
-          this.contentService.getAll().pipe(
+          this.contentService.getPublishedBlogPosts().pipe(
             timeout(12000),
-            map((content) => ({ slug, content })),
+            map((posts) => ({ slug, posts })),
           ),
         ),
         takeUntil(this.destroy$),
       )
       .subscribe({
-        next: ({ slug, content }) => {
-          const post =
-            (content.blogPosts ?? []).find(
-              (candidate) => candidate.slug === slug && this.contentService.isBlogPostLive(candidate),
-            ) ?? null;
-          this.applyLoadedPost(post, content);
+        next: ({ slug, posts }) => {
+          const post = posts.find((candidate) => candidate.slug === slug) ?? null;
+          this.applyLoadedPost(post, posts);
         },
         error: () => {
           this.notFound = true;
@@ -445,7 +441,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     this.backLabel = '← Back to Blog';
   }
 
-  private applyLoadedPost(post: BlogPost | null, content: PortfolioContent): void {
+  private applyLoadedPost(post: BlogPost | null, allPosts: BlogPost[]): void {
     if (post) {
       this.notFound = false;
       this.post = post;
@@ -453,10 +449,10 @@ export class BlogViewComponent implements OnInit, OnDestroy {
       this.tocItems = this.extractToc(this.renderedContent);
       this.sourceLinks = this.extractSourceLinks(post.content ?? '');
       this.trustBadges = this.extractTrustBadges(post.tags ?? []);
-      this.computeRelated(content.blogPosts ?? [], post);
-      this.computeSeries(content.blogPosts ?? [], post);
+      this.computeRelated(allPosts, post);
+      this.computeSeries(allPosts, post);
       this.contentService.trackBlogView(post.slug);
-      this.setMetaTags(post, content);
+      this.setMetaTags(post);
       this.loadSocialState(post.slug);
       this.resetScrollPosition();
       this.syncArticleMetrics();
@@ -464,9 +460,6 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     } else {
       this.notFound = true;
     }
-
-    if (content.hero?.name) this.authorName = content.hero.name;
-    if (content.hero?.title) this.authorTitle = content.hero.title;
 
     this.cdr.detectChanges();
   }
@@ -476,8 +469,8 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }
 
-  private setMetaTags(post: BlogPost, content: { hero?: { name?: string } }): void {
-    const author = content.hero?.name ?? 'Portfolio';
+  private setMetaTags(post: BlogPost): void {
+    const author = this.authorName || 'Portfolio';
     const absoluteUrl = this.getCurrentAbsoluteUrl();
     const imageUrl = this.toAbsoluteAssetUrl(post.coverImage);
     this.titleService.setTitle(`${post.title} · ${author}`);

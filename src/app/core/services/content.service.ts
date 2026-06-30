@@ -9,9 +9,13 @@ import {
     SiteSettings,
     Testimonial,
 } from '@core/models';
-import { normalizePortfolioContent, normalizeSettingsSingleton } from '@core/utils/wave2-compat';
+import {
+  normalizeBlogPostsCollection,
+  normalizePortfolioContent,
+  normalizeSettingsSingleton,
+} from '@core/utils/wave2-compat';
 import { environment } from '@env/environment';
-import { map, Observable, shareReplay } from 'rxjs';
+import { catchError, map, Observable, shareReplay } from 'rxjs';
 import { StorageService } from './storage.service';
 
 export type ResumeFunnelStage = 'view' | 'click' | 'download';
@@ -47,7 +51,9 @@ export class ContentService {
   private static readonly BLOG_POPULARITY_KEY = 'blog-popularity';
   private static readonly RESUME_FUNNEL_KEY = 'resume-funnel-events';
   private static readonly RESUME_FUNNEL_LIMIT = 2000;
+  private readonly blogBase = this.base + '/blogs';
   private cachedContent$?: Observable<PortfolioContent>;
+  private cachedPublishedBlogPosts$?: Observable<BlogPost[]>;
 
   /** Resolve a stored image value to a full URL.
    *  Handles: /uploads/... paths (from new file storage) and legacy data: base64 */
@@ -81,13 +87,29 @@ export class ContentService {
   }
 
   getPublishedBlogPosts(): Observable<BlogPost[]> {
-    return this.getAllCached().pipe(
-      map((content) =>
-        (content.blogPosts ?? [])
-          .filter((p) => this.isBlogPostLive(p))
-          .sort((a, b) => this.toDateMs(b.publishedAt) - this.toDateMs(a.publishedAt)),
-      ),
-    );
+    if (!this.cachedPublishedBlogPosts$) {
+      this.cachedPublishedBlogPosts$ = this.http.get<unknown>(this.blogBase).pipe(
+        map((res) => normalizeBlogPostsCollection(res)),
+        map((posts) =>
+          posts
+            .filter((p) => this.isBlogPostLive(p))
+            .sort((a, b) => this.toDateMs(b.publishedAt) - this.toDateMs(a.publishedAt)),
+        ),
+        // Keep compatibility while backend blog-only endpoint is being rolled out.
+        catchError(() =>
+          this.getAllCached().pipe(
+            map((content) =>
+              (content.blogPosts ?? [])
+                .filter((p) => this.isBlogPostLive(p))
+                .sort((a, b) => this.toDateMs(b.publishedAt) - this.toDateMs(a.publishedAt)),
+            ),
+          ),
+        ),
+        shareReplay({ bufferSize: 1, refCount: false }),
+      );
+    }
+
+    return this.cachedPublishedBlogPosts$;
   }
 
   getPublishedBlogPostBySlug(

@@ -6,6 +6,14 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.20 (2026-07-01)
+
+| Feature | Details |
+| ------- | ------- |
+| Blog-only data loading path | Public blog pages now load posts from a dedicated blog API path (`/api/content/blogs`) instead of relying on full `page-content` payloads. |
+| Related/series data minimization | Related posts and series navigation are now computed from blog-only datasets in article view, reducing unnecessary exposure of non-blog portfolio sections. |
+| Safe compatibility fallback | If backend blog-only endpoint is unavailable, frontend falls back to legacy `page-content` flow to prevent production outages during rollout. |
+
 ### v1.1.19 (2026-07-01)
 
 | Feature | Details |
@@ -314,6 +322,13 @@ All feature components are **lazy-loaded** via dynamic `import()`.
 2. Newly inserted section nodes are auto-registered via `MutationObserver`.
 3. If any reveal block is still hidden after initial render window, a fallback pass forces visibility so core content never remains blank.
 4. This keeps visual entry animations while prioritizing guaranteed content visibility on cold/slow first loads.
+
+### Blog Data API Strategy
+
+1. `/blog` and `/blog/:slug` now prefer blog-only payloads from `/api/content/blogs`.
+2. Related-post and series suggestions are computed only from the fetched published blog list.
+3. This reduces overfetching and avoids exposing unrelated homepage/admin-managed sections in blog route requests.
+4. During backend migration windows, frontend automatically falls back to `page-content` so user-facing blog routes remain available.
 
 ### Blog Article Experience (`/blog/:slug`)
 
