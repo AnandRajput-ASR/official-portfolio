@@ -6,14 +6,19 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.2 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Production auth probe fix | Set production `cookieAuth` to `false` so app startup no longer probes `/api/auth/me` on every page load when backend session endpoint is unavailable. |
+| Meta CSP warning cleanup | Removed `frame-ancestors` from meta CSP (it is enforced via response header, not meta). |
+
 ### v1.1.1 (2026-06-30)
 
 | Feature | Details |
 | ------- | ------- |
 | Production API via Vercel proxy | Switched production API base URL back to `/api` so browser calls stay same-origin and Vercel rewrites forward requests to Render. |
 | CSP tightened for proxy mode | Vercel header CSP `connect-src` now uses `'self'` in production instead of allowing direct backend host calls. |
-
-### v1.1.0 (2026-06-30)
 
 ### v1.1.0 (2026-06-30)
 
@@ -188,8 +193,16 @@ export const environment = {
   production: true,
   api: { baseUrl: '/api' },
   assets: { baseUrl: '/assets' },
+  cookieAuth: false,
 };
 ```
+
+### Authentication Mode by Environment
+
+| Runtime | Auth mode | `cookieAuth` |
+| ------- | --------- | ------------ |
+| Development (`ng serve`) | Cookie/session-capable backend integration | `true` or `false` per local backend support |
+| Production (Vercel) | Legacy token mode (no startup `/auth/me` probe) | `false` |
 
 ### API Base URL Resolution
 
