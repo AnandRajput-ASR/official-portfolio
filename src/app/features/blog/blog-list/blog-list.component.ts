@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { BlogPost } from '@core/models';
 import { ContentService } from '@core/services/content.service';
+import { timeout } from 'rxjs';
 
 @Component({
   selector: 'app-blog-list',
@@ -51,7 +52,12 @@ import { ContentService } from '@core/services/content.service';
         <p>Loading posts…</p>
       </div>
 
-      <div class="bl-empty" *ngIf="!loading && filteredPosts.length === 0">
+      <div class="bl-empty" *ngIf="!loading && loadError">
+        <span>⚠️</span>
+        <p>Could not load posts right now. Please try again.</p>
+      </div>
+
+      <div class="bl-empty" *ngIf="!loading && !loadError && filteredPosts.length === 0">
         <span>✍️</span>
         <p>No posts match your current filter.</p>
       </div>
@@ -86,6 +92,7 @@ export class BlogListComponent implements OnInit {
   private contentService = inject(ContentService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   posts: BlogPost[] = [];
   filteredPosts: BlogPost[] = [];
@@ -96,16 +103,22 @@ export class BlogListComponent implements OnInit {
   searchTerm = '';
   sortBy: 'newest' | 'popular' = 'newest';
   loading = true;
+  loadError = false;
 
   ngOnInit(): void {
     this.route.paramMap.subscribe((params) => {
       const tagFromRoute = params.get('tag');
       this.activeTag = tagFromRoute ? decodeURIComponent(tagFromRoute) : '';
       this.applyFilters();
+      this.cdr.detectChanges();
     });
 
-    this.contentService.getPublishedBlogPosts().subscribe({
+    this.contentService
+      .getPublishedBlogPosts()
+      .pipe(timeout(10000))
+      .subscribe({
       next: (posts) => {
+        this.loadError = false;
         this.posts = posts;
         this.popularityMap = this.contentService.getBlogPopularityMap();
         this.allTags = Array.from(new Set(posts.flatMap((post) => post.tags || []))).sort((a, b) =>
@@ -113,12 +126,15 @@ export class BlogListComponent implements OnInit {
         );
         this.applyFilters();
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
+        this.loadError = true;
         this.filteredPosts = [];
         this.loading = false;
+        this.cdr.detectChanges();
       },
-    });
+      });
   }
 
   applyFilters(): void {

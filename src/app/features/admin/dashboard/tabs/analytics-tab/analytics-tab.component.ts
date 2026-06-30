@@ -29,6 +29,7 @@ export class AnalyticsTabComponent implements OnInit {
   analytics: Analytics | null = null;
   analyticsLoading = false;
   resumeFunnelDays: 7 | 30 = 30;
+  chartDays: 7 | 30 | 90 = 30;
   resumeFunnel: ResumeFunnelSummary = {
     timeframeDays: 30,
     totals: { views: 0, clicks: 0, downloads: 0 },
@@ -108,9 +109,58 @@ export class AnalyticsTabComponent implements OnInit {
     return ((s / v) * 100).toFixed(1) + '%';
   }
 
-  /** Returns zero-filled 30-day visit array ready for the bar chart. */
+  conversionRatePercent(): number {
+    const v = this.analytics?.contactFormViews || 0,
+      s = this.analytics?.contactFormSubmissions || 0;
+    if (!v) return 0;
+    return (s / v) * 100;
+  }
+
+  resumeClickThroughRate(): string {
+    const views = this.resumeFunnel.totals.views || 0,
+      clicks = this.resumeFunnel.totals.clicks || 0;
+    if (!views) return '—';
+    return ((clicks / views) * 100).toFixed(1) + '%';
+  }
+
+  resumeClickThroughRatePercent(): number {
+    const views = this.resumeFunnel.totals.views || 0,
+      clicks = this.resumeFunnel.totals.clicks || 0;
+    if (!views) return 0;
+    return (clicks / views) * 100;
+  }
+
+  resumeDownloadRate(): string {
+    const clicks = this.resumeFunnel.totals.clicks || 0,
+      downloads = this.resumeFunnel.totals.downloads || 0;
+    if (!clicks) return '—';
+    return ((downloads / clicks) * 100).toFixed(1) + '%';
+  }
+
+  resumeDownloadRatePercent(): number {
+    const clicks = this.resumeFunnel.totals.clicks || 0,
+      downloads = this.resumeFunnel.totals.downloads || 0;
+    if (!clicks) return 0;
+    return (downloads / clicks) * 100;
+  }
+
+  overallResumeCTR(): string {
+    const views = this.resumeFunnel.totals.views || 0,
+      downloads = this.resumeFunnel.totals.downloads || 0;
+    if (!views) return '—';
+    return ((downloads / views) * 100).toFixed(1) + '%';
+  }
+
+  overallResumeCTRPercent(): number {
+    const views = this.resumeFunnel.totals.views || 0,
+      downloads = this.resumeFunnel.totals.downloads || 0;
+    if (!views) return 0;
+    return (downloads / views) * 100;
+  }
+
+  /** Returns zero-filled visit array ready for the bar chart based on selected days. */
   visitChartBars(): { date: string; count: number; label: string }[] {
-    const days = 30;
+    const days = this.chartDays;
     const map = new Map<string, number>();
     const visits = Array.isArray(this.analytics?.dailyVisits)
       ? (this.analytics?.dailyVisits as DailyVisit[])
@@ -134,6 +184,10 @@ export class AnalyticsTabComponent implements OnInit {
     return Math.max(1, ...this.visitChartBars().map((b) => b.count));
   }
 
+  visitChartMid(): number {
+    return Math.round(this.visitChartMax() / 2);
+  }
+
   /** Returns a +/- delta string vs last month. */
   monthDelta(): string {
     const cur = this.analytics?.thisMonth ?? 0;
@@ -151,6 +205,17 @@ export class AnalyticsTabComponent implements OnInit {
   setResumeFunnelDays(days: 7 | 30): void {
     this.resumeFunnelDays = days;
     this.loadResumeFunnel();
+  }
+
+  setChartDays(days: 7 | 30 | 90): void {
+    this.chartDays = days;
+    this.cdr.markForCheck();
+  }
+
+  chartBarsMidpoint(): { date: string; count: number; label: string } | undefined {
+    const bars = this.visitChartBars();
+    const mid = Math.floor(bars.length / 2);
+    return bars[mid];
   }
 
   private loadResumeFunnel(): void {

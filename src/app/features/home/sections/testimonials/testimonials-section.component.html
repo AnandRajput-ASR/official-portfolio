@@ -19,6 +19,10 @@
           [src]="contentService.getImageUrl(t.avatar)"
           [alt]="t.name"
           loading="lazy"
+          decoding="async"
+          fetchpriority="low"
+          width="40"
+          height="40"
         />
         <div class="testi-info">
           <p class="testi-name">{{ t.name }}</p>
@@ -101,7 +105,7 @@
         <label>Your Photo <small>(optional)</small></label>
         <div class="testi-photo-upload">
           <div class="testi-photo-preview" *ngIf="testiSubmitAvatar">
-            <img [src]="testiSubmitAvatar" alt="preview" />
+            <img [src]="testiSubmitAvatar" alt="preview" decoding="async" width="48" height="48" />
           </div>
           <div class="testi-photo-placeholder" *ngIf="!testiSubmitAvatar">
             {{ testiSubmitForm.name ? testiSubmitForm.name.charAt(0).toUpperCase() : '?' }}

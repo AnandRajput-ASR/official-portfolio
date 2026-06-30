@@ -18,18 +18,29 @@
   </div>
 
   <div class="msg-filters">
-    <button [class.active]="messageFilter === 'all'" (click)="messageFilter = 'all'">
-      All <span class="filter-count">{{ messages.length }}</span>
-    </button>
-    <button [class.active]="messageFilter === 'unread'" (click)="messageFilter = 'unread'">
-      Unread <span class="filter-count">{{ getUnreadCount() }}</span>
-    </button>
-    <button [class.active]="messageFilter === 'starred'" (click)="messageFilter = 'starred'">
-      ★ Starred <span class="filter-count">{{ getStarredCount() }}</span>
-    </button>
-    <button [class.active]="messageFilter === 'archived'" (click)="messageFilter = 'archived'">
-      Archived <span class="filter-count">{{ getArchivedCount() }}</span>
-    </button>
+    <div class="msg-search-wrap">
+      <input
+        type="search"
+        class="msg-search-input"
+        [(ngModel)]="searchQuery"
+        placeholder="Search by name, email or message…"
+        aria-label="Search messages"
+      />
+    </div>
+    <div class="msg-filter-tabs">
+      <button [class.active]="messageFilter === 'all'" (click)="messageFilter = 'all'">
+        All <span class="filter-count">{{ messages.length }}</span>
+      </button>
+      <button [class.active]="messageFilter === 'unread'" (click)="messageFilter = 'unread'">
+        Unread <span class="filter-count">{{ getUnreadCount() }}</span>
+      </button>
+      <button [class.active]="messageFilter === 'starred'" (click)="messageFilter = 'starred'">
+        ★ Starred <span class="filter-count">{{ getStarredCount() }}</span>
+      </button>
+      <button [class.active]="messageFilter === 'archived'" (click)="messageFilter = 'archived'">
+        Archived <span class="filter-count">{{ getArchivedCount() }}</span>
+      </button>
+    </div>
   </div>
 
   <div class="label-filters" *ngIf="availableLabels.length > 0">
@@ -50,10 +61,11 @@
 
   <div class="msg-empty" *ngIf="!messagesLoading && filteredMessages.length === 0">
     <span class="empty-icon">✉</span>
-    <p *ngIf="messageFilter === 'all'">No messages yet. Share your portfolio to get messages!</p>
-    <p *ngIf="messageFilter === 'unread'">No unread messages.</p>
-    <p *ngIf="messageFilter === 'starred'">No starred messages.</p>
-    <p *ngIf="messageFilter === 'archived'">No archived messages.</p>
+    <p *ngIf="searchQuery.trim()">No messages match "<strong>{{ searchQuery.trim() }}</strong>".</p>
+    <p *ngIf="!searchQuery.trim() && messageFilter === 'all'">No messages yet. Share your portfolio to get messages!</p>
+    <p *ngIf="!searchQuery.trim() && messageFilter === 'unread'">No unread messages.</p>
+    <p *ngIf="!searchQuery.trim() && messageFilter === 'starred'">No starred messages.</p>
+    <p *ngIf="!searchQuery.trim() && messageFilter === 'archived'">No archived messages.</p>
   </div>
 
   <div class="msg-layout" *ngIf="!messagesLoading && filteredMessages.length > 0">

@@ -42,6 +42,9 @@
           *ngIf="t.avatar"
           [src]="contentService.getImageUrl(t.avatar)"
           [alt]="t.name"
+          decoding="async"
+          width="36"
+          height="36"
         />
         <div class="testi-admin-name">
           <strong>{{ t.name }}</strong>
@@ -107,7 +110,7 @@
             <label>Avatar Photo <small>(optional)</small></label>
             <div class="avatar-upload-row">
               <div class="testi-avatar-preview" *ngIf="t.avatar">
-                <img [src]="contentService.getImageUrl(t.avatar)" alt="avatar" />
+                <img [src]="contentService.getImageUrl(t.avatar)" alt="avatar" decoding="async" width="64" height="64" />
               </div>
               <label class="btn btn-outline btn-xs">
                 {{ t.avatar ? 'Replace Photo' : 'Upload Photo' }}
@@ -155,6 +158,9 @@
             *ngIf="p.avatar"
             [src]="contentService.getImageUrl(p.avatar)"
             [alt]="p.name"
+            decoding="async"
+            width="36"
+            height="36"
           />
           <div>
             <strong>{{ p.name }}</strong>
@@ -254,7 +260,7 @@
         <label>Profile Photo <small>(optional)</small></label>
         <div class="avatar-upload-row">
           <div class="testi-avatar-preview" *ngIf="testimonialAvatarPreview">
-            <img [src]="testimonialAvatarPreview" alt="preview" />
+            <img [src]="testimonialAvatarPreview" alt="preview" decoding="async" width="64" height="64" />
           </div>
           <label class="btn btn-outline btn-xs">
             {{ testimonialAvatarPreview ? 'Replace' : 'Upload Photo' }}

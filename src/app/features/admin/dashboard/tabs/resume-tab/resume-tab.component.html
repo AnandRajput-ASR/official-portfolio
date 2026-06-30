@@ -48,6 +48,14 @@
     </div>
   </ng-template>
 
+  <!-- Previous upload note (shown after a replacement) -->
+  <div class="resume-prev-note" *ngIf="previousUpload">
+    <span class="resume-prev-icon">🔄</span>
+    <span>Previously: <strong>{{ previousUpload.fileName }}</strong>
+      <span *ngIf="previousUpload.uploadedAt"> · {{ formatDate(previousUpload.uploadedAt) }}</span>
+    </span>
+  </div>
+
   <!-- Upload dropzone -->
   <div
     class="resume-dropzone"

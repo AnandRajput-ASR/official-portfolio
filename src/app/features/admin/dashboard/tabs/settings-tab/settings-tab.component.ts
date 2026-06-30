@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  OnDestroy,
-  OnInit,
-  inject,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    OnDestroy,
+    OnInit,
+    inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SiteSettings } from '@core/models';
@@ -56,7 +56,7 @@ export class SettingsTabComponent implements OnInit, OnDestroy {
     amber: '#f5a623',
     green: '#4caf50',
   };
-  readonly themeTokenFields: Array<{ key: ThemeToken; label: string }> = [
+  readonly themeTokenFields: { key: ThemeToken; label: string }[] = [
     { key: 'bg', label: 'Background' },
     { key: 'surface', label: 'Surface 1' },
     { key: 'surface2', label: 'Surface 2' },

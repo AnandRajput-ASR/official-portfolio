@@ -56,6 +56,7 @@ export class MessagesStateService {
     );
     this.patch({ messages: nextMessages });
     this.updateMeta(id, { archived });
+    this.messagesService.setArchived(id, archived).subscribe();
   }
 
   setLabels(id: string, labels: string[]): void {
@@ -67,6 +68,7 @@ export class MessagesStateService {
     );
     this.patch({ messages: nextMessages });
     this.updateMeta(id, { labels: normalized });
+    this.messagesService.updateLabels(id, normalized).subscribe();
   }
 
   markQuickReplied(id: string): void {
@@ -76,6 +78,7 @@ export class MessagesStateService {
     );
     this.patch({ messages: nextMessages });
     this.updateMeta(id, { repliedAt });
+    this.messagesService.markReplied(id, repliedAt).subscribe();
   }
 
   private applyMeta(message: Message): Message {

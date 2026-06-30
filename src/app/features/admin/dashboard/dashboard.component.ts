@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, HostListener, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, OnInit, computed, inject } from '@angular/core';
 import { ActiveTab } from '@core/models';
 import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
@@ -8,6 +8,7 @@ import { AuthService } from '@core/services/auth.service';
 import { ConfirmService } from '@core/services/confirm.service';
 import { MessagesStateService } from '@core/services/messages-state.service';
 import { ResumeStateService } from '@core/services/resume-state.service';
+import { StorageService } from '@core/services/storage.service';
 import { ThemeService } from '@core/services/theme.service';
 import { ConfirmDialogComponent } from '@shared/components/confirm-dialog/confirm-dialog.component';
 import { ToastComponent } from '@shared/components/toast/toast.component';
@@ -67,6 +68,8 @@ import { TestimonialsTabComponent } from './tabs/testimonials-tab/testimonials-t
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardComponent implements OnInit {
+  private static readonly ACTIVE_TAB_KEY = 'admin-active-tab';
+
   protected store = inject(AdminContentStore);
   private adminService = inject(AdminService);
   protected audit = inject(AuditLogService);
@@ -75,16 +78,30 @@ export class DashboardComponent implements OnInit {
   resumeService = inject(ResumeStateService);
   themeService = inject(ThemeService);
   confirm = inject(ConfirmService);
+  private storage = inject(StorageService);
 
   sidebarOpen = false;
   activeTab: ActiveTab = 'hero';
 
+  /** Computed signal — rebuilds the dirty tabs label only when dirtyTabs changes. */
+  readonly dirtyTabsLabel = computed(() => {
+    this.store.dirty(); // subscribe to signal
+    return Array.from(this.store.dirtyTabs)
+      .map((t) => this.tabLabel(t))
+      .join(', ');
+  });
+
   ngOnInit(): void {
+    const saved = this.storage.get<string>(DashboardComponent.ACTIVE_TAB_KEY);
+    if (saved && this.isValidTab(saved)) {
+      this.activeTab = saved as ActiveTab;
+    }
     this.adminService.getAll().subscribe({
       next: (data) => this.store.content.set(data),
       error: () => this.store.content.set(null),
     });
     this.resumeService.load();
+    if (this.activeTab === 'messages') this.messagesService.load();
   }
 
   async setTab(tab: ActiveTab): Promise<void> {
@@ -105,6 +122,7 @@ export class DashboardComponent implements OnInit {
       this.audit.log(this.activeTab, 'revert', 'Discarded unsaved changes on tab switch');
     }
     this.activeTab = tab;
+    this.storage.set(DashboardComponent.ACTIVE_TAB_KEY, tab);
     if (tab === 'messages') this.messagesService.load();
   }
 
@@ -135,10 +153,13 @@ export class DashboardComponent implements OnInit {
     return this.store.dirty();
   }
 
-  getDirtyTabsLabel(): string {
-    return Array.from(this.store.dirtyTabs)
-      .map((t) => this.tabLabel(t))
-      .join(', ');
+  private isValidTab(value: string): boolean {
+    const valid: ActiveTab[] = [
+      'hero', 'skills', 'companies', 'personal', 'experience', 'certifications',
+      'testimonials', 'blog', 'analytics', 'settings', 'messages', 'resume',
+      'account', 'stats', 'audit',
+    ];
+    return valid.includes(value as ActiveTab);
   }
 
   @HostListener('window:beforeunload', ['$event'])

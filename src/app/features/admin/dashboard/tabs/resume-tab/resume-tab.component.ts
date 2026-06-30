@@ -25,6 +25,7 @@ export class ResumeTabComponent {
   uploadProgress = 0;
   uploadState: 'idle' | 'reading' | 'uploading' | 'done' | 'error' = 'idle';
   uploadErrorMsg = '';
+  previousUpload: { fileName: string; uploadedAt: string } | null = null;
 
   get resumeInfo() {
     return this.resumeState.info();
@@ -51,6 +52,11 @@ export class ResumeTabComponent {
     if (file.size > 10 * 1024 * 1024) {
       this.toast.error('Max 10MB allowed.');
       return;
+    }
+    // Snapshot current resume info before it's replaced
+    const current = this.resumeState.info();
+    if (current?.available && current.fileName) {
+      this.previousUpload = { fileName: current.fileName, uploadedAt: current.uploadedAt ?? '' };
     }
     this.uploadState = 'reading';
     this.uploadProgress = 0;
@@ -90,6 +96,7 @@ export class ResumeTabComponent {
     this.resumeService.deleteResume().subscribe({
       next: () => {
         this.resumeState.set({ available: false });
+        this.previousUpload = null;
         this.toast.success('Resume removed.');
       },
       error: () => this.toast.error('Delete failed'),

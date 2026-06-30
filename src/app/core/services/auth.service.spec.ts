@@ -9,17 +9,29 @@ describe('AuthService', () => {
   let service: AuthService;
   let http: HttpTestingController;
   let router: jasmine.SpyObj<Router>;
-  let store: Record<string, string>;
+  let localStore: Record<string, string>;
+  let sessionStore: Record<string, string>;
   const originalCookieAuth = environment.cookieAuth;
 
   beforeEach(() => {
-    store = {};
-    spyOn(Storage.prototype, 'getItem').and.callFake((k: string) => store[k] ?? null);
-    spyOn(Storage.prototype, 'setItem').and.callFake((k: string, v: string) => {
-      store[k] = v;
+    localStore = {};
+    sessionStore = {};
+    spyOn(Storage.prototype, 'getItem').and.callFake(function (this: Storage, k: string) {
+      return this === window.sessionStorage ? sessionStore[k] ?? null : localStore[k] ?? null;
     });
-    spyOn(Storage.prototype, 'removeItem').and.callFake((k: string) => {
-      delete store[k];
+    spyOn(Storage.prototype, 'setItem').and.callFake(function (this: Storage, k: string, v: string) {
+      if (this === window.sessionStorage) {
+        sessionStore[k] = v;
+        return;
+      }
+      localStore[k] = v;
+    });
+    spyOn(Storage.prototype, 'removeItem').and.callFake(function (this: Storage, k: string) {
+      if (this === window.sessionStorage) {
+        delete sessionStore[k];
+        return;
+      }
+      delete localStore[k];
     });
     router = jasmine.createSpyObj<Router>('Router', ['navigate']);
 
@@ -63,6 +75,8 @@ describe('AuthService', () => {
       expect(service.getToken()).toBe('jwt-token');
       expect(service.currentUser()).toEqual({ username: 'admin', role: 'admin' });
       expect(service.isLoggedInSnapshot()).toBeTrue();
+      expect(sessionStore['ar-portfolio:token']).toBe(JSON.stringify('jwt-token'));
+      expect(localStore['ar-portfolio:token']).toBeUndefined();
     });
 
     it('clears storage and navigates home on logout', () => {
@@ -81,12 +95,23 @@ describe('AuthService', () => {
     });
 
     it('probeSession returns the stored user without an HTTP call', (done) => {
-      store['ar-portfolio:user'] = JSON.stringify({ username: 'admin', role: 'admin' });
+      sessionStore['ar-portfolio:user'] = JSON.stringify({ username: 'admin', role: 'admin' });
       service.probeSession().subscribe((user) => {
         expect(user).toEqual({ username: 'admin', role: 'admin' });
         done();
       });
       http.expectNone(`${environment.api.baseUrl}/auth/me`);
+    });
+
+    it('migrates a legacy persistent token into session storage when bootstrapping', () => {
+      localStore['ar-portfolio:token'] = JSON.stringify('jwt-token');
+      localStore['ar-portfolio:user'] = JSON.stringify({ username: 'admin', role: 'admin' });
+
+      create();
+
+      expect(service.getToken()).toBe('jwt-token');
+      expect(sessionStore['ar-portfolio:token']).toBe(JSON.stringify('jwt-token'));
+      expect(localStore['ar-portfolio:token']).toBeUndefined();
     });
   });
 

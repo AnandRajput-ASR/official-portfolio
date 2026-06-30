@@ -26,8 +26,9 @@ interface ForgotPasswordResponse {
  *    attack surface.
  *
  *  - **Legacy mode** (default, `cookieAuth: false`): the JWT is returned
- *    in the login response body and stored in `localStorage`. Will be
- *    removed once the backend cookie path is deployed.
+ *    in the login response body and stored in `sessionStorage` only.
+ *    This fallback keeps local development working without leaving a
+ *    long-lived bearer token in persistent browser storage.
  *
  * Either way the contract the rest of the app sees is identical:
  * `login` returns an Observable, `isLoggedInSnapshot` returns a boolean,
@@ -70,8 +71,9 @@ export class AuthService {
       .post<AuthResponse>(`${environment.api.baseUrl}/auth/login`, { username, password })
       .pipe(
         tap((res) => {
-          this.storage.set(AuthService.TOKEN_KEY, res.token);
-          this.storage.set(AuthService.USER_KEY, { username: res.username, role: res.role });
+          this.storage.setSession(AuthService.TOKEN_KEY, res.token);
+          this.storage.setSession(AuthService.USER_KEY, { username: res.username, role: res.role });
+          this.clearLegacyPersistentAuth();
           this.markLoggedIn(res.username, res.role);
         }),
       );
@@ -89,14 +91,14 @@ export class AuthService {
           complete: () => this.clearLocalSession(),
         });
     } else {
-      this.storage.remove(AuthService.TOKEN_KEY);
-      this.storage.remove(AuthService.USER_KEY);
+      this.clearStoredAuth();
       this.markLoggedOut();
       this.router.navigate(['/']);
     }
   }
 
   private clearLocalSession(): void {
+    this.clearStoredAuth();
     this.markLoggedOut();
     this.router.navigate(['/']);
   }
@@ -104,12 +106,12 @@ export class AuthService {
   /** Returns the stored JWT, or null. Cookie mode always returns null. */
   getToken(): string | null {
     if (environment.cookieAuth) return null;
-    const v = this.storage.get<string>(AuthService.TOKEN_KEY);
+    const v = this.readStoredToken();
     return v ?? null;
   }
 
   getUsername(): string {
-    const user = this.storage.get<{ username: string }>(AuthService.USER_KEY);
+    const user = this.readStoredUser();
     if (user?.username) return user.username;
     return this.currentUser()?.username ?? 'admin';
   }
@@ -129,7 +131,7 @@ export class AuthService {
    */
   probeSession(): Observable<{ username: string; role: string } | null> {
     if (!environment.cookieAuth) {
-      const user = this.storage.get<{ username: string; role: string }>(AuthService.USER_KEY);
+      const user = this.readStoredUser();
       return of(user ?? null);
     }
     return this.http
@@ -172,8 +174,9 @@ export class AuthService {
       .pipe(
         tap((res) => {
           if (res.token) {
-            this.storage.set(AuthService.TOKEN_KEY, res.token);
-            this.storage.set(AuthService.USER_KEY, { username: res.username, role: res.role });
+            this.storage.setSession(AuthService.TOKEN_KEY, res.token);
+            this.storage.setSession(AuthService.USER_KEY, { username: res.username, role: res.role });
+            this.clearLegacyPersistentAuth();
           }
           this.audit.log('account', 'save', 'Changed account credentials');
         }),
@@ -202,12 +205,13 @@ export class AuthService {
    */
   private initialUser(): { username: string; role: string } | null {
     if (environment.cookieAuth) return null;
+    this.migrateLegacyPersistentAuth();
     if (!this.hasValidSession()) return null;
-    return this.storage.get<{ username: string; role: string }>(AuthService.USER_KEY) ?? null;
+    return this.readStoredUser();
   }
 
   private hasValidSession(): boolean {
-    const token = this.storage.get<string>(AuthService.TOKEN_KEY);
+    const token = this.readStoredToken();
     if (!token) return false;
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -223,5 +227,39 @@ export class AuthService {
 
   private markLoggedOut(): void {
     this.currentUser.set(null);
+  }
+
+  private readStoredToken(): string | null {
+    return this.storage.getSession<string>(AuthService.TOKEN_KEY);
+  }
+
+  private readStoredUser(): { username: string; role: string } | null {
+    return this.storage.getSession<{ username: string; role: string }>(AuthService.USER_KEY);
+  }
+
+  private clearStoredAuth(): void {
+    this.storage.removeSession(AuthService.TOKEN_KEY);
+    this.storage.removeSession(AuthService.USER_KEY);
+    this.clearLegacyPersistentAuth();
+  }
+
+  private clearLegacyPersistentAuth(): void {
+    this.storage.remove(AuthService.TOKEN_KEY);
+    this.storage.remove(AuthService.USER_KEY);
+  }
+
+  private migrateLegacyPersistentAuth(): void {
+    const legacyToken = this.storage.get<string>(AuthService.TOKEN_KEY);
+    const legacyUser = this.storage.get<{ username: string; role: string }>(AuthService.USER_KEY);
+
+    if (legacyToken) {
+      this.storage.setSession(AuthService.TOKEN_KEY, legacyToken);
+    }
+    if (legacyUser) {
+      this.storage.setSession(AuthService.USER_KEY, legacyUser);
+    }
+    if (legacyToken || legacyUser) {
+      this.clearLegacyPersistentAuth();
+    }
   }
 }

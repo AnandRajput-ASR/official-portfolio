@@ -72,6 +72,25 @@
   }
 }
 
+.toggle-with-status {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.toggle-status {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  transition: color 0.2s;
+
+  &.on {
+    color: #22c55e;
+  }
+}
+
 @media (max-width: 768px) {
   .form-grid {
     grid-template-columns: 1fr;

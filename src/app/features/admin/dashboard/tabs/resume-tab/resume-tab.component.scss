@@ -59,6 +59,29 @@
   }
 }
 
+.resume-prev-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  border-radius: 3px;
+  margin-bottom: 1rem;
+
+  .resume-prev-icon {
+    flex-shrink: 0;
+  }
+
+  strong {
+    color: var(--text);
+  }
+}
+
 .resume-no-file {
   text-align: center;
   padding: 3rem 2rem;

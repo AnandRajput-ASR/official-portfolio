@@ -13,6 +13,7 @@ import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
 import { ConfirmService } from '@core/services/confirm.service';
 import { ContentService } from '@core/services/content.service';
+import { renderMarkdown } from '@core/utils/markdown';
 import { ToastService } from '@shared/components/toast/toast.component';
 
 @Component({
@@ -35,6 +36,8 @@ export class BlogTabComponent implements OnInit, OnDestroy {
   showAddBlog = false;
   editingBlogId: string | null = null;
   newBlog: Partial<BlogPost> = this.emptyBlog();
+  previewBlogIds = new Set<string>();
+  previewNewBlog = false;
 
   get saving(): boolean {
     return this.store.saving();
@@ -53,6 +56,20 @@ export class BlogTabComponent implements OnInit, OnDestroy {
 
   markDirty(): void {
     this.store.markDirty('blog');
+  }
+
+  togglePreview(id: string): void {
+    if (this.previewBlogIds.has(id)) {
+      this.previewBlogIds.delete(id);
+    } else {
+      this.previewBlogIds.add(id);
+    }
+  }
+
+  getPreviewHtml(content: string): string {
+    // Normalize literal \n escape sequences (from JSON-encoded data) to real newlines
+    const normalized = (content || '').replace(/\\n/g, '\n');
+    return renderMarkdown(normalized);
   }
 
   saveBlog(): void {
@@ -180,8 +197,14 @@ export class BlogTabComponent implements OnInit, OnDestroy {
     const unpublishAt = this.normalizeDateTimeInput(post.unpublishedAt, true);
 
     if (!publishAt) return 'Not scheduled';
-    if (unpublishAt) return `${publishAt} -> ${unpublishAt}`;
-    return publishAt;
+    const fmt = (dt: string) => {
+      const d = new Date(dt);
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+        + ' · '
+        + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    };
+    if (unpublishAt) return `${fmt(publishAt)} → ${fmt(unpublishAt)}`;
+    return fmt(publishAt);
   }
 
   addBlogTag(p: Partial<BlogPost>, e: Event): void {

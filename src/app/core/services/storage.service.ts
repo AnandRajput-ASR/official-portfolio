@@ -17,13 +17,23 @@ import { Injectable } from '@angular/core';
 export class StorageService {
   private static readonly NAMESPACE = 'ar-portfolio';
 
-  /** Returns null when localStorage is unavailable (SSR / private mode). */
-  private get store(): Storage | null {
+  private getStore(scope: 'local' | 'session'): Storage | null {
     try {
-      return typeof window !== 'undefined' ? window.localStorage : null;
+      if (typeof window === 'undefined') return null;
+      return scope === 'session' ? window.sessionStorage : window.localStorage;
     } catch {
       return null;
     }
+  }
+
+  /** Returns null when localStorage is unavailable (SSR / private mode). */
+  private get store(): Storage | null {
+    return this.getStore('local');
+  }
+
+  /** Returns null when sessionStorage is unavailable (SSR / private mode). */
+  private get sessionStore(): Storage | null {
+    return this.getStore('session');
   }
 
   private key(name: string): string {
@@ -31,7 +41,14 @@ export class StorageService {
   }
 
   get<T>(name: string): T | null {
-    const store = this.store;
+    return this.getFrom(this.store, name);
+  }
+
+  getSession<T>(name: string): T | null {
+    return this.getFrom(this.sessionStore, name);
+  }
+
+  private getFrom<T>(store: Storage | null, name: string): T | null {
     if (!store) return null;
     try {
       const raw = store.getItem(this.key(name));
@@ -43,7 +60,14 @@ export class StorageService {
   }
 
   set<T>(name: string, value: T): void {
-    const store = this.store;
+    this.setTo(this.store, name, value);
+  }
+
+  setSession<T>(name: string, value: T): void {
+    this.setTo(this.sessionStore, name, value);
+  }
+
+  private setTo<T>(store: Storage | null, name: string, value: T): void {
     if (!store) return;
     try {
       store.setItem(this.key(name), JSON.stringify(value));
@@ -54,7 +78,14 @@ export class StorageService {
   }
 
   remove(name: string): void {
-    const store = this.store;
+    this.removeFrom(this.store, name);
+  }
+
+  removeSession(name: string): void {
+    this.removeFrom(this.sessionStore, name);
+  }
+
+  private removeFrom(store: Storage | null, name: string): void {
     if (!store) return;
     try {
       store.removeItem(this.key(name));

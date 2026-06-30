@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Message } from '@core/models';
 import { ConfirmService } from '@core/services/confirm.service';
@@ -15,7 +15,7 @@ import { ToastService } from '@shared/components/toast/toast.component';
   styleUrl: './messages-tab.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class MessagesTabComponent {
+export class MessagesTabComponent implements OnInit {
   private readonly messagesService = inject(MessagesService);
   readonly messagesState = inject(MessagesStateService);
   private readonly confirm = inject(ConfirmService);
@@ -25,8 +25,9 @@ export class MessagesTabComponent {
   messageFilter: 'all' | 'unread' | 'starred' | 'archived' = 'all';
   activeLabel = 'all';
   labelInput = '';
+  searchQuery = '';
 
-  readonly quickReplies: Array<{ title: string; subject: string; body: string }> = [
+  readonly quickReplies: { title: string; subject: string; body: string }[] = [
     {
       title: 'Intro Call',
       subject: 'Thanks for reaching out',
@@ -77,6 +78,7 @@ export class MessagesTabComponent {
   }
 
   get filteredMessages(): Message[] {
+    const q = this.searchQuery.trim().toLowerCase();
     const withFilter = this.messages.filter((m) => {
       const isArchived = !!m.archived;
       if (this.messageFilter === 'archived') return isArchived;
@@ -86,8 +88,18 @@ export class MessagesTabComponent {
       return true;
     });
 
-    if (this.activeLabel === 'all') return withFilter;
-    return withFilter.filter((m) => (m.labels || []).includes(this.activeLabel));
+    const withLabel =
+      this.activeLabel === 'all'
+        ? withFilter
+        : withFilter.filter((m) => (m.labels || []).includes(this.activeLabel));
+
+    if (!q) return withLabel;
+    return withLabel.filter(
+      (m) =>
+        m.name.toLowerCase().includes(q) ||
+        m.email.toLowerCase().includes(q) ||
+        m.message.toLowerCase().includes(q),
+    );
   }
 
   get availableLabels(): string[] {
@@ -173,7 +185,7 @@ export class MessagesTabComponent {
     const next = !msg.archived;
     msg.archived = next;
     this.messagesState.setArchived(msg.id, next);
-    if (next && this.selectedMessage?.id === msg.id) {
+    if (this.selectedMessage?.id === msg.id && this.messageFilter !== 'all') {
       this.closeMessage();
     }
     this.toast.success(next ? 'Message archived' : 'Message moved to inbox');

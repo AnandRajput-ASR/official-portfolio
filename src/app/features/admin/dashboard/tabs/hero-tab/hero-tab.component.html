@@ -51,10 +51,15 @@
       </div>
       <div class="form-group toggle-group">
         <label>Available for Work</label>
-        <label class="toggle">
-          <input type="checkbox" [(ngModel)]="heroEdit.availableForWork" name="available" />
-          <span class="toggle-slider"></span>
-        </label>
+        <div class="toggle-with-status">
+          <label class="toggle">
+            <input type="checkbox" [(ngModel)]="heroEdit.availableForWork" name="available" />
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-status" [class.on]="heroEdit.availableForWork">
+            {{ heroEdit.availableForWork ? 'Yes' : 'No' }}
+          </span>
+        </div>
       </div>
     </div>
   </div>

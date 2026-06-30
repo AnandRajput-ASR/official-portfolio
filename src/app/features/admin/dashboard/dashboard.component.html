@@ -1,5 +1,5 @@
 <div class="dirty-bar" *ngIf="dirtyTabCount > 0">
-  <span>⚠ Unsaved changes in: {{ getDirtyTabsLabel() }}</span>
+  <span>⚠ Unsaved changes in: {{ dirtyTabsLabel() }}</span>
 </div>
 
 <div class="admin" *ngIf="store.content() !== null; else loader">
@@ -8,8 +8,8 @@
   <app-confirm-dialog
     [visible]="confirm.visible()"
     [config]="confirm.config()"
-    (confirm)="confirm.yes()"
-    (cancel)="confirm.no()"
+    (confirmed)="confirm.yes()"
+    (cancelled)="confirm.no()"
   >
   </app-confirm-dialog>
 
@@ -51,10 +51,10 @@
         <span class="tab-icon">🏢</span> Work / Companies
       </button>
       <button [class.active]="activeTab === 'personal'" (click)="mobileSetTab('personal')">
-        <span class="tab-icon">⚡</span> Side Projects
+        <span class="tab-icon">🚀</span> Side Projects
       </button>
       <button [class.active]="activeTab === 'experience'" (click)="mobileSetTab('experience')">
-        <span class="tab-icon">📋</span> Timeline
+        <span class="tab-icon">&#128197;</span> Timeline
       </button>
       <button [class.active]="activeTab === 'stats'" (click)="mobileSetTab('stats')">
         <span class="tab-icon">📈</span> About Stats
@@ -99,7 +99,7 @@
         <span class="dirty-dot" *ngIf="store.isDirty('account')"></span>
       </button>
       <button [class.active]="activeTab === 'audit'" (click)="mobileSetTab('audit')">
-        <span class="tab-icon">📋</span> Audit Log
+        <span class="tab-icon">&#128221;</span> Audit Log
         <span
           class="unread-badge"
           *ngIf="audit.events().length > 0"

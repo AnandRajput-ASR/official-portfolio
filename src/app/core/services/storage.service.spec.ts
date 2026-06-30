@@ -3,16 +3,28 @@ import { StorageService } from './storage.service';
 
 describe('StorageService', () => {
   let service: StorageService;
-  let store: Record<string, string>;
+  let localStore: Record<string, string>;
+  let sessionStore: Record<string, string>;
 
   beforeEach(() => {
-    store = {};
-    spyOn(Storage.prototype, 'getItem').and.callFake((k: string) => store[k] ?? null);
-    spyOn(Storage.prototype, 'setItem').and.callFake((k: string, v: string) => {
-      store[k] = v;
+    localStore = {};
+    sessionStore = {};
+    spyOn(Storage.prototype, 'getItem').and.callFake(function (this: Storage, k: string) {
+      return this === window.sessionStorage ? sessionStore[k] ?? null : localStore[k] ?? null;
     });
-    spyOn(Storage.prototype, 'removeItem').and.callFake((k: string) => {
-      delete store[k];
+    spyOn(Storage.prototype, 'setItem').and.callFake(function (this: Storage, k: string, v: string) {
+      if (this === window.sessionStorage) {
+        sessionStore[k] = v;
+        return;
+      }
+      localStore[k] = v;
+    });
+    spyOn(Storage.prototype, 'removeItem').and.callFake(function (this: Storage, k: string) {
+      if (this === window.sessionStorage) {
+        delete sessionStore[k];
+        return;
+      }
+      delete localStore[k];
     });
     TestBed.configureTestingModule({});
     service = TestBed.inject(StorageService);
@@ -34,7 +46,7 @@ describe('StorageService', () => {
   });
 
   it('returns null on a JSON-parse failure', () => {
-    store['ar-portfolio:bad'] = '{not json';
+    localStore['ar-portfolio:bad'] = '{not json';
     expect(service.get('bad')).toBeNull();
   });
 
@@ -46,8 +58,23 @@ describe('StorageService', () => {
 
   it('namespaces keys so a wildcard wipe is safe', () => {
     service.set('a', 1);
-    const rawKeys = Object.keys(store);
+    const rawKeys = Object.keys(localStore);
     expect(rawKeys.every((k) => k.startsWith('ar-portfolio:'))).toBeTrue();
+  });
+
+  it('round-trips a session-scoped value', () => {
+    service.setSession('token', 'jwt');
+    expect(service.getSession('token')).toBe('jwt');
+    expect(service.get('token')).toBeNull();
+  });
+
+  it('removes only the session-scoped value when requested', () => {
+    service.set('theme', 'dark');
+    service.setSession('token', 'jwt');
+    service.removeSession('token');
+
+    expect(service.getSession('token')).toBeNull();
+    expect(service.get('theme')).toBe('dark');
   });
 
   it('respects TTL — returns null after expiry', () => {

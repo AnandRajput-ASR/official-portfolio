@@ -55,4 +55,22 @@ export class MessagesService {
       .patch<ApiResponse>(`${this.base}/mark-all-read`, {})
       .pipe(tap(() => this.audit.log('messages', 'save', 'Marked all messages as read')));
   }
+
+  updateLabels(id: string, labels: string[]): Observable<ApiResponse> {
+    return this.http
+      .patch<ApiResponse>(`${this.base}/${id}/labels`, { labels })
+      .pipe(tap(() => this.audit.log('messages', 'save', 'Updated message labels')));
+  }
+
+  setArchived(id: string, archived: boolean): Observable<ApiResponse> {
+    return this.http
+      .patch<ApiResponse>(`${this.base}/${id}/archive`, { archived })
+      .pipe(tap(() => this.audit.log('messages', 'save', archived ? 'Archived message' : 'Moved message to inbox')));
+  }
+
+  markReplied(id: string, repliedAt: string): Observable<ApiResponse> {
+    return this.http
+      .patch<ApiResponse>(`${this.base}/${id}/replied`, { repliedAt })
+      .pipe(tap(() => this.audit.log('messages', 'save', 'Marked message as replied')));
+  }
 }

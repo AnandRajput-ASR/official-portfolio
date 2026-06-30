@@ -294,7 +294,6 @@ export class HomeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.visitorCount.set(count);
           this.loading.set(false);
           this.apiError.set(false);
-          this.contentService.trackEvent('pageView');
           this.contentService.trackResumeFunnel('view', 'resume-cta');
         },
         error: () => {

@@ -11,9 +11,40 @@
 
 .msg-filters {
   display: flex;
+  flex-direction: column;
   gap: 0;
   margin-bottom: 1.5rem;
   border-bottom: 1px solid var(--border);
+
+  .msg-search-wrap {
+    padding: 0.5rem 0 0.75rem;
+  }
+
+  .msg-search-input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 0.45rem 0.75rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.76rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: var(--amber);
+    }
+
+    &::placeholder {
+      color: var(--muted);
+    }
+  }
+
+  .msg-filter-tabs {
+    display: flex;
+    gap: 0;
+  }
 
   button {
     background: none;
