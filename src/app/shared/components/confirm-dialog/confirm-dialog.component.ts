@@ -102,6 +102,7 @@ export interface ConfirmConfig {
         letter-spacing: 0.1em;
         text-transform: uppercase;
         padding: 0.6rem 1.3rem;
+        min-height: 2.5rem;
         cursor: pointer;
         font-weight: 700;
         background: transparent;
@@ -156,6 +157,21 @@ export interface ConfirmConfig {
         to {
           opacity: 1;
           transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .cd-box {
+          padding: 1.35rem 1.15rem;
+        }
+
+        .cd-actions {
+          width: 100%;
+          justify-content: stretch;
+        }
+
+        .cd-btn {
+          flex: 1;
         }
       }
     `,

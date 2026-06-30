@@ -6,6 +6,24 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.27 (2026-07-01)
+
+| Feature | Details |
+| ------- | ------- |
+| Admin mobile/tablet shell polish | Improved admin mobile topbar/sidebar action hit areas (`menu`, theme toggle, sidebar footer controls) for better phone/tablet usability while preserving desktop dashboard layout. |
+| Shared admin-tab touch-target hardening | Added mobile safeguards in shared admin tab base styles so icon/action buttons and form controls in tab content meet touch-friendly minimum sizing across extracted admin tabs. |
+| Popup/modal responsive QA pass | Audited add/edit admin modals (skills, companies, projects, certifications, blog) for phone/tablet overflow and control sizing; modal containers remain viewport-safe on tested widths. |
+| Confirm dialog mobile action fix | Increased confirm dialog action button tap size and improved small-screen action layout to avoid undersized confirm/cancel controls in destructive workflows. |
+
+### v1.1.26 (2026-07-01)
+
+| Feature | Details |
+| ------- | ------- |
+| Full mobile/tablet overflow hardening | Eliminated horizontal overflow across audited routes (`/`, `/blog`, `/blog/:slug`, secret/admin login) for 320/360/390/768 viewports without changing desktop layout behavior. |
+| Blog markdown code-block containment | Added viewport-safe handling for markdown-rendered code blocks (including language-class code nodes from `innerHTML`) so long lines scroll inside article blocks instead of expanding page width. |
+| Mobile menu containment pass | Hardened mobile drawer/menu panel sizing and overflow behavior to prevent off-canvas UI from affecting document width on smaller devices. |
+| Tap-target accessibility polish | Increased minimum hit areas for key interactive controls (blog social/actions, tag filters, nav toggles, testimonial stars, contact copy, admin back link, and related home/blog actions). |
+
 ### v1.1.25 (2026-07-01)
 
 | Feature | Details |
@@ -634,6 +652,57 @@ Note: The internal `featured` marker is used only for editorial control and is n
 | Blog list looks empty unexpectedly | Verify published posts exist in content API and clear active filters/tags from toolbar. |
 | Featured card not visible | Ensure at least one post matches current filter/search combination. |
 | Post images missing | Confirm `coverImage` URLs are valid and reachable from browser network context. |
+
+### Mobile & Tablet Responsiveness Verification
+
+Use this checklist whenever styles/components are changed to keep mobile/tablet UX stable without desktop regressions.
+
+#### Audited Route Matrix
+
+| Route | Purpose |
+| ----- | ------- |
+| `/` | Full home experience (header, hero, ticker, sections, forms). |
+| `/blog` | Blog listing and filter interactions. |
+| `/blog/:slug` | Article readability, markdown rendering, social actions, comments, related cards. |
+| `/:slug` (secret admin entry) | Secret entry/login gate layout and CTA usability. |
+| `/admin/login` | Admin auth form layout and touch targets. |
+
+#### Viewports
+
+| Profile | Width × Height |
+| ------- | -------------- |
+| Small phone | `320 x 800` |
+| Standard phone | `360 x 800` |
+| Large phone | `390 x 844` |
+| Tablet | `768 x 1024` |
+
+#### Step-by-Step QA Workflow
+
+1. Run local app with `npm start`.
+2. Open each route in the matrix above.
+3. Validate no horizontal scroll at each viewport (`document.documentElement.scrollWidth - clientWidth === 0`).
+4. Check markdown-heavy blog post(s) with fenced code and image blocks.
+5. Verify mobile navigation drawer opens/closes without creating page overflow.
+6. Spot-check touch targets for major controls (aim for minimum 40px on interactive controls).
+7. Re-run desktop checks to confirm no visual/behavioral regressions.
+
+#### Admin Popup / Overlay Checklist
+
+1. Log in to `/admin/dashboard`.
+2. Open each available add/edit popup modal (for example: skills, companies, side projects, certifications, blog post modal).
+3. Validate modal overlay + panel at `320x800`, `390x844`, and `768x1024` with no horizontal overflow.
+4. Verify modal header close button and modal action buttons are touch-friendly.
+5. Trigger at least one destructive action to open global confirm dialog and verify confirm/cancel controls are touch-friendly on mobile.
+
+#### Expected Behavior After v1.1.26
+
+| Area | Expected behavior |
+| ---- | ----------------- |
+| Home route layout | No horizontal overflow on audited phone/tablet widths. |
+| Blog list route | No overflow; filter chips remain touch-friendly. |
+| Blog article route | Markdown code blocks scroll within article container, page width stays constrained. |
+| Secret/admin login routes | No overflow; core CTA/link hit targets meet mobile touch expectations. |
+| Desktop/laptop layout | Existing visual style and behavior remain unchanged. |
 
 ---
 

@@ -193,6 +193,36 @@
   margin-top: 1.5rem;
 }
 
+@media (max-width: 768px) {
+  button {
+    min-width: 2.5rem;
+    min-height: 2.5rem;
+  }
+
+  .btn {
+    min-height: 2.5rem;
+  }
+
+  .btn.btn-sm,
+  .btn.btn-xs {
+    min-height: 2.5rem;
+  }
+
+  input,
+  textarea,
+  select {
+    min-height: 2.5rem;
+  }
+
+  .form-group {
+    input,
+    textarea,
+    select {
+      min-height: 2.5rem;
+    }
+  }
+}
+
 // ── Inline loading-button spinner ────────────────────────────────────────────
 .lb-spinner {
   display: inline-block;

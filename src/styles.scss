@@ -91,3 +91,30 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--amber);
 }
+
+/* Blog markdown is rendered via innerHTML; keep language code blocks viewport-safe on mobile. */
+.bv-markdown pre {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-sizing: border-box;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bv-markdown pre > code[class*='language-'] {
+  display: block;
+  min-width: max-content;
+  white-space: pre;
+}
+
+.bv-markdown code[class*='language-'] {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bv-markdown img {
+  max-width: 100%;
+  height: auto;
+}
