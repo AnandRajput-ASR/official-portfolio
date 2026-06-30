@@ -13,7 +13,7 @@ import {
   normalizeBlogPostsCollection,
   normalizePortfolioContent,
   normalizeSettingsSingleton,
-} from '@core/utils/wave2-compat';
+} from '@core/utils/content-api-normalizers';
 import { environment } from '@env/environment';
 import { catchError, map, Observable, shareReplay } from 'rxjs';
 import { StorageService } from './storage.service';

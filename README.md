@@ -6,6 +6,13 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.21 (2026-07-01)
+
+| Feature | Details |
+| ------- | ------- |
+| Utility naming clarity | Renamed blog/content normalization utility from `wave2-compat` to `content-api-normalizers` for clearer ownership and purpose while backend blog-only API rollout is in progress. |
+| Import path cleanup | Updated admin/content service imports to use the new utility file name without behavioral changes. |
+
 ### v1.1.20 (2026-07-01)
 
 | Feature | Details |
@@ -329,6 +336,12 @@ All feature components are **lazy-loaded** via dynamic `import()`.
 2. Related-post and series suggestions are computed only from the fetched published blog list.
 3. This reduces overfetching and avoids exposing unrelated homepage/admin-managed sections in blog route requests.
 4. During backend migration windows, frontend automatically falls back to `page-content` so user-facing blog routes remain available.
+
+### Content Normalization Utilities
+
+1. Canonical API normalization helpers are now grouped in `content-api-normalizers`.
+2. File naming now reflects actual usage (content/blog payload normalization), not migration phase labels.
+3. Keep future adapters in this utility when introducing new payload versions to preserve service-level simplicity.
 
 ### Blog Article Experience (`/blog/:slug`)
 
