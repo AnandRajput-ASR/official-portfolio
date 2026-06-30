@@ -1,207 +1,283 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { ContentService } from '@core/services/content.service';
-import { Hero } from '@core/models';
-import { sanitizeHtml } from '@core/utils/safe-html';
-
-interface DemoHero {
-  name: string;
-  title: string;
-  subtitle: string;
-  bio: string;
-  email: string;
-  linkedin: string;
-  github: string;
-  location: string;
-  availableForWork: boolean;
-}
+import { PortfolioContent } from '@core/models';
+import { ResumeData, defaultResumeData, generateLatex } from './resume-latex';
+import { ToastComponent, ToastService } from '@shared/components/toast/toast.component';
 
 @Component({
   selector: 'app-resume-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  template: `
-    <div class="re-page">
-      <header class="re-header">
-        <a routerLink="/playground" class="re-back">← Playground</a>
-        <h1>Live Resume Editor</h1>
-        <p>Type on the left, the preview on the right updates as you type. Click Share to copy a link.</p>
-      </header>
-
-      <div class="re-grid">
-        <section class="re-form">
-          <div class="re-field">
-            <label>Name</label>
-            <input type="text" [(ngModel)]="data().name" (ngModelChange)="onChange()" />
-          </div>
-          <div class="re-field">
-            <label>Job title</label>
-            <input type="text" [(ngModel)]="data().title" (ngModelChange)="onChange()" />
-          </div>
-          <div class="re-field">
-            <label>Tagline</label>
-            <input type="text" [(ngModel)]="data().subtitle" (ngModelChange)="onChange()" />
-          </div>
-          <div class="re-field">
-            <label>Location</label>
-            <input type="text" [(ngModel)]="data().location" (ngModelChange)="onChange()" />
-          </div>
-          <div class="re-field">
-            <label>Email</label>
-            <input type="email" [(ngModel)]="data().email" (ngModelChange)="onChange()" />
-          </div>
-          <div class="re-field">
-            <label>LinkedIn URL</label>
-            <input type="url" [(ngModel)]="data().linkedin" (ngModelChange)="onChange()" />
-          </div>
-          <div class="re-field">
-            <label>GitHub URL</label>
-            <input type="url" [(ngModel)]="data().github" (ngModelChange)="onChange()" />
-          </div>
-          <div class="re-field">
-            <label>Bio</label>
-            <textarea
-              rows="4"
-              [(ngModel)]="data().bio"
-              (ngModelChange)="onChange()"
-            ></textarea>
-          </div>
-          <div class="re-field re-toggle">
-            <label>
-              <input type="checkbox" [(ngModel)]="data().availableForWork" (ngModelChange)="onChange()" />
-              Available for work
-            </label>
-          </div>
-
-          <div class="re-actions">
-            <button class="re-btn re-btn-primary" (click)="share()">🔗 Share</button>
-            <button class="re-btn" (click)="reset()">↺ Reset to live data</button>
-            <span class="re-shared" *ngIf="shared()">Link copied!</span>
-          </div>
-        </section>
-
-        <section class="re-preview">
-          <div class="re-preview-label">Public preview — same data model as the live site</div>
-          <div class="re-preview-card" [innerHTML]="preview()"></div>
-        </section>
-      </div>
-    </div>
-  `,
+  imports: [CommonModule, FormsModule, RouterLink, ToastComponent],
+  templateUrl: './resume-editor.component.html',
   styleUrls: ['./resume-editor.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ResumeEditorComponent implements OnInit, OnDestroy {
+export class ResumeEditorComponent implements OnInit {
   private contentService = inject(ContentService);
+  private toast = inject(ToastService);
 
-  /** Two-way bound via [(ngModel)] — each edit triggers `onChange()`. */
-  readonly data = signal<DemoHero>(this.empty());
-  readonly preview = signal<string>('');
-  readonly shared = signal<boolean>(false);
-
-  private debounceId: ReturnType<typeof setTimeout> | null = null;
+  readonly data = signal<ResumeData>(defaultResumeData());
+  readonly activeSection = signal<string>('header');
+  readonly previewMode = signal<'visual' | 'latex'>('visual');
 
   ngOnInit(): void {
-    // Seed from the live site's hero if available; otherwise demo data.
     this.contentService.getAll().subscribe({
-      next: (c) => {
-        const h = c.hero;
-        if (h) this.data.set(this.fromHero(h));
-        this.onChange();
-      },
-      error: () => this.onChange(),
+      next: (c) => this.prefillFromContent(c),
+      error: () => {},
     });
   }
 
-  ngOnDestroy(): void {
-    if (this.debounceId) clearTimeout(this.debounceId);
+  setSection(s: string): void {
+    this.activeSection.set(s);
   }
 
-  onChange(): void {
-    if (this.debounceId) clearTimeout(this.debounceId);
-    this.debounceId = setTimeout(() => {
-      this.preview.set(this.renderPreview(this.data()));
-    }, 200);
+  addSkill(): void {
+    this.data.update((d) => ({
+      ...d,
+      skills: [...d.skills, { category: '', items: '' }],
+    }));
   }
 
-  reset(): void {
-    this.data.set(this.empty());
-    this.onChange();
+  removeSkill(i: number): void {
+    this.data.update((d) => ({
+      ...d,
+      skills: d.skills.filter((_, idx) => idx !== i),
+    }));
   }
 
-  share(): void {
-    const json = JSON.stringify(this.data());
-    const url =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/playground/resume?d=${encodeURIComponent(btoa(unescape(encodeURIComponent(json))))}`
-        : '';
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(() => {
-        this.shared.set(true);
-        setTimeout(() => this.shared.set(false), 2000);
-      });
+  addCert(): void {
+    this.data.update((d) => ({
+      ...d,
+      certifications: [...d.certifications, { code: '', name: '' }],
+    }));
+  }
+
+  removeCert(i: number): void {
+    this.data.update((d) => ({
+      ...d,
+      certifications: d.certifications.filter((_, idx) => idx !== i),
+    }));
+  }
+
+  addEducation(): void {
+    this.data.update((d) => ({
+      ...d,
+      education: [...d.education, { degree: '', university: '', period: '' }],
+    }));
+  }
+
+  removeEducation(i: number): void {
+    this.data.update((d) => ({
+      ...d,
+      education: d.education.filter((_, idx) => idx !== i),
+    }));
+  }
+
+  addBullet(expIdx: number, projIdx: number): void {
+    this.data.update((d) => {
+      const exp = [...d.experience];
+      const projs = [...exp[expIdx].projects];
+      projs[projIdx] = { ...projs[projIdx], bullets: [...projs[projIdx].bullets, ''] };
+      exp[expIdx] = { ...exp[expIdx], projects: projs };
+      return { ...d, experience: exp };
+    });
+  }
+
+  removeBullet(expIdx: number, projIdx: number, bulletIdx: number): void {
+    this.data.update((d) => {
+      const exp = [...d.experience];
+      const projs = [...exp[expIdx].projects];
+      projs[projIdx] = {
+        ...projs[projIdx],
+        bullets: projs[projIdx].bullets.filter((_, i) => i !== bulletIdx),
+      };
+      exp[expIdx] = { ...exp[expIdx], projects: projs };
+      return { ...d, experience: exp };
+    });
+  }
+
+  addProject(expIdx: number): void {
+    this.data.update((d) => {
+      const exp = [...d.experience];
+      exp[expIdx] = {
+        ...exp[expIdx],
+        projects: [...exp[expIdx].projects, { name: '', bullets: [''] }],
+      };
+      return { ...d, experience: exp };
+    });
+  }
+
+  removeProject(expIdx: number, projIdx: number): void {
+    this.data.update((d) => {
+      const exp = [...d.experience];
+      exp[expIdx] = {
+        ...exp[expIdx],
+        projects: exp[expIdx].projects.filter((_, i) => i !== projIdx),
+      };
+      return { ...d, experience: exp };
+    });
+  }
+
+  getLatex(): string {
+    return generateLatex(this.data());
+  }
+
+  copyLatex(): void {
+    const tex = this.getLatex();
+    navigator.clipboard.writeText(tex).then(() => {
+      this.toast.success('LaTeX source copied to clipboard!');
+    });
+  }
+
+  downloadPdf(): void {
+    const d = this.data();
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      this.toast.error('Popup blocked — allow popups for PDF download.');
+      return;
     }
+    printWindow.document.write(this.buildPrintHtml(d));
+    printWindow.document.close();
+    setTimeout(() => {
+      printWindow.print();
+    }, 400);
   }
 
-  private empty(): DemoHero {
-    return {
-      name: 'Your Name',
-      title: 'Senior Angular Developer',
-      subtitle: 'I build production-grade web apps.',
-      bio: '5+ years shipping Angular SPAs. AZ-400 DevOps Engineer Expert.',
-      email: 'you@example.com',
-      linkedin: 'https://linkedin.com/in/you',
-      github: 'https://github.com/you',
-      location: 'Pune, India',
-      availableForWork: true,
-    };
+  resetToDefaults(): void {
+    this.data.set(defaultResumeData());
+    this.toast.info('Reset to default resume data.');
   }
 
-  private fromHero(h: Hero): DemoHero {
-    return {
-      name: h.name,
-      title: h.title,
-      subtitle: h.subtitle,
-      bio: h.bio,
-      email: h.email,
-      linkedin: h.linkedin,
-      github: h.github,
-      location: h.location,
-      availableForWork: h.availableForWork,
-    };
+  trackByIndex(i: number): number {
+    return i;
   }
 
-  /** Builds a self-contained HTML string that mirrors the home hero block. */
-  private renderPreview(d: DemoHero): string {
-    const safe = (s: string) =>
-      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    const html = `
-      <div class="rh-card">
-        ${d.availableForWork ? '<div class="rh-pill">● Open to work</div>' : ''}
-        <h1>${safe(d.name)}</h1>
-        <h2>${safe(d.title)}</h2>
-        <p class="rh-sub">${safe(d.subtitle)}</p>
-        <p class="rh-bio">${safe(d.bio)}</p>
-        <div class="rh-meta">
-          <span>📍 ${safe(d.location)}</span>
-          <span>✉ ${safe(d.email)}</span>
-          <span>in ${safe(d.linkedin.replace(/^https?:\/\//, ''))}</span>
-          <span>gh ${safe(d.github.replace(/^https?:\/\//, ''))}</span>
-        </div>
-      </div>
-      <style>
-        body { background:#0d0d0d; color:#f0ede8; font-family:'Syne',sans-serif; padding:1.5rem; margin:0; }
-        .rh-card { background:#141414; border:1px solid #f5a623; padding:1.5rem; }
-        .rh-pill { display:inline-block; background:rgba(245,166,35,.15); color:#f5a623; padding:.2rem .6rem; font-size:.7rem; font-family:'Space Mono',monospace; margin-bottom:.5rem; }
-        h1 { font-size:1.6rem; margin:.25rem 0; }
-        h2 { font-size:1.05rem; color:#f5a623; margin:0 0 .5rem; font-weight:600; }
-        .rh-sub { color:#7a7570; font-size:.9rem; margin:0 0 .5rem; }
-        .rh-bio { font-size:.85rem; line-height:1.5; margin:0 0 1rem; }
-        .rh-meta { display:flex; flex-wrap:wrap; gap:.5rem; font-size:.7rem; color:#7a7570; font-family:'Space Mono',monospace; }
-        .rh-meta span { background:#1a1a1a; border:1px solid #252525; padding:.2rem .5rem; }
-      </style>
-    `;
-    return sanitizeHtml(html);
+  private prefillFromContent(c: PortfolioContent): void {
+    const h = c.hero;
+    if (!h) return;
+
+    const skills = c.skills?.length
+      ? this.groupSkills(c.skills)
+      : defaultResumeData().skills;
+
+    const certs = c.certifications?.length
+      ? c.certifications
+          .filter((cert) => cert.is_deleted !== true)
+          .map((cert) => ({ code: cert.code || '', name: cert.name || '' }))
+      : defaultResumeData().certifications;
+
+    this.data.update((d) => ({
+      ...d,
+      name: h.name || d.name,
+      location: h.location || d.location,
+      email: h.email || d.email,
+      linkedin: h.linkedin || d.linkedin,
+      objective: h.bio || d.objective,
+      skills: skills.length ? skills : d.skills,
+      certifications: certs.length ? certs : d.certifications,
+    }));
+  }
+
+  private groupSkills(skills: { category?: string; name?: string; title?: string }[]): { category: string; items: string }[] {
+    const groups: Record<string, string[]> = {};
+    for (const s of skills) {
+      const cat = s.category || 'Other';
+      const name = s.name || s.title || '';
+      if (!name) continue;
+      if (!groups[cat]) groups[cat] = [];
+      groups[cat].push(name);
+    }
+    return Object.entries(groups).map(([category, items]) => ({
+      category,
+      items: items.join(', '),
+    }));
+  }
+
+  private buildPrintHtml(d: ResumeData): string {
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const skillRows = d.skills
+      .map((s) => `<tr><td class="sk-cat">${esc(s.category)}</td><td>${esc(s.items)}</td></tr>`)
+      .join('');
+
+    const expBlocks = d.experience
+      .map((exp) => {
+        const projects = exp.projects
+          .map((p) => {
+            const bullets = p.bullets
+              .filter((b) => b.trim())
+              .map((b) => `<li>${esc(b)}</li>`)
+              .join('');
+            return `<li><strong>Project: ${esc(p.name)}</strong><ul class="dash">${bullets}</ul></li>`;
+          })
+          .join('');
+        const closing = exp.closing ? `<p class="closing">${esc(exp.closing)}</p>` : '';
+        return `
+          <div class="exp-block">
+            <div class="exp-row"><strong>${esc(exp.title)}</strong><span>${esc(exp.period)}</span></div>
+            <div class="exp-row"><em>${esc(exp.company)}</em><em>${esc(exp.location)}</em></div>
+            <p class="exp-meta"><strong>Key Projects:</strong> ${esc(exp.keyProjects)}</p>
+            <p class="exp-meta"><strong>Tech Stack:</strong> ${esc(exp.techStack)}</p>
+            <ul class="projects">${projects}</ul>
+            ${closing}
+          </div>`;
+      })
+      .join('');
+
+    const certItems = d.certifications
+      .map((c) => `<li><strong>${esc(c.code)}</strong> – ${esc(c.name)}</li>`)
+      .join('');
+
+    const eduItems = d.education
+      .map(
+        (e) =>
+          `<div class="exp-row"><strong>${esc(e.degree)}</strong>, ${esc(e.university)}<span>${esc(e.period)}</span></div>`,
+      )
+      .join('');
+
+    return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>${esc(d.name)} - Resume</title>
+<style>
+@page { margin: 0.7in; size: A4; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Times New Roman', serif; font-size: 10pt; line-height: 1.4; color: #000; }
+.header { text-align: center; margin-bottom: 8pt; }
+.header h1 { font-size: 18pt; letter-spacing: 2pt; margin-bottom: 4pt; }
+.header p { font-size: 10pt; }
+.header a { color: #000; }
+.section-title { font-size: 12pt; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 2pt; margin: 10pt 0 6pt; }
+.sk-table { width: 100%; border-collapse: collapse; }
+.sk-table td { padding: 2pt 8pt 2pt 0; font-size: 10pt; vertical-align: top; }
+.sk-cat { font-weight: bold; white-space: nowrap; width: 100pt; }
+.exp-block { margin-bottom: 6pt; }
+.exp-row { display: flex; justify-content: space-between; }
+.exp-meta { margin: 3pt 0; font-size: 10pt; }
+.closing { font-style: italic; margin: 4pt 0; font-size: 10pt; }
+ul { padding-left: 18pt; margin: 4pt 0; }
+ul.dash { list-style: none; padding-left: 14pt; }
+ul.dash li::before { content: '– '; margin-left: -14pt; }
+ul.projects > li { list-style: disc; margin: 4pt 0; }
+li { font-size: 10pt; margin: 1pt 0; }
+</style></head><body>
+<div class="header">
+  <h1>${esc(d.name).toUpperCase()}</h1>
+  <p>${esc(d.phone)} ◇ ${esc(d.location)}</p>
+  <p><a href="mailto:${esc(d.email)}">${esc(d.email)}</a> ◇ <a href="${esc(d.linkedin)}">LinkedIn</a></p>
+</div>
+<div class="section-title">OBJECTIVE</div>
+<p>${esc(d.objective)}</p>
+<div class="section-title">SKILLS</div>
+<table class="sk-table">${skillRows}</table>
+<div class="section-title">EXPERIENCE</div>
+${expBlocks}
+<div class="section-title">CERTIFICATIONS</div>
+<p style="font-style:italic;margin-bottom:4pt;">Certified across Microsoft Azure Fundamentals, Administration, Development, and DevOps.</p>
+<ul>${certItems}</ul>
+<div class="section-title">EDUCATION</div>
+${eduItems}
+</body></html>`;
   }
 }

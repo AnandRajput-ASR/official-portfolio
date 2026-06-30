@@ -1,0 +1,233 @@
+<app-toast />
+<div class="re-page">
+  <header class="re-header">
+    <a routerLink="/playground" class="re-back">← Playground</a>
+    <h1>Resume Builder</h1>
+    <p>Edit your full resume, export as LaTeX or download PDF. Data pre-filled from your live portfolio.</p>
+  </header>
+
+  <div class="re-toolbar">
+    <div class="re-tabs">
+      <button *ngFor="let s of ['header','objective','skills','experience','certifications','education']"
+              [class.active]="activeSection() === s" (click)="setSection(s)">
+        {{ s }}
+      </button>
+    </div>
+    <div class="re-export">
+      <button class="re-btn" (click)="copyLatex()">📋 Copy LaTeX</button>
+      <button class="re-btn re-btn-primary" (click)="downloadPdf()">⬇ Download PDF</button>
+      <button class="re-btn" (click)="resetToDefaults()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div class="re-grid">
+    <!-- EDITOR PANEL -->
+    <section class="re-form">
+
+      <!-- Header -->
+      <div *ngIf="activeSection() === 'header'" class="re-section">
+        <div class="re-field">
+          <label>Full Name</label>
+          <input type="text" [(ngModel)]="data().name" />
+        </div>
+        <div class="re-field">
+          <label>Phone</label>
+          <input type="text" [(ngModel)]="data().phone" />
+        </div>
+        <div class="re-field">
+          <label>Location</label>
+          <input type="text" [(ngModel)]="data().location" />
+        </div>
+        <div class="re-field">
+          <label>Email</label>
+          <input type="email" [(ngModel)]="data().email" />
+        </div>
+        <div class="re-field">
+          <label>LinkedIn URL</label>
+          <input type="url" [(ngModel)]="data().linkedin" />
+        </div>
+      </div>
+
+      <!-- Objective -->
+      <div *ngIf="activeSection() === 'objective'" class="re-section">
+        <div class="re-field">
+          <label>Objective / Summary</label>
+          <textarea rows="6" [(ngModel)]="data().objective"></textarea>
+        </div>
+      </div>
+
+      <!-- Skills -->
+      <div *ngIf="activeSection() === 'skills'" class="re-section">
+        <div class="re-repeater" *ngFor="let skill of data().skills; let i = index; trackBy: trackByIndex">
+          <div class="re-row">
+            <div class="re-field re-field-sm">
+              <label>Category</label>
+              <input type="text" [(ngModel)]="skill.category" />
+            </div>
+            <div class="re-field re-field-lg">
+              <label>Skills (comma-separated)</label>
+              <input type="text" [(ngModel)]="skill.items" />
+            </div>
+            <button class="re-btn-icon" (click)="removeSkill(i)" title="Remove">✕</button>
+          </div>
+        </div>
+        <button class="re-btn re-btn-add" (click)="addSkill()">+ Add Skill Category</button>
+      </div>
+
+      <!-- Experience -->
+      <div *ngIf="activeSection() === 'experience'" class="re-section">
+        <div *ngFor="let exp of data().experience; let ei = index; trackBy: trackByIndex" class="re-exp-block">
+          <div class="re-row">
+            <div class="re-field re-field-lg">
+              <label>Job Title</label>
+              <input type="text" [(ngModel)]="exp.title" />
+            </div>
+            <div class="re-field re-field-sm">
+              <label>Period</label>
+              <input type="text" [(ngModel)]="exp.period" />
+            </div>
+          </div>
+          <div class="re-row">
+            <div class="re-field re-field-lg">
+              <label>Company</label>
+              <input type="text" [(ngModel)]="exp.company" />
+            </div>
+            <div class="re-field re-field-sm">
+              <label>Location</label>
+              <input type="text" [(ngModel)]="exp.location" />
+            </div>
+          </div>
+          <div class="re-field">
+            <label>Key Projects</label>
+            <input type="text" [(ngModel)]="exp.keyProjects" />
+          </div>
+          <div class="re-field">
+            <label>Tech Stack</label>
+            <input type="text" [(ngModel)]="exp.techStack" />
+          </div>
+
+          <div *ngFor="let proj of exp.projects; let pi = index; trackBy: trackByIndex" class="re-project">
+            <div class="re-project-header">
+              <div class="re-field re-field-lg">
+                <label>Project Name</label>
+                <input type="text" [(ngModel)]="proj.name" />
+              </div>
+              <button class="re-btn-icon" (click)="removeProject(ei, pi)" title="Remove project">✕</button>
+            </div>
+            <div *ngFor="let bullet of proj.bullets; let bi = index; trackBy: trackByIndex" class="re-bullet">
+              <input type="text" [(ngModel)]="proj.bullets[bi]" placeholder="Bullet point..." />
+              <button class="re-btn-icon" (click)="removeBullet(ei, pi, bi)" title="Remove bullet">✕</button>
+            </div>
+            <button class="re-btn re-btn-add re-btn-sm" (click)="addBullet(ei, pi)">+ Bullet</button>
+          </div>
+
+          <button class="re-btn re-btn-add" (click)="addProject(ei)">+ Add Project</button>
+
+          <div class="re-field">
+            <label>Closing statement (optional, italic)</label>
+            <input type="text" [(ngModel)]="exp.closing" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Certifications -->
+      <div *ngIf="activeSection() === 'certifications'" class="re-section">
+        <div class="re-repeater" *ngFor="let cert of data().certifications; let i = index; trackBy: trackByIndex">
+          <div class="re-row">
+            <div class="re-field re-field-sm">
+              <label>Code</label>
+              <input type="text" [(ngModel)]="cert.code" placeholder="AZ-400" />
+            </div>
+            <div class="re-field re-field-lg">
+              <label>Full Name</label>
+              <input type="text" [(ngModel)]="cert.name" placeholder="Microsoft Certified: ..." />
+            </div>
+            <button class="re-btn-icon" (click)="removeCert(i)" title="Remove">✕</button>
+          </div>
+        </div>
+        <button class="re-btn re-btn-add" (click)="addCert()">+ Add Certification</button>
+      </div>
+
+      <!-- Education -->
+      <div *ngIf="activeSection() === 'education'" class="re-section">
+        <div class="re-repeater" *ngFor="let edu of data().education; let i = index; trackBy: trackByIndex">
+          <div class="re-field">
+            <label>Degree</label>
+            <input type="text" [(ngModel)]="edu.degree" />
+          </div>
+          <div class="re-row">
+            <div class="re-field re-field-lg">
+              <label>University</label>
+              <input type="text" [(ngModel)]="edu.university" />
+            </div>
+            <div class="re-field re-field-sm">
+              <label>Period</label>
+              <input type="text" [(ngModel)]="edu.period" />
+            </div>
+            <button class="re-btn-icon" (click)="removeEducation(i)" title="Remove">✕</button>
+          </div>
+        </div>
+        <button class="re-btn re-btn-add" (click)="addEducation()">+ Add Education</button>
+      </div>
+
+    </section>
+
+    <!-- PREVIEW PANEL -->
+    <section class="re-preview">
+      <div class="re-preview-bar">
+        <button [class.active]="previewMode() === 'visual'" (click)="previewMode.set('visual')">Preview</button>
+        <button [class.active]="previewMode() === 'latex'" (click)="previewMode.set('latex')">LaTeX Source</button>
+      </div>
+      <div class="re-preview-card" *ngIf="previewMode() === 'visual'">
+        <!-- Live visual preview -->
+        <div class="rv-header">
+          <h1>{{ data().name | uppercase }}</h1>
+          <p>{{ data().phone }} ◇ {{ data().location }}</p>
+          <p>{{ data().email }} ◇ LinkedIn</p>
+        </div>
+        <div class="rv-section">
+          <h2>OBJECTIVE</h2>
+          <p>{{ data().objective }}</p>
+        </div>
+        <div class="rv-section">
+          <h2>SKILLS</h2>
+          <table>
+            <tr *ngFor="let s of data().skills">
+              <td class="rv-sk-cat">{{ s.category }}</td>
+              <td>{{ s.items }}</td>
+            </tr>
+          </table>
+        </div>
+        <div class="rv-section" *ngFor="let exp of data().experience">
+          <h2>EXPERIENCE</h2>
+          <div class="rv-exp-row"><strong>{{ exp.title }}</strong><span>{{ exp.period }}</span></div>
+          <div class="rv-exp-row"><em>{{ exp.company }}</em><em>{{ exp.location }}</em></div>
+          <p class="rv-meta"><strong>Key Projects:</strong> {{ exp.keyProjects }}</p>
+          <p class="rv-meta"><strong>Tech Stack:</strong> {{ exp.techStack }}</p>
+          <ul *ngFor="let p of exp.projects">
+            <li><strong>Project: {{ p.name }}</strong>
+              <ul class="rv-dash">
+                <li *ngFor="let b of p.bullets">{{ b }}</li>
+              </ul>
+            </li>
+          </ul>
+          <p class="rv-closing" *ngIf="exp.closing">{{ exp.closing }}</p>
+        </div>
+        <div class="rv-section">
+          <h2>CERTIFICATIONS</h2>
+          <ul>
+            <li *ngFor="let c of data().certifications"><strong>{{ c.code }}</strong> – {{ c.name }}</li>
+          </ul>
+        </div>
+        <div class="rv-section">
+          <h2>EDUCATION</h2>
+          <div *ngFor="let e of data().education" class="rv-exp-row">
+            <span><strong>{{ e.degree }}</strong>, {{ e.university }}</span>
+            <span>{{ e.period }}</span>
+          </div>
+        </div>
+      </div>
+      <pre class="re-latex-view" *ngIf="previewMode() === 'latex'">{{ getLatex() }}</pre>
+    </section>
+  </div>
+</div>
