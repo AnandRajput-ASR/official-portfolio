@@ -6,6 +6,13 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.23 (2026-07-01)
+
+| Feature | Details |
+| ------- | ------- |
+| Production source exposure hardening | Angular production build is now explicitly configured with `sourceMap: false`, `namedChunks: false`, and `optimization: true` to reduce deploy-time source visibility in browser tooling. |
+| Network initiator expectation documented | Added deployment note clarifying that DevTools `Initiator` cannot be hidden from the end user because it is computed by the browser from the active runtime call stack. |
+
 ### v1.1.22 (2026-07-01)
 
 | Feature | Details |
@@ -674,6 +681,34 @@ export const environment = {
 4. Run `npm run build` (production build).
 5. Deploy the generated build to Vercel.
 6. Open deployed app and verify API requests go to `/api/*` (same-origin), with Vercel rewriting to Render backend.
+
+### Production Source-Visibility Hardening
+
+Production build hardening is applied in `angular.json` under build `configurations.production`.
+
+| Setting | Value | Why |
+| ------- | ----- | --- |
+| `sourceMap` | `false` | Prevents `.map` files from being emitted in production output. |
+| `namedChunks` | `false` | Avoids readable chunk names that reveal feature intent. |
+| `optimization` | `true` | Ensures minified/optimized output for deployment. |
+
+Validation steps after deploy:
+
+1. Open `https://<your-domain>/*.js.map` and confirm it returns 404 (or no map file).
+2. Open DevTools Sources tab and confirm only minified bundles are present.
+3. Open Network tab and confirm requests use same-origin `/api/*`.
+
+### About DevTools Initiator
+
+`Initiator` in the browser Network tab cannot be hidden or disabled by frontend code.
+The browser derives it from request origin (script, parser, fetch, XHR, redirect chain, stack trace).
+
+What you can still do:
+
+1. Minify/optimize bundles (already enabled in production).
+2. Disable source maps (already enabled in production).
+3. Keep request URLs and payloads free of sensitive internal details.
+4. Move sensitive logic/decisions to backend APIs only.
 
 ### 3. Start Development Server
 
