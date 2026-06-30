@@ -22,6 +22,7 @@ export class ResumeEditorComponent implements OnInit {
   readonly data = signal<ResumeData>(defaultResumeData());
   readonly activeSection = signal<string>('header');
   readonly previewMode = signal<'visual' | 'latex'>('visual');
+  private initialSnapshot: ResumeData | null = null;
 
   ngOnInit(): void {
     this.loadFromPortfolio();
@@ -144,15 +145,24 @@ export class ResumeEditorComponent implements OnInit {
   }
 
   resetToDefaults(): void {
-    this.loadFromPortfolio();
-    this.toast.info('Reset to live portfolio data.');
+    if (this.initialSnapshot) {
+      this.data.set(structuredClone(this.initialSnapshot));
+    } else {
+      this.data.set(defaultResumeData());
+    }
+    this.toast.info('Reset to initial state.');
   }
 
   private loadFromPortfolio(): void {
     this.data.set(defaultResumeData());
     this.contentService.getAll().subscribe({
-      next: (c) => this.prefillFromContent(c),
-      error: () => {},
+      next: (c) => {
+        this.prefillFromContent(c);
+        this.initialSnapshot = structuredClone(this.data());
+      },
+      error: () => {
+        this.initialSnapshot = structuredClone(this.data());
+      },
     });
   }
 
