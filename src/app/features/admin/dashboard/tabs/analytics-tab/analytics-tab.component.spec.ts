@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { AdminService } from '@core/services/admin.service';
 import { ConfirmService } from '@core/services/confirm.service';
 import { ToastService } from '@shared/components/toast/toast.component';
@@ -19,6 +21,8 @@ describe('AnalyticsTabComponent', () => {
     await TestBed.configureTestingModule({
       imports: [AnalyticsTabComponent],
       providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
         { provide: AdminService, useValue: adminStub },
         { provide: ToastService, useValue: { success: () => {}, error: () => {} } },
         { provide: ConfirmService, useValue: { ask: () => Promise.resolve(false) } },

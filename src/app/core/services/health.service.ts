@@ -1,5 +1,6 @@
 import { Injectable, OnDestroy, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { take } from 'rxjs';
 import { environment } from '@env/environment';
 
 export type HealthStatus = 'healthy' | 'degraded' | 'unreachable' | 'unknown';
@@ -51,7 +52,7 @@ export class HealthService implements OnDestroy {
   /** Force a probe now (e.g. on the "Retry" button). */
   probe(): void {
     const t0 = Date.now();
-    this.http.get(`${environment.api.baseUrl}/health`).subscribe({
+    this.http.get(`${environment.api.baseUrl}/health`).pipe(take(1)).subscribe({
       next: () => {
         this.snapshot.set({
           status: 'healthy',

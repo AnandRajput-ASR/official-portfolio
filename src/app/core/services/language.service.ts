@@ -1,6 +1,6 @@
 ﻿import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { map, Observable, of, tap } from 'rxjs';
+import { map, Observable, of, take, tap } from 'rxjs';
 import { StorageService } from './storage.service';
 
 // Supported languages â€” to add a new one:
@@ -125,14 +125,12 @@ export class LanguageService {
       this.translations.set(this.applyOverrides(lang, this.cache[lang]!));
       return;
     }
-    this.http.get<Record<string, string>>(`/assets/i18n/${lang}.json`).subscribe({
+    this.http.get<Record<string, string>>(`/assets/i18n/${lang}.json`).pipe(take(1)).subscribe({
       next: (data) => {
         this.cache[lang] = data;
-        // Only apply if this lang is still active (user didn't toggle away)
         if (this.lang() === lang) this.translations.set(this.applyOverrides(lang, data));
       },
       error: () => {
-        // Fallback: if the JSON fails to load, try English
         if (lang !== 'en') this.loadFallbackToEnglish();
       },
     });
@@ -143,7 +141,7 @@ export class LanguageService {
       this.translations.set(this.cache['en']!);
       return;
     }
-    this.http.get<Record<string, string>>('/assets/i18n/en.json').subscribe({
+    this.http.get<Record<string, string>>('/assets/i18n/en.json').pipe(take(1)).subscribe({
       next: (data) => {
         this.cache['en'] = data;
         this.translations.set(this.applyOverrides('en', data));

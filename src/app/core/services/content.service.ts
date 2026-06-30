@@ -12,7 +12,7 @@ import {
 import { normalizeBlogPostsCollection } from '@core/utils/blog-normalizers';
 import { normalizePortfolioContent, normalizeSettingsSingleton } from '@core/utils/content-normalizers';
 import { environment } from '@env/environment';
-import { catchError, map, Observable, shareReplay } from 'rxjs';
+import { catchError, map, Observable, shareReplay, take } from 'rxjs';
 import { StorageService } from './storage.service';
 
 export type ResumeFunnelStage = 'view' | 'click' | 'download';
@@ -53,6 +53,11 @@ export class ContentService {
   private readonly blogBase = this.base + '/blogs';
   private cachedContent$?: Observable<PortfolioContent>;
   private cachedPublishedBlogPosts$?: Observable<BlogPost[]>;
+
+  invalidateCache(): void {
+    this.cachedContent$ = undefined;
+    this.cachedPublishedBlogPosts$ = undefined;
+  }
 
   /** Resolve a stored image value to a full URL.
    *  Handles: /uploads/... paths (from new file storage) and legacy data: base64 */
@@ -228,6 +233,7 @@ export class ContentService {
   trackEvent(event: string, meta?: Record<string, unknown>): void {
     this.http
       .post(this.base + '/analytics/track', { event, ...meta })
+      .pipe(take(1))
       .subscribe({
         error: (err) => this.reportClientError('analytics.track', err, { event, meta }),
       });
@@ -237,6 +243,7 @@ export class ContentService {
   trackResumeLead(email: string): void {
     this.http
       .post(this.base + '/resume-lead', { email })
+      .pipe(take(1))
       .subscribe({ error: (err) => this.reportClientError('resume.lead', err) });
   }
 

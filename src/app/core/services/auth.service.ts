@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { AuthResponse } from '@core/models';
 import { AuditLogService } from '@core/services/audit-log.service';
 import { environment } from '@env/environment';
-import { catchError, Observable, of, tap } from 'rxjs';
+import { catchError, Observable, of, take, tap } from 'rxjs';
 import { StorageService } from './storage.service';
 
 interface ForgotPasswordResponse {
@@ -82,10 +82,9 @@ export class AuthService {
   logout(): void {
     this.audit.log('account', 'revert', 'Logged out admin session');
     if (environment.cookieAuth) {
-      // Best-effort: tell the backend to clear cookies. Always continue
-      // to local cleanup even if the call fails.
       this.http
         .post(`${environment.api.baseUrl}/auth/logout`, {}, { withCredentials: true })
+        .pipe(take(1))
         .subscribe({
           error: () => this.clearLocalSession(),
           complete: () => this.clearLocalSession(),

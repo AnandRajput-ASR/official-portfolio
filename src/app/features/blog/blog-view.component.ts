@@ -330,7 +330,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     if (this.socialLoading || this.socialError) return;
 
     this.socialLoading = true;
-    this.contentService.toggleBlogLike(slug).subscribe({
+    this.contentService.toggleBlogLike(slug).pipe(take(1)).subscribe({
       next: (state) => {
         this.socialState = this.normalizeSocialState(state);
         this.likeLocked = true;
@@ -354,7 +354,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
 
     this.socialLoading = true;
     const payload: BlogCommentInput = { name: name.slice(0, 48), message: message.slice(0, 600) };
-    this.contentService.addBlogComment(this.post.slug, payload).subscribe({
+    this.contentService.addBlogComment(this.post.slug, payload).pipe(take(1)).subscribe({
       next: (state) => {
         this.socialState = this.normalizeSocialState(state);
         this.commentText = '';
@@ -396,7 +396,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
       }
 
       this.socialLoading = true;
-      this.contentService.trackBlogShare(slug).subscribe({
+      this.contentService.trackBlogShare(slug).pipe(take(1)).subscribe({
         next: (state) => {
           this.socialState = this.normalizeSocialState(state);
           this.shareLocked = true;
