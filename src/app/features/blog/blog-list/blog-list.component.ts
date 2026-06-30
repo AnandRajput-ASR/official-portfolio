@@ -94,37 +94,39 @@ import { timeout } from 'rxjs';
         <button class="bl-clear" (click)="clearFilters()">Reset filters</button>
       </div>
 
-      <a
-        *ngIf="!loading && featuredPost"
-        class="bl-featured"
-        [routerLink]="['/blog', featuredPost.slug]"
-        [state]="{ from: currentListUrl }"
-      >
-        <div class="bl-featured-media" *ngIf="featuredPost.coverImage; else featuredFallback">
-          <img
-            [src]="featuredPost.coverImage"
-            [alt]="featuredPost.title"
-            loading="eager"
-            decoding="async"
-            fetchpriority="high"
-          />
-        </div>
-        <ng-template #featuredFallback>
-          <div class="bl-featured-fallback">Featured</div>
-        </ng-template>
-        <div class="bl-featured-content">
-          <p class="bl-featured-kicker">Featured Story</p>
-          <h2>{{ featuredPost.title }}</h2>
-          <p>{{ featuredPost.excerpt }}</p>
-          <div class="bl-featured-meta">
-            <span>{{ featuredPost.publishedAt | date: 'MMMM d, y' }}</span>
-            <span class="bl-sep">·</span>
-            <span>{{ featuredPost.readingTime }} min read</span>
-            <span class="bl-sep" *ngIf="popularity(featuredPost.slug) > 0">·</span>
-            <span *ngIf="popularity(featuredPost.slug) > 0">{{ popularity(featuredPost.slug) }} views</span>
+      <section *ngIf="!loading && featuredPosts.length > 0" class="bl-featured-list">
+        <a
+          *ngFor="let featuredPost of featuredPosts; let idx = index; trackBy: trackById"
+          class="bl-featured"
+          [routerLink]="['/blog', featuredPost.slug]"
+          [state]="{ from: currentListUrl }"
+        >
+          <div class="bl-featured-media" *ngIf="featuredPost.coverImage; else featuredFallback">
+            <img
+              [src]="featuredPost.coverImage"
+              [alt]="featuredPost.title"
+              [loading]="idx === 0 ? 'eager' : 'lazy'"
+              decoding="async"
+              [attr.fetchpriority]="idx === 0 ? 'high' : null"
+            />
           </div>
-        </div>
-      </a>
+          <ng-template #featuredFallback>
+            <div class="bl-featured-fallback">Featured</div>
+          </ng-template>
+          <div class="bl-featured-content">
+            <p class="bl-featured-kicker">Featured Story</p>
+            <h2>{{ featuredPost.title }}</h2>
+            <p>{{ featuredPost.excerpt }}</p>
+            <div class="bl-featured-meta">
+              <span>{{ featuredPost.publishedAt | date: 'MMMM d, y' }}</span>
+              <span class="bl-sep">·</span>
+              <span>{{ featuredPost.readingTime }} min read</span>
+              <span class="bl-sep" *ngIf="popularity(featuredPost.slug) > 0">·</span>
+              <span *ngIf="popularity(featuredPost.slug) > 0">{{ popularity(featuredPost.slug) }} views</span>
+            </div>
+          </div>
+        </a>
+      </section>
 
       <div class="bl-grid" *ngIf="!loading && listPosts.length > 0">
         <a
@@ -140,7 +142,7 @@ import { timeout } from 'rxjs';
             <div class="bl-card-fallback">Post</div>
           </ng-template>
           <div class="bl-card-tags">
-            <span *ngFor="let tag of post.tags" class="bl-card-tag">{{ tag }}</span>
+            <span *ngFor="let tag of displayTags(post)" class="bl-card-tag">{{ tag }}</span>
           </div>
           <h2 class="bl-card-title">{{ post.title }}</h2>
           <p class="bl-card-excerpt">{{ post.excerpt }}</p>
@@ -160,6 +162,7 @@ import { timeout } from 'rxjs';
   styleUrls: ['./blog-list.component.scss'],
 })
 export class BlogListComponent implements OnInit {
+  private readonly FEATURED_TAG = 'featured';
   private contentService = inject(ContentService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -168,7 +171,7 @@ export class BlogListComponent implements OnInit {
   posts: BlogPost[] = [];
   filteredPosts: BlogPost[] = [];
   listPosts: BlogPost[] = [];
-  featuredPost: BlogPost | null = null;
+  featuredPosts: BlogPost[] = [];
   allTags: string[] = [];
   popularityMap: Record<string, number> = {};
 
@@ -198,9 +201,9 @@ export class BlogListComponent implements OnInit {
         this.loadError = false;
         this.posts = posts;
         this.popularityMap = this.contentService.getBlogPopularityMap();
-        this.allTags = Array.from(new Set(posts.flatMap((post) => post.tags || []))).sort((a, b) =>
-          a.localeCompare(b),
-        );
+        this.allTags = Array.from(new Set(posts.flatMap((post) => post.tags || [])))
+          .filter((tag) => tag.toLowerCase() !== this.FEATURED_TAG)
+          .sort((a, b) => a.localeCompare(b));
         this.applyFilters();
         this.loading = false;
         this.cdr.detectChanges();
@@ -238,8 +241,9 @@ export class BlogListComponent implements OnInit {
       return (Date.parse(b.publishedAt || '') || 0) - (Date.parse(a.publishedAt || '') || 0);
     });
 
-    this.featuredPost = this.filteredPosts[0] ?? null;
-    this.listPosts = this.filteredPosts.slice(1);
+    this.featuredPosts = this.pickFeaturedPosts(this.filteredPosts);
+    const featuredIds = new Set(this.featuredPosts.map((post) => post.id));
+    this.listPosts = this.filteredPosts.filter((post) => !featuredIds.has(post.id));
   }
 
   selectTag(tag = ''): void {
@@ -277,5 +281,20 @@ export class BlogListComponent implements OnInit {
 
   trackById(_: number, item: { id: string }): string {
     return item.id;
+  }
+
+  displayTags(post: BlogPost): string[] {
+    return (post.tags || []).filter((tag) => tag.toLowerCase() !== this.FEATURED_TAG);
+  }
+
+  private pickFeaturedPosts(posts: BlogPost[]): BlogPost[] {
+    if (!posts.length) return [];
+    const explicitFeatured = posts.filter((post) =>
+      (post.tags || []).some((tag) => tag.toLowerCase() === this.FEATURED_TAG),
+    );
+    if (explicitFeatured.length > 0) {
+      return explicitFeatured;
+    }
+    return posts.slice(0, 1);
   }
 }

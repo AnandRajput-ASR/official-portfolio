@@ -82,23 +82,37 @@
         <div class="form-group">
           <div class="blog-content-label-row">
             <label>Full Article Content <small>(plain text or markdown)</small></label>
-            <button
-              type="button"
-              class="btn btn-outline btn-xs blog-preview-toggle"
-              (click)="togglePreview(post.id)"
-            >{{ previewBlogIds.has(post.id) ? '✎ Edit' : '👁 Preview' }}</button>
           </div>
-          <textarea
-            *ngIf="!previewBlogIds.has(post.id)"
-            rows="14"
-            [(ngModel)]="post.content"
-            class="blog-content-editor"
-          ></textarea>
-          <div
-            *ngIf="previewBlogIds.has(post.id)"
-            class="blog-md-preview"
-            [innerHTML]="getPreviewHtml(post.content)"
-          ></div>
+          <div class="blog-editor-toolbar">
+            <button type="button" class="btn btn-outline btn-xs" (click)="insertCodeBlock(post, postEditor)">
+              + Code Block
+            </button>
+            <button type="button" class="btn btn-outline btn-xs" (click)="insertInlineCode(post, postEditor)">
+              + Inline Code
+            </button>
+            <button type="button" class="btn btn-outline btn-xs" (click)="insertImageMarkdown(post, postEditor)">
+              + Image URL
+            </button>
+            <button type="button" class="btn btn-outline btn-xs" (click)="postImagePicker.click()">
+              + Upload Screenshot
+            </button>
+            <input
+              #postImagePicker
+              type="file"
+              accept="image/*"
+              class="blog-hidden-file-input"
+              (change)="onImageFilePicked(post, $event, postEditor)"
+            />
+          </div>
+          <div class="blog-editor-live-grid">
+            <textarea
+              #postEditor
+              rows="14"
+              [(ngModel)]="post.content"
+              class="blog-content-editor"
+            ></textarea>
+            <div class="blog-md-preview" [innerHTML]="getPreviewHtml(post.content)"></div>
+          </div>
         </div>
         <div class="form-group">
           <label>Cover Image URL <small>(optional)</small></label>
@@ -124,6 +138,16 @@
           <label class="checkbox-label">
             <input type="checkbox" [(ngModel)]="post.published" /> Published (visible on
             portfolio)
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [ngModel]="isFeaturedPost(post)"
+              (ngModelChange)="setFeaturedPost(post, $event)"
+            />
+            Featured on Blog page (hero card)
           </label>
         </div>
         <div class="blog-save-row">
@@ -292,25 +316,39 @@
     <div class="form-group">
       <div class="blog-content-label-row">
         <label>Article Content
-          <small>(plain text or markdown — renders as preformatted on portfolio)</small></label>
-        <button
-          type="button"
-          class="btn btn-outline btn-xs blog-preview-toggle"
-          (click)="previewNewBlog = !previewNewBlog"
-        >{{ previewNewBlog ? '✎ Edit' : '👁 Preview' }}</button>
+          <small>(live markdown preview)</small></label>
       </div>
-      <textarea
-        *ngIf="!previewNewBlog"
-        rows="12"
-        [(ngModel)]="newBlog.content"
-        class="blog-content-editor"
-        placeholder="# Your Heading&#10;&#10;Start writing..."
-      ></textarea>
-      <div
-        *ngIf="previewNewBlog"
-        class="blog-md-preview"
-        [innerHTML]="getPreviewHtml(newBlog.content || '')"
-      ></div>
+      <div class="blog-editor-toolbar">
+        <button type="button" class="btn btn-outline btn-xs" (click)="insertCodeBlock(newBlog, newPostEditor)">
+          + Code Block
+        </button>
+        <button type="button" class="btn btn-outline btn-xs" (click)="insertInlineCode(newBlog, newPostEditor)">
+          + Inline Code
+        </button>
+        <button type="button" class="btn btn-outline btn-xs" (click)="insertImageMarkdown(newBlog, newPostEditor)">
+          + Image URL
+        </button>
+        <button type="button" class="btn btn-outline btn-xs" (click)="newPostImagePicker.click()">
+          + Upload Screenshot
+        </button>
+        <input
+          #newPostImagePicker
+          type="file"
+          accept="image/*"
+          class="blog-hidden-file-input"
+          (change)="onImageFilePicked(newBlog, $event, newPostEditor)"
+        />
+      </div>
+      <div class="blog-editor-live-grid">
+        <textarea
+          #newPostEditor
+          rows="12"
+          [(ngModel)]="newBlog.content"
+          class="blog-content-editor"
+          placeholder="# Your Heading&#10;&#10;Start writing..."
+        ></textarea>
+        <div class="blog-md-preview" [innerHTML]="getPreviewHtml(newBlog.content || '')"></div>
+      </div>
     </div>
     <div class="form-group">
       <label>Tags <small>(press Enter)</small></label>
@@ -330,6 +368,16 @@
         ><input type="checkbox" [(ngModel)]="newBlog.published" /> Publish immediately (visible on
         portfolio)</label
       >
+    </div>
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input
+          type="checkbox"
+          [ngModel]="isFeaturedPost(newBlog)"
+          (ngModelChange)="setFeaturedPost(newBlog, $event)"
+        />
+        Featured on Blog page (hero card)
+      </label>
     </div>
     <div class="modal-actions">
       <button class="btn btn-outline btn-sm" (click)="showAddBlog = false">Cancel</button>

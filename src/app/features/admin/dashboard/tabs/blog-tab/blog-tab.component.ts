@@ -1,18 +1,19 @@
 import { CommonModule } from '@angular/common';
 import {
-    ChangeDetectionStrategy,
-    ChangeDetectorRef,
-    Component,
-    OnDestroy,
-    OnInit,
-    inject,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnDestroy,
+  OnInit,
+  inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import {
-    AdminBlogComment,
-    AdminBlogCommentsPayload,
-    BlogCommentModerationStatus,
-    BlogPost,
+  AdminBlogComment,
+  AdminBlogCommentsPayload,
+  BlogCommentModerationStatus,
+  BlogPost,
 } from '@core/models';
 import { AdminContentStore } from '@core/services/admin-content.store';
 import { AdminService } from '@core/services/admin.service';
@@ -29,18 +30,19 @@ import { ToastService } from '@shared/components/toast/toast.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BlogTabComponent implements OnInit, OnDestroy {
+  private readonly FEATURED_TAG = 'featured';
   private store = inject(AdminContentStore);
   private adminService = inject(AdminService);
   private confirm = inject(ConfirmService);
   private toast = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
+  private sanitizer = inject(DomSanitizer);
 
   blogEdit: BlogPost[] = [];
   showAddBlog = false;
   editingBlogId: string | null = null;
   newBlog: Partial<BlogPost> = this.emptyBlog();
   previewBlogIds = new Set<string>();
-  previewNewBlog = false;
   commentsPanelOpenBySlug = new Set<string>();
   commentsLoadingBySlug: Record<string, boolean> = {};
   commentsBySlug: Record<string, AdminBlogComment[]> = {};
@@ -75,10 +77,60 @@ export class BlogTabComponent implements OnInit, OnDestroy {
     }
   }
 
-  getPreviewHtml(content: string): string {
+  insertCodeBlock(target: Partial<BlogPost>, editor: HTMLTextAreaElement): void {
+    const snippet = '\n```ts\n// write your code\n```\n';
+    const cursorOffset = '\n```ts\n'.length;
+    this.insertAtCursor(target, editor, snippet, cursorOffset);
+  }
+
+  insertInlineCode(target: Partial<BlogPost>, editor: HTMLTextAreaElement): void {
+    this.insertAtCursor(target, editor, '`code`', 1);
+  }
+
+  insertImageMarkdown(target: Partial<BlogPost>, editor: HTMLTextAreaElement): void {
+    const snippet = '\n![alt text](https://example.com/image.png)\n';
+    const cursorOffset = '\n![alt text]('.length;
+    this.insertAtCursor(target, editor, snippet, cursorOffset);
+  }
+
+  onImageFilePicked(
+    target: Partial<BlogPost>,
+    event: Event,
+    editor: HTMLTextAreaElement,
+  ): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.toast.error('Please choose an image file.');
+      input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = String(reader.result || '');
+      if (!dataUrl) {
+        this.toast.error('Could not read image file.');
+        return;
+      }
+      const altText = file.name.replace(/\.[^.]+$/, '') || 'screenshot';
+      const snippet = `\n![${altText}](${dataUrl})\n`;
+      this.insertAtCursor(target, editor, snippet);
+      this.toast.success('Image embedded in markdown.');
+      input.value = '';
+    };
+    reader.onerror = () => {
+      this.toast.error('Failed to read image file.');
+      input.value = '';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  getPreviewHtml(content: string): SafeHtml {
     // Normalize literal \n escape sequences (from JSON-encoded data) to real newlines
     const normalized = (content || '').replace(/\\n/g, '\n');
-    return renderMarkdown(normalized);
+    return this.sanitizer.bypassSecurityTrustHtml(renderMarkdown(normalized));
   }
 
   saveBlog(): void {
@@ -242,6 +294,19 @@ export class BlogTabComponent implements OnInit, OnDestroy {
   removeTagFromNew(list: string[], tag: string): void {
     const i = list.indexOf(tag);
     if (i > -1) list.splice(i, 1);
+  }
+
+  isFeaturedPost(post: Partial<BlogPost>): boolean {
+    return (post.tags || []).some((tag) => tag.toLowerCase() === this.FEATURED_TAG);
+  }
+
+  setFeaturedPost(post: Partial<BlogPost>, featured: boolean): void {
+    const tags = [...(post.tags || [])].filter((tag) => tag.toLowerCase() !== this.FEATURED_TAG);
+    if (featured) {
+      tags.push(this.FEATURED_TAG);
+    }
+    post.tags = tags;
+    this.markDirty();
   }
 
   trackById(_: number, item: { id: string }): string {
@@ -469,5 +534,26 @@ export class BlogTabComponent implements OnInit, OnDestroy {
 
   private commentKey(slug: string, commentId: string): string {
     return `${slug}::${commentId}`;
+  }
+
+  private insertAtCursor(
+    target: Partial<BlogPost>,
+    editor: HTMLTextAreaElement,
+    snippet: string,
+    cursorOffset = snippet.length,
+  ): void {
+    const current = target.content || '';
+    const start = Number.isFinite(editor.selectionStart) ? editor.selectionStart : current.length;
+    const end = Number.isFinite(editor.selectionEnd) ? editor.selectionEnd : current.length;
+    const next = `${current.slice(0, start)}${snippet}${current.slice(end)}`;
+    target.content = next;
+    this.markDirty();
+    this.cdr.markForCheck();
+
+    queueMicrotask(() => {
+      const cursor = start + Math.max(0, cursorOffset);
+      editor.focus();
+      editor.setSelectionRange(cursor, cursor);
+    });
   }
 }

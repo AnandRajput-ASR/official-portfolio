@@ -37,6 +37,7 @@ const FORBID_TAGS = ['script', 'style', 'link', 'meta', 'object', 'embed', 'base
 const FORBID_ATTR_PREFIX = ['on'];
 
 const IFRAME_ALLOWED_SRC = /^https:\/\/(www\.youtube\.com|player\.vimeo\.com)\//;
+const IMG_DATA_URL_ALLOWED = /^data:image\/(png|jpeg|jpg|gif|webp);base64,/i;
 
 let configured = false;
 function configure(): void {
@@ -44,9 +45,17 @@ function configure(): void {
   configured = true;
   DOMPurify.addHook('uponSanitizeAttribute', (node, ev) => {
     const tagName = (node as Element | null)?.nodeName?.toUpperCase() ?? '';
-    if (ev.attrName === 'src' || ev.attrName === 'href') {
+    if (ev.attrName === 'href') {
       const v = String(ev.attrValue ?? '').trim().toLowerCase();
       if (v.startsWith('javascript:') || v.startsWith('data:')) {
+        ev.keepAttr = false;
+      }
+    }
+    if (ev.attrName === 'src') {
+      const rawValue = String(ev.attrValue ?? '').trim();
+      const value = rawValue.toLowerCase();
+      const isAllowedImageDataUrl = tagName === 'IMG' && IMG_DATA_URL_ALLOWED.test(rawValue);
+      if ((value.startsWith('javascript:') || value.startsWith('data:')) && !isAllowedImageDataUrl) {
         ev.keepAttr = false;
       }
     }

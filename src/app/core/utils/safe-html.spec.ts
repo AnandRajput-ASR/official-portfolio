@@ -24,6 +24,16 @@ describe('sanitizeHtml', () => {
     expect(html).not.toContain('data:text/html');
   });
 
+  it('keeps data:image URLs on img tags', () => {
+    const html = sanitizeHtml('<img src="data:image/png;base64,AAAA" alt="img">');
+    expect(html).toContain('data:image/png;base64,AAAA');
+  });
+
+  it('strips non-image data: URLs on img tags', () => {
+    const html = sanitizeHtml('<img src="data:text/html;base64,AAAA" alt="img">');
+    expect(html).not.toContain('data:text/html');
+  });
+
   it('keeps allowed YouTube iframe', () => {
     const html = sanitizeHtml(
       '<iframe src="https://www.youtube.com/embed/abc" frameborder="0"></iframe>',

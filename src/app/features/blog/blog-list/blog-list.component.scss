@@ -275,6 +275,12 @@
   }
 }
 
+.bl-featured-list {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.6rem;
+}
+
 .bl-featured-media,
 .bl-featured-fallback {
   min-height: 230px;

@@ -6,6 +6,30 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.12 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Multi-featured posts support | `/blog` now supports multiple featured posts at once; all posts tagged `featured` render in the top featured section. |
+| Featured fallback behavior retained | If no post is marked featured, the first sorted/filtered post is still shown as the fallback featured story. |
+| Featured section UX update | Featured stories now render as a stacked featured list before normal post cards. |
+
+### v1.1.11 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Manual featured-post control in Admin Blog tab | Added explicit `Featured on Blog page (hero card)` toggle for existing and new posts in `/admin/dashboard` Blog editor. |
+| Deterministic featured-card selection | `/blog` now prioritizes posts tagged as `featured`; if none are marked, it falls back to the first post by active sort/filter result. |
+| Cleaner public tag display | Internal `featured` control tag is hidden from public blog card tag chips to avoid exposing editorial metadata. |
+
+### v1.1.10 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Live markdown authoring in Admin Blog editor | Blog content editors now render side-by-side live markdown preview while writing (existing and new posts). |
+| Markdown productivity toolbar | Added quick actions for `Code Block`, `Inline Code`, `Image URL`, and `Upload Screenshot` to reduce manual markdown typing. |
+| Screenshot embedding support | Local image uploads now insert markdown image tags using embedded data URLs, and markdown sanitization allows safe `data:image/*` rendering for previews/articles. |
+
 ### v1.1.9 (2026-06-30)
 
 | Feature | Details |
@@ -339,6 +363,41 @@ Admins can now moderate blog comments directly from `/admin/dashboard` under the
 | Hidden comment | Offers `Unhide` and `Soft Delete` actions. |
 | Deleted comment | Offers `Restore` action. |
 
+### Admin Blog Markdown Live Preview
+
+Admins can now write markdown with a live split editor in `/admin/dashboard` under the Blog tab.
+
+#### Workflow
+
+1. Open any existing post in edit mode, or click `+ New Post`.
+2. Use the left panel editor to write markdown content.
+3. See rendered output instantly in the right preview panel.
+4. Use toolbar actions to insert rich markdown quickly:
+  - `+ Code Block`
+  - `+ Inline Code`
+  - `+ Image URL`
+  - `+ Upload Screenshot`
+5. Save the post as usual.
+
+#### Toolbar Actions
+
+| Action | What it inserts |
+| ------ | --------------- |
+| `+ Code Block` | Fenced markdown block with selected language (for example, `ts`, `bash`, `sql`). |
+| `+ Inline Code` | Inline markdown token around current cursor context. |
+| `+ Image URL` | Markdown image syntax using a pasted URL. |
+| `+ Upload Screenshot` | Markdown image syntax using a local uploaded image encoded as safe `data:image/*` URL. |
+
+#### Authoring Notes
+
+| Topic | Behavior |
+| ----- | -------- |
+| Existing posts | Live preview updates while editing post content. |
+| New posts | Live preview works before first save for draft creation flow. |
+| Code snippets | Render in markdown `<pre><code>` blocks with existing article styles. |
+| Images/screenshots | Render directly in preview and article view using markdown image syntax. |
+| Mobile UX | Live editor stacks vertically (editor above preview) on small screens. |
+
 ### Series Support Rules
 
 Series navigation is automatically enabled when both of these are present in post tags:
@@ -378,6 +437,25 @@ The `/blog` page is designed for quick content scanning before deep reading.
 | Tag chips | Lets users narrow by topic while preserving URL-based navigation (`/blog/tag/:tag`). |
 | Featured story card | Highlights the top result from the current filter/sort context to create a stronger first-click candidate. |
 | Post grid | Displays remaining posts in compact, image-forward cards with metadata for rapid comparison. |
+
+#### Featured vs Normal Post (Admin-Controlled)
+
+You can now explicitly control which post appears in the blog hero featured card.
+
+1. Open `/admin/dashboard` and go to Blog / Writing.
+2. Open a post (or create a new one).
+3. Toggle `Featured on Blog page (hero card)`.
+4. Save the post.
+
+Behavior rules:
+
+| Case | Result on `/blog` |
+| ---- | ----------------- |
+| One or more posts marked featured | All featured posts in current sorted/filtered results are rendered in the top Featured section. |
+| No post marked featured | The first post from current sorted/filtered results is used as fallback featured story. |
+| Other posts | All posts not rendered in Featured section appear in the normal post grid below. |
+
+Note: The internal `featured` marker is used only for editorial control and is not shown as a public tag chip.
 
 #### Blog Browsing Workflow
 
