@@ -6,6 +6,12 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.3 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Context-aware article back navigation | Blog article back actions now return to Home when opened from Home writing section, and return to the blog listing route when opened from `/blog` or `/blog/tag/:tag`. |
+
 ### v1.1.2 (2026-06-30)
 
 | Feature | Details |
@@ -153,6 +159,13 @@ Configured in `tsconfig.json` for clean imports:
 | `**`               | —                    | —                 | Redirects to `/`           |
 
 All feature components are **lazy-loaded** via dynamic `import()`.
+
+### Blog Navigation Behavior
+
+1. Opening an article from Home writing section stores Home as the source.
+2. Opening an article from Blog list/tag pages stores the current blog listing URL as the source.
+3. On article page, Back button returns to the stored source route.
+4. If no source route is available (direct deep-link), Back defaults to `/blog`.
 
 ---
 

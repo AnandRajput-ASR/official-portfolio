@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { BlogPost } from '@core/models';
 import { ContentService } from '@core/services/content.service';
 import { renderMarkdown } from '@core/utils/markdown';
@@ -9,11 +9,11 @@ import { renderMarkdown } from '@core/utils/markdown';
 @Component({
   selector: 'app-blog-view',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   template: `
     <div class="bv-page" *ngIf="post; else loading">
       <div class="bv-topbar">
-        <a routerLink="/blog" class="bv-back">← Back to Blog</a>
+        <a href="" (click)="goBack($event)" class="bv-back">{{ backLabel }}</a>
         <span class="bv-reading-time">{{ post.readingTime }} min read</span>
       </div>
 
@@ -35,7 +35,7 @@ import { renderMarkdown } from '@core/utils/markdown';
       </article>
 
       <footer class="bv-footer">
-        <a routerLink="/blog" class="bv-back-footer">← Back to Blog</a>
+        <a href="" (click)="goBack($event)" class="bv-back-footer">{{ backLabel }}</a>
         <p class="bv-footer-note">Written by {{ authorName }} · {{ authorTitle }}</p>
       </footer>
     </div>
@@ -51,13 +51,14 @@ import { renderMarkdown } from '@core/utils/markdown';
       <span class="bv-404-icon">✍️</span>
       <h2>Article not found</h2>
       <p class="bv-404-sub">This article may have been removed or the link is incorrect.</p>
-      <a routerLink="/blog" class="bv-back">← Back to Blog</a>
+      <a href="" (click)="goBack($event)" class="bv-back">{{ backLabel }}</a>
     </div>
   `,
   styleUrls: ['./blog-view.component.scss'],
 })
 export class BlogViewComponent implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private contentService = inject(ContentService);
   private titleService = inject(Title);
   private metaService = inject(Meta);
@@ -67,8 +68,12 @@ export class BlogViewComponent implements OnInit {
   notFound = false;
   authorName = 'Anand Rajput';
   authorTitle = 'Angular Developer & Azure Engineer';
+  private backTarget = '/blog';
+  backLabel = '← Back to Blog';
 
   ngOnInit(): void {
+    this.resolveBackTarget();
+
     const slug = this.route.snapshot.paramMap.get('slug');
     this.contentService.getPublishedBlogPostBySlug(slug).subscribe({
       next: ({ post, content }) => {
@@ -87,6 +92,30 @@ export class BlogViewComponent implements OnInit {
         this.notFound = true;
       },
     });
+  }
+
+  goBack(event: Event): void {
+    event.preventDefault();
+    void this.router.navigateByUrl(this.backTarget);
+  }
+
+  private resolveBackTarget(): void {
+    const from = this.router.getCurrentNavigation()?.extras.state?.['from'] ?? history.state?.from;
+
+    if (from === '/') {
+      this.backTarget = '/';
+      this.backLabel = '← Back to Home';
+      return;
+    }
+
+    if (typeof from === 'string' && from.startsWith('/blog')) {
+      this.backTarget = from;
+      this.backLabel = '← Back to Blog';
+      return;
+    }
+
+    this.backTarget = '/blog';
+    this.backLabel = '← Back to Blog';
   }
 
   private setMetaTags(post: BlogPost, content: { hero?: { name?: string } }): void {

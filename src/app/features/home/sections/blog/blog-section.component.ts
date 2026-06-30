@@ -32,7 +32,7 @@ export class BlogSectionComponent {
   }
 
   navigateToBlog(slug: string): void {
-    this.router.navigate(['/blog', slug]);
+    this.router.navigate(['/blog', slug], { state: { from: '/' } });
   }
 
   trackById(_: number, item: { id: string }): string {

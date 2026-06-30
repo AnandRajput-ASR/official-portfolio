@@ -66,6 +66,7 @@ import { timeout } from 'rxjs';
         <a
           *ngFor="let post of filteredPosts; trackBy: trackById"
           [routerLink]="['/blog', post.slug]"
+          [state]="{ from: currentListUrl }"
           class="bl-card"
         >
           <div class="bl-card-tags">
@@ -104,11 +105,15 @@ export class BlogListComponent implements OnInit {
   sortBy: 'newest' | 'popular' = 'newest';
   loading = true;
   loadError = false;
+  currentListUrl = '/blog';
 
   ngOnInit(): void {
+    this.currentListUrl = this.router.url;
+
     this.route.paramMap.subscribe((params) => {
       const tagFromRoute = params.get('tag');
       this.activeTag = tagFromRoute ? decodeURIComponent(tagFromRoute) : '';
+      this.currentListUrl = this.router.url;
       this.applyFilters();
       this.cdr.detectChanges();
     });
