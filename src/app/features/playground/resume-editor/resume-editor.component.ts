@@ -129,21 +129,16 @@ export class ResumeEditorComponent implements OnInit {
   downloadPdf(): void {
     const d = this.data();
     const html = this.buildPrintHtml(d);
-    const blob = new Blob([html], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    iframe.src = url;
-    document.body.appendChild(iframe);
-    iframe.onload = () => {
-      setTimeout(() => {
-        iframe.contentWindow?.print();
-        setTimeout(() => {
-          document.body.removeChild(iframe);
-          URL.revokeObjectURL(url);
-        }, 1000);
-      }, 300);
-    };
+    const w = window.open('about:blank', '_blank');
+    if (!w) {
+      this.toast.error('Please allow popups for this site to download PDF.');
+      return;
+    }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+    w.onload = () => w.print();
+    w.onafterprint = () => w.close();
   }
 
   resetToDefaults(): void {
