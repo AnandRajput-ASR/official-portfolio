@@ -6,11 +6,20 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.1 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Production API via Vercel proxy | Switched production API base URL back to `/api` so browser calls stay same-origin and Vercel rewrites forward requests to Render. |
+| CSP tightened for proxy mode | Vercel header CSP `connect-src` now uses `'self'` in production instead of allowing direct backend host calls. |
+
+### v1.1.0 (2026-06-30)
+
 ### v1.1.0 (2026-06-30)
 
 | Feature | Details |
 | ------- | ------- |
-| Environment-based API URL centralization | Production now targets Render backend via `environment.prod.ts`, while development continues using localhost backend via `environment.ts`. |
+| Environment-based API URL centralization | Development and production API targets are managed via Angular environment files, with production now using same-origin `/api` proxy routing. |
 | Hardcoded API endpoint cleanup | Removed hardcoded `/api` fallback checks from runtime interceptor logic and aligned tests with environment-based URL resolution. |
 | Deployment compatibility update | CSP `connect-src` now explicitly allows the Render backend host used in production API calls. |
 
@@ -100,7 +109,7 @@ official-portfolio-frontend/
 │   │
 │   ├── environments/
 │   │   ├── environment.ts         # Development config (localhost:3000)
-│   │   └── environment.prod.ts    # Production config (Render backend)
+│   │   └── environment.prod.ts    # Production config (same-origin /api via Vercel rewrite)
 │   │
 │   ├── index.html                 # HTML shell (SEO meta, Open Graph, JSON-LD)
 │   ├── main.ts                    # Bootstrap
@@ -177,7 +186,7 @@ export const environment = {
 ```typescript
 export const environment = {
   production: true,
-  api: { baseUrl: 'https://official-portfolio-backend-6f1v.onrender.com/api' },
+  api: { baseUrl: '/api' },
   assets: { baseUrl: '/assets' },
 };
 ```
@@ -187,7 +196,7 @@ export const environment = {
 | Runtime | API base URL | Source of truth |
 | ------- | ------------ | --------------- |
 | Development (`ng serve`) | `http://localhost:3000/api` | `src/environments/environment.ts` |
-| Production build (`ng build --configuration production`) | `https://official-portfolio-backend-6f1v.onrender.com/api` | `src/environments/environment.prod.ts` via Angular file replacement |
+| Production build (`ng build --configuration production`) | `/api` | `src/environments/environment.prod.ts` via Angular file replacement |
 
 ### Verification Workflow
 
@@ -196,7 +205,7 @@ export const environment = {
 3. Confirm API requests go to `http://localhost:3000/api/*`.
 4. Run `npm run build` (production build).
 5. Deploy the generated build to Vercel.
-6. Open deployed app and verify API requests go to `https://official-portfolio-backend-6f1v.onrender.com/api/*`.
+6. Open deployed app and verify API requests go to `/api/*` (same-origin), with Vercel rewriting to Render backend.
 
 ### 3. Start Development Server
 
@@ -276,7 +285,7 @@ Both repos are designed to work together:
                                    PostgreSQL
 ```
 
-For production, this frontend is configured to call the deployed Render API directly using the environment production base URL.
+For production, this frontend calls same-origin `/api` and relies on Vercel rewrites to forward traffic to the deployed Render backend.
 
 ---
 

@@ -7,15 +7,15 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://official-portfolio-backend-production.up.railway.app/api/$1"
+      "destination": "https://official-portfolio-backend-6f1v.onrender.com/api/$1"
     },
     {
       "source": "/robots.txt",
-      "destination": "https://official-portfolio-backend-production.up.railway.app/robots.txt"
+      "destination": "https://official-portfolio-backend-6f1v.onrender.com/robots.txt"
     },
     {
       "source": "/sitemap.xml",
-      "destination": "https://official-portfolio-backend-production.up.railway.app/sitemap.xml"
+      "destination": "https://official-portfolio-backend-6f1v.onrender.com/sitemap.xml"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
@@ -33,7 +33,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self'; frame-src https://www.youtube.com https://player.vimeo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://*.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self'; frame-src https://www.youtube.com https://player.vimeo.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         }
       ]
     }
