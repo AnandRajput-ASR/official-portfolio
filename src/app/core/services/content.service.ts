@@ -1,19 +1,16 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import {
-    ApiResponse,
-    BlogCommentInput,
-    BlogPost,
-    BlogSocialState,
-    PortfolioContent,
-    SiteSettings,
-    Testimonial,
+  ApiResponse,
+  BlogCommentInput,
+  BlogPost,
+  BlogSocialState,
+  PortfolioContent,
+  SiteSettings,
+  Testimonial,
 } from '@core/models';
-import {
-  normalizeBlogPostsCollection,
-  normalizePortfolioContent,
-  normalizeSettingsSingleton,
-} from '@core/utils/content-api-normalizers';
+import { normalizeBlogPostsCollection } from '@core/utils/blog-normalizers';
+import { normalizePortfolioContent, normalizeSettingsSingleton } from '@core/utils/content-normalizers';
 import { environment } from '@env/environment';
 import { catchError, map, Observable, shareReplay } from 'rxjs';
 import { StorageService } from './storage.service';

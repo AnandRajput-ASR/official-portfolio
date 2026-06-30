@@ -6,6 +6,13 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.22 (2026-07-01)
+
+| Feature | Details |
+| ------- | ------- |
+| Utility boundary split | Split normalization helpers into `content-normalizers` and `blog-normalizers` to keep API adaptation concerns domain-focused while blog-only endpoints are rolling out. |
+| Service import clarity | Updated content/admin service imports to use domain-specific normalizer files with no behavioral regressions. |
+
 ### v1.1.21 (2026-07-01)
 
 | Feature | Details |
@@ -339,9 +346,15 @@ All feature components are **lazy-loaded** via dynamic `import()`.
 
 ### Content Normalization Utilities
 
-1. Canonical API normalization helpers are now grouped in `content-api-normalizers`.
-2. File naming now reflects actual usage (content/blog payload normalization), not migration phase labels.
-3. Keep future adapters in this utility when introducing new payload versions to preserve service-level simplicity.
+1. Canonical API normalization helpers are now grouped into domain modules: `content-normalizers` and `blog-normalizers`.
+2. File naming now reflects actual usage (content vs blog payload normalization), not migration phase labels.
+3. Keep future adapters in the matching domain module so service-level logic remains simple and explicit.
+
+### Normalizer Module Boundaries
+
+1. `content-normalizers`: portfolio/page-content shapes (hero, companies, projects, settings, analytics, testimonials).
+2. `blog-normalizers`: blog-list payload adaptation (`blogPosts`, `blog_posts`, `posts`, `items`, wrapped `data`).
+3. Keep endpoint-specific transformations inside their module so service code remains small and explicit.
 
 ### Blog Article Experience (`/blog/:slug`)
 
