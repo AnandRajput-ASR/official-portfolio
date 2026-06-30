@@ -82,7 +82,7 @@ const JSON_LD_ID = 'blog-article-jsonld';
             <p class="bv-social-status" *ngIf="socialLoading">Loading interactions...</p>
             <p class="bv-social-error" *ngIf="socialError">Interactions could not be loaded right now.</p>
             <div class="bv-social-row">
-              <button class="bv-social-btn" [class.active]="isLiked" (click)="toggleLike()" [disabled]="socialLoading || socialError || likeLocked">
+              <button class="bv-social-btn" [class.active]="isLiked" (click)="toggleLike()" [disabled]="socialLoading || socialError">
                 {{ isLiked ? 'Liked' : 'Like' }} · {{ likeCount }}
               </button>
               <button class="bv-social-btn" (click)="focusComments()" [disabled]="socialLoading || socialError">
@@ -322,7 +322,9 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     event.preventDefault();
     const target = this.document.getElementById(id);
     if (!target) return;
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const topbarHeight = 60;
+    const y = target.getBoundingClientRect().top + window.scrollY - topbarHeight;
+    window.scrollTo({ top: y, behavior: 'smooth' });
   }
 
   toggleLike(): void {
@@ -435,7 +437,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.likeHintVisible = false;
       this.cdr.detectChanges();
-    }, 3000);
+    }, 5000);
   }
 
   private showShareHint(): void {
@@ -444,7 +446,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.shareHintVisible = false;
       this.cdr.detectChanges();
-    }, 3000);
+    }, 5000);
   }
 
   get isLiked(): boolean {
