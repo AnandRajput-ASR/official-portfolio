@@ -6,6 +6,13 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.14 (2026-06-30)
+
+| Feature | Details |
+| ------- | ------- |
+| Markdown code rendering clarity fix | Fixed admin live preview styling so inline code and fenced code blocks are visually distinct even for HTML rendered via `[innerHTML]`. |
+| Clipboard screenshot compatibility hardening | Improved image paste handling to detect screenshots from both `clipboardData.items` and `clipboardData.files` sources. |
+
 ### v1.1.13 (2026-06-30)
 
 | Feature | Details |

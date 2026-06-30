@@ -132,13 +132,14 @@ export class BlogTabComponent implements OnInit, OnDestroy {
     event: ClipboardEvent,
     editor: HTMLTextAreaElement,
   ): void {
-    const items = Array.from(event.clipboardData?.items ?? []);
+    const clipboardData = event.clipboardData;
+    const items = Array.from(clipboardData?.items ?? []);
     const imageItem = items.find((item) => item.type.startsWith('image/'));
-    if (!imageItem) {
-      return;
-    }
-
-    const file = imageItem.getAsFile();
+    const fileFromItem = imageItem?.getAsFile() ?? null;
+    const fileFromFiles = Array.from(clipboardData?.files ?? []).find((file) =>
+      file.type.startsWith('image/'),
+    );
+    const file = fileFromItem ?? fileFromFiles ?? null;
     if (!file) {
       return;
     }
