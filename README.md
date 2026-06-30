@@ -6,6 +6,16 @@ A modern, production-ready **Angular 20** single-page application that serves as
 
 ## Changelog
 
+### v1.1.25 (2026-07-01)
+
+| Feature | Details |
+| ------- | ------- |
+| Local anti-repeat guard for likes | Blog article Like action is now locked per post in browser local storage after a successful like, preventing repeated like toggles from the same browser session/profile. |
+| Local anti-repeat guard for shares | Blog article Share action is now locked per post in browser local storage after a successful share tracking event, reducing repeated share-count inflation from rapid repeated clicks. |
+| Guard-aware social UI state | Like/Share controls now reflect local lock state (`Liked`/`Shared`) and stay disabled after first successful action for the same post in that browser. |
+| Share UX after local lock | Share is still allowed for copy/share actions after the first recorded share, but additional clicks no longer increment the backend share count for that browser. |
+| Repeat-share anti-abuse preserved | Local share lock now blocks duplicate share tracking while keeping the link-sharing action usable for users who want to copy the URL again. |
+
 ### v1.1.24 (2026-07-01)
 
 | Feature | Details |
@@ -390,18 +400,19 @@ The blog article actions are now expected to be stored in the backend and loaded
 
 | Action | Storage | Scope | Notes |
 | ------ | ------- | ----- | ----- |
-| Like | Backend | Per post | The backend should persist viewer state and like counts for each slug. |
+| Like | Backend + browser local storage guard | Per post | Backend persists canonical counts/state; frontend also stores a local one-way lock to block repeated likes from the same browser profile. |
 | Comment | Backend | Per post | Comments should be stored per slug and returned in display order. |
-| Share | Backend | Per post | Share actions should increment per-post counts. |
+| Share | Backend + browser local storage guard | Per post | Backend increments share counts; frontend also stores a local one-way lock to prevent repeated share inflation from the same browser profile. |
 | Save for later | Backend | Per post | If kept, this should be a server-backed bookmark list, not browser-only state. |
 
 #### Important Constraint
 
-These interactions should now be synced to the backend and shared across devices for the same post. That means:
+These interactions are synced to the backend while also applying local anti-repeat client guards for Like/Share. That means:
 
 1. A visitor should see the same counts and comments when they return, on any device.
 2. Other visitors should see the same public counts and published comments.
 3. Analytics tracking remains separate from the social API and can continue for reporting.
+4. A single browser profile cannot repeatedly trigger Like/Share on the same post after first success.
 
 #### Backend API Contract
 

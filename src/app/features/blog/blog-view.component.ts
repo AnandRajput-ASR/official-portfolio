@@ -81,17 +81,19 @@ const JSON_LD_ID = 'blog-article-jsonld';
             <p class="bv-social-status" *ngIf="socialLoading">Loading interactions...</p>
             <p class="bv-social-error" *ngIf="socialError">Interactions could not be loaded right now.</p>
             <div class="bv-social-row">
-              <button class="bv-social-btn" [class.active]="isLiked" (click)="toggleLike()" [disabled]="socialLoading || socialError">
+              <button class="bv-social-btn" [class.active]="isLiked" (click)="toggleLike()" [disabled]="socialLoading || socialError || likeLocked">
                 {{ isLiked ? 'Liked' : 'Like' }} · {{ likeCount }}
               </button>
               <button class="bv-social-btn" (click)="focusComments()" [disabled]="socialLoading || socialError">
                 Comment · {{ commentCount }}
               </button>
               <button class="bv-social-btn" (click)="sharePost()" [disabled]="socialLoading || socialError">
-                Share · {{ shareCount }}
+                {{ shareLocked ? 'Shared' : 'Share' }} · {{ shareCount }}
               </button>
             </div>
             <p class="bv-social-hint" *ngIf="shareCopied">Link copied to clipboard.</p>
+            <p class="bv-social-hint" *ngIf="likeLocked && !socialLoading">Like already recorded.</p>
+            <p class="bv-social-hint" *ngIf="shareLocked && !socialLoading">Share already recorded.</p>
           </section>
 
           <section class="bv-comments" id="bv-comments">
@@ -247,6 +249,8 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   backLabel = '← Back to Blog';
   private previousScrollRestoration: ScrollRestoration | null = null;
   private socialRequestId = 0;
+  likeLocked = false;
+  shareLocked = false;
 
   ngOnInit(): void {
     if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
@@ -321,17 +325,23 @@ export class BlogViewComponent implements OnInit, OnDestroy {
 
   toggleLike(): void {
     if (!this.post) return;
+    const slug = this.post.slug;
+    if (this.likeLocked) return;
     if (this.socialLoading || this.socialError) return;
 
     this.socialLoading = true;
-    this.contentService.toggleBlogLike(this.post.slug).subscribe({
+    this.contentService.toggleBlogLike(slug).subscribe({
       next: (state) => {
         this.socialState = this.normalizeSocialState(state);
+        this.likeLocked = true;
+        this.contentService.markLocallyLikedBlog(slug);
         this.socialLoading = false;
+        this.cdr.detectChanges();
       },
       error: () => {
         this.socialError = true;
         this.socialLoading = false;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -359,6 +369,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
 
   async sharePost(): Promise<void> {
     if (!this.post || typeof window === 'undefined') return;
+    const slug = this.post.slug;
     if (this.socialLoading || this.socialError) return;
     const url = window.location.href;
 
@@ -379,15 +390,24 @@ export class BlogViewComponent implements OnInit, OnDestroy {
         return;
       }
 
+      // Allow re-copy/re-share UX without re-counting shares once locked locally.
+      if (this.shareLocked) {
+        return;
+      }
+
       this.socialLoading = true;
-      this.contentService.trackBlogShare(this.post.slug).subscribe({
+      this.contentService.trackBlogShare(slug).subscribe({
         next: (state) => {
           this.socialState = this.normalizeSocialState(state);
+          this.shareLocked = true;
+          this.contentService.markLocallySharedBlog(slug);
           this.socialLoading = false;
+          this.cdr.detectChanges();
         },
         error: () => {
           this.socialError = true;
           this.socialLoading = false;
+          this.cdr.detectChanges();
         },
       });
     } catch {
@@ -402,7 +422,7 @@ export class BlogViewComponent implements OnInit, OnDestroy {
   }
 
   get isLiked(): boolean {
-    return this.socialState?.viewerLiked === true;
+    return this.likeLocked || this.socialState?.viewerLiked === true;
   }
 
   get likeCount(): number {
@@ -656,6 +676,8 @@ export class BlogViewComponent implements OnInit, OnDestroy {
 
   private loadSocialState(slug: string): void {
     const requestId = ++this.socialRequestId;
+    this.likeLocked = this.contentService.hasLocallyLikedBlog(slug);
+    this.shareLocked = this.contentService.hasLocallySharedBlog(slug);
     this.socialLoading = true;
     this.socialError = false;
     this.socialState = null;
@@ -677,6 +699,10 @@ export class BlogViewComponent implements OnInit, OnDestroy {
           clearTimeout(failSafe);
           if (requestId !== this.socialRequestId) return;
           this.socialState = this.normalizeSocialState(state);
+          if (this.socialState.viewerLiked) {
+            this.likeLocked = true;
+            this.contentService.markLocallyLikedBlog(slug);
+          }
           this.socialLoading = false;
           this.socialError = false;
           this.cdr.detectChanges();

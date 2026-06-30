@@ -46,6 +46,8 @@ export class ContentService {
 
   private base = environment.api.baseUrl + '/content';
   private static readonly BLOG_POPULARITY_KEY = 'blog-popularity';
+  private static readonly BLOG_LIKED_SLUGS_KEY = 'blog-liked-slugs';
+  private static readonly BLOG_SHARED_SLUGS_KEY = 'blog-shared-slugs';
   private static readonly RESUME_FUNNEL_KEY = 'resume-funnel-events';
   private static readonly RESUME_FUNNEL_LIMIT = 2000;
   private readonly blogBase = this.base + '/blogs';
@@ -188,6 +190,22 @@ export class ContentService {
     return out;
   }
 
+  hasLocallyLikedBlog(slug: string): boolean {
+    return this.getInteractionSlugSet(ContentService.BLOG_LIKED_SLUGS_KEY).has(this.normalizeSlug(slug));
+  }
+
+  markLocallyLikedBlog(slug: string): void {
+    this.addInteractionSlug(ContentService.BLOG_LIKED_SLUGS_KEY, slug);
+  }
+
+  hasLocallySharedBlog(slug: string): boolean {
+    return this.getInteractionSlugSet(ContentService.BLOG_SHARED_SLUGS_KEY).has(this.normalizeSlug(slug));
+  }
+
+  markLocallySharedBlog(slug: string): void {
+    this.addInteractionSlug(ContentService.BLOG_SHARED_SLUGS_KEY, slug);
+  }
+
   // Settings
   getSettings(): Observable<SiteSettings> {
     return this.http
@@ -311,6 +329,28 @@ export class ContentService {
     if (!rawValue) return 0;
     const ms = Date.parse(rawValue);
     return Number.isFinite(ms) ? ms : 0;
+  }
+
+  private normalizeSlug(slug: string): string {
+    return (slug || '').trim().toLowerCase();
+  }
+
+  private getInteractionSlugSet(storageKey: string): Set<string> {
+    const raw = this.storage.get<unknown>(storageKey);
+    if (!Array.isArray(raw)) return new Set<string>();
+    const normalized = raw
+      .filter((entry): entry is string => typeof entry === 'string')
+      .map((entry) => this.normalizeSlug(entry))
+      .filter((entry) => !!entry);
+    return new Set(normalized);
+  }
+
+  private addInteractionSlug(storageKey: string, slug: string): void {
+    const normalized = this.normalizeSlug(slug);
+    if (!normalized) return;
+    const set = this.getInteractionSlugSet(storageKey);
+    set.add(normalized);
+    this.storage.set(storageKey, Array.from(set));
   }
 
   private getResumeFunnelEvents(): ResumeFunnelEvent[] {
