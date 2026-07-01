@@ -195,18 +195,19 @@ export class ResumeEditorComponent implements OnInit {
     return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>${esc(d.name)} - Resume</title>
 <style>
-@page { margin: 0.7in; size: A4; }
+@page { margin: 0.7in; size: 210mm 297mm; }
+@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Times New Roman', serif; font-size: 10pt; line-height: 1.4; color: #000; }
+body { font-family: 'Times New Roman', serif; font-size: 10pt; line-height: 1.4; color: #000; width: 210mm; }
 .header { text-align: center; margin-bottom: 8pt; }
 .header h1 { font-size: 18pt; letter-spacing: 2pt; margin-bottom: 4pt; }
 .header p { font-size: 10pt; }
-.header a { color: #000; }
+.header a { color: #000; text-decoration: underline; }
 .section-title { font-size: 12pt; font-weight: bold; border-bottom: 1.5px solid #000; padding-bottom: 2pt; margin: 10pt 0 6pt; }
 .sk-table { width: 100%; border-collapse: collapse; }
 .sk-table td { padding: 2pt 8pt 2pt 0; font-size: 10pt; vertical-align: top; }
 .sk-cat { font-weight: bold; white-space: nowrap; width: 100pt; }
-.exp-block { margin-bottom: 6pt; }
+.exp-block { margin-bottom: 6pt; page-break-inside: avoid; }
 .exp-row { display: flex; justify-content: space-between; }
 .exp-meta { margin: 3pt 0; font-size: 10pt; }
 .closing { font-style: italic; margin: 4pt 0; font-size: 10pt; }
@@ -215,6 +216,7 @@ ul.dash { list-style: none; padding-left: 14pt; }
 ul.dash li::before { content: '– '; margin-left: -14pt; }
 ul.projects > li { list-style: disc; margin: 4pt 0; }
 li { font-size: 10pt; margin: 1pt 0; }
+.section-title { page-break-after: avoid; }
 </style></head><body>
 <div class="header">
   <h1>${esc(d.name).toUpperCase()}</h1>

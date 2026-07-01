@@ -178,6 +178,7 @@
         <button [class.active]="previewMode() === 'visual'" (click)="previewMode.set('visual')">Preview</button>
         <button [class.active]="previewMode() === 'latex'" (click)="previewMode.set('latex')">LaTeX Source</button>
       </div>
+      <div class="re-page-indicator" *ngIf="previewMode() === 'visual'">A4 · 210 × 297 mm · dashed line = page break</div>
       <div class="re-preview-card" *ngIf="previewMode() === 'visual'">
         <!-- Live visual preview -->
         <div class="rv-header">

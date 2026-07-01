@@ -214,7 +214,7 @@
 }
 
 .re-preview {
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 50%, #333);
   border: 1px solid var(--border);
   position: sticky;
   top: 1rem;
@@ -246,13 +246,43 @@
 }
 
 .re-preview-card {
-  padding: 1.5rem;
+  padding: 20mm;
   background: #fff;
   color: #000;
   font-family: 'Times New Roman', serif;
   font-size: 9pt;
   line-height: 1.4;
-  min-height: 400px;
+  min-height: 297mm;
+  width: 210mm;
+  max-width: 100%;
+  margin: 0 auto;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
+
+  &::after {
+    content: '— PAGE BREAK —';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 297mm;
+    border-top: 2px dashed #ccc;
+    text-align: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 8pt;
+    color: #aaa;
+    padding-top: 4pt;
+    letter-spacing: 0.15em;
+  }
+}
+
+.re-page-indicator {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0.4rem 0;
 }
 
 .re-latex-view {
