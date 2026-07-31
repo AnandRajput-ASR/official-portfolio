@@ -27,6 +27,7 @@ export interface Company extends EntityMetadata {
   description: string;
   projects: CompanyProject[];
   displayOrder: number;
+  achievements?: string[];
   website?: string;
   teamSize?: string;
   startDate?: string;

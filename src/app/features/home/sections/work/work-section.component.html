@@ -46,6 +46,11 @@
           </div>
         </div>
         <div class="co-header-right">
+          <div class="co-achievements" *ngIf="company.achievements?.length">
+            <span class="co-achievement" *ngFor="let ach of company.achievements">
+              🏆 {{ ach }}
+            </span>
+          </div>
           <span class="co-proj-count"
             >{{ visibleProjects(company.id).length }} project{{
               visibleProjects(company.id).length !== 1 ? 's' : ''

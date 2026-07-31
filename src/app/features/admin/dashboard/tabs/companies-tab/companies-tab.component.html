@@ -232,6 +232,16 @@
           ></textarea>
         </div>
 
+        <div class="form-group">
+          <label>🏆 Achievements <small>(one per line, e.g. 2x Star of the Month)</small></label>
+          <textarea
+            rows="3"
+            [ngModel]="getAchievementsText(co)"
+            (ngModelChange)="setAchievements(co, $event); scheduleAutoSave()"
+            placeholder="2x Star of the Month&#10;1x ACE Award"
+          ></textarea>
+        </div>
+
         <div class="co-tech-stack-panel" *ngIf="getUniqueTechStack(co).length > 0">
           <div class="co-tech-stack-header">
             <span class="label-sm"

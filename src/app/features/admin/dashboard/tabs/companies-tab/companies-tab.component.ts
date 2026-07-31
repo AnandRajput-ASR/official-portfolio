@@ -1,12 +1,12 @@
 import { CommonModule } from '@angular/common';
 import {
-  ChangeDetectionStrategy,
-  ChangeDetectorRef,
-  Component,
-  HostListener,
-  OnDestroy,
-  OnInit,
-  inject,
+    ChangeDetectionStrategy,
+    ChangeDetectorRef,
+    Component,
+    HostListener,
+    OnDestroy,
+    OnInit,
+    inject,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DragListDirective } from '@core/directives/drag-list.directive';
@@ -16,26 +16,26 @@ import { AdminService } from '@core/services/admin.service';
 import { ConfirmService } from '@core/services/confirm.service';
 import { ContentService } from '@core/services/content.service';
 import {
-  PROJECT_STATUSES,
-  applyDefaultPeriod,
-  calcTenure,
-  getCompletedCount,
-  getCompletionRate,
-  getDuplicateProjectTitles,
-  getInProgressCount,
-  getProjectsMissingDetailsCount,
-  getProjectsWithImpact,
-  getTechProjectCount,
-  getUniqueTechStack,
-  hasInvalidDateRange,
-  impactScore,
-  impactStrengthClass,
-  impactStrengthLabel,
-  isDuplicateProjectTitle,
-  isProjectDetailsMissing,
-  isValidWebsite,
-  projectStatusIcon,
-  projectStatusLabel,
+    PROJECT_STATUSES,
+    applyDefaultPeriod,
+    calcTenure,
+    getCompletedCount,
+    getCompletionRate,
+    getDuplicateProjectTitles,
+    getInProgressCount,
+    getProjectsMissingDetailsCount,
+    getProjectsWithImpact,
+    getTechProjectCount,
+    getUniqueTechStack,
+    hasInvalidDateRange,
+    impactScore,
+    impactStrengthClass,
+    impactStrengthLabel,
+    isDuplicateProjectTitle,
+    isProjectDetailsMissing,
+    isValidWebsite,
+    projectStatusIcon,
+    projectStatusLabel,
 } from '@core/utils/company-metrics';
 import { ToastService } from '@shared/components/toast/toast.component';
 
@@ -442,6 +442,15 @@ export class CompaniesTabComponent implements OnInit, OnDestroy {
     this.companyShortcutsVisible = !this.companyShortcutsVisible;
   }
 
+  getAchievementsText(co: Company): string {
+    if (!Array.isArray(co.achievements)) return '';
+    return co.achievements.join('\n');
+  }
+
+  setAchievements(co: Company, text: string): void {
+    co.achievements = text.split('\n').map((s) => s.trim()).filter((s) => s.length > 0);
+  }
+
   private emptyCompany(): Partial<Company> {
     return {
       name: '',
@@ -452,6 +461,7 @@ export class CompaniesTabComponent implements OnInit, OnDestroy {
       accentColor: '#f5a623',
       current: false,
       description: '',
+      achievements: [],
       projects: [],
       website: '',
       teamSize: '',
